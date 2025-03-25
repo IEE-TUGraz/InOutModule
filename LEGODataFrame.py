@@ -5,9 +5,6 @@ import openpyxl
 import pandas as pd
 
 
-
-
-
 class CaseStudy:
 
     def __init__(self, example_folder: str, do_not_merge_single_node_buses: bool = False,
@@ -88,7 +85,7 @@ class CaseStudy:
             self.dPower_VRESProfiles = dPower_VRESProfiles
         else:
             self.power_vresprofiles_file = power_vresprofiles_file
-            self.dPower_VRESProfiles = self.get_dPower_VRESProfiles()
+            self.dPower_VRESProfiles = self.get_dPower_VRESProfiles(self.example_folder + self.power_vresprofiles_file)
 
         if dPower_Storage is not None:
             self.dPower_Storage = dPower_Storage
@@ -281,12 +278,13 @@ class CaseStudy:
         dPower_Inflows = dPower_Inflows.set_index(['rp', 'g', 'k'])
         return dPower_Inflows
 
-    def get_dPower_VRESProfiles(self):
-        dPower_VRESProfiles = pd.read_excel(self.example_folder + self.power_vresprofiles_file, skiprows=[0, 1, 3, 4, 5])
+    @staticmethod
+    def get_dPower_VRESProfiles(excel_file_path: str):
+        CaseStudy.check_LEGOExcel_version(excel_file_path, "v0.0.3")
+        dPower_VRESProfiles = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
         dPower_VRESProfiles = dPower_VRESProfiles.drop(dPower_VRESProfiles.columns[0], axis=1)
-        dPower_VRESProfiles = dPower_VRESProfiles.rename(columns={dPower_VRESProfiles.columns[0]: "rp", dPower_VRESProfiles.columns[1]: "i", dPower_VRESProfiles.columns[2]: "tec"})
-        dPower_VRESProfiles = dPower_VRESProfiles.melt(id_vars=['rp', 'i', 'tec'], var_name='k', value_name='Capacity')
-        dPower_VRESProfiles = dPower_VRESProfiles.set_index(['rp', 'i', 'k', 'tec'])
+        dPower_VRESProfiles = dPower_VRESProfiles.melt(id_vars=['id', 'rp', 'g', 'dataPackage', 'dataSource'], var_name='k', value_name='Capacity')
+        dPower_VRESProfiles = dPower_VRESProfiles.set_index(['rp', 'k', 'g'])
         return dPower_VRESProfiles
 
     def get_dPower_WeightsRP(self):
