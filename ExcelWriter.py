@@ -6,6 +6,8 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+from InOutModule import ExcelReader
+
 package_directory_ExcelWriter = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -32,6 +34,7 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
     # Get file paths
     file_path = __checkFilepath(file_path)
     templatePath = f"{package_directory_ExcelWriter}/templates/{templateName}-template.xlsx"
+    ExcelReader.__check_LEGOExcel_version(templatePath, "v0.0.3")
 
     # Load template workbook
     templateWorkbook = load_workbook(templatePath)
@@ -97,8 +100,6 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
 
 
 if __name__ == "__main__":
-    from InOutModule import LEGODataFrame
-
-    data = LEGODataFrame.CaseStudy.get_dPower_VRESProfiles("examples/Power_VRESProfiles.xlsx")  # Read in example data
+    data = ExcelReader.get_dPower_VRESProfiles("examples/Power_VRESProfiles.xlsx")  # Read in example data
     write_VRESProfiles(data, "examples/output/Power_VRESProfiles_output.xlsx")  # Write data to Excel file
     pass
