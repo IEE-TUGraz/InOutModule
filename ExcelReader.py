@@ -28,6 +28,14 @@ def get_dPower_Hindex(excel_file_path: str):
     return dPower_Hindex
 
 
+def get_dPower_BusInfo(excel_file_path: str):
+    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
+    dPower_BusInfo = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_BusInfo = dPower_BusInfo.drop(dPower_BusInfo.columns[0], axis=1)
+    dPower_BusInfo = dPower_BusInfo.set_index('i')
+    return dPower_BusInfo
+
+
 def get_dPower_VRES(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.3")
     dPower_VRES = __read_generator_data(excel_file_path)
