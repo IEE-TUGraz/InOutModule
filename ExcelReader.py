@@ -31,9 +31,22 @@ def get_dPower_Hindex(excel_file_path: str):
 def get_dPower_BusInfo(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.3")
     dPower_BusInfo = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_BusInfo = dPower_BusInfo.drop(dPower_BusInfo.columns[0], axis=1)
+    dPower_BusInfo = dPower_BusInfo[dPower_BusInfo["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+
     dPower_BusInfo = dPower_BusInfo.set_index('i')
     return dPower_BusInfo
+
+
+def get_dPower_Network(excel_file_path: str):
+    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
+    dPower_Network = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_Network = dPower_Network[dPower_Network["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+
+    dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
+    dPower_Network["pPmax"] *= 1e-3
+
+    dPower_Network = dPower_Network.set_index(['i', 'j', 'c'])
+    return dPower_Network
 
 
 def get_dPower_VRES(excel_file_path: str):
