@@ -94,7 +94,7 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
                 case _:
                     __copyCellStyle(rowTemplate_values, cell)
 
-    if not os.path.exists(os.path.dirname(file_path)):
+    if not os.path.exists(os.path.dirname(file_path)) and os.path.dirname(file_path) != "":
         os.makedirs(os.path.dirname(file_path))  # Create folder if it does not exist
     templateWorkbook.save(file_path)
 
