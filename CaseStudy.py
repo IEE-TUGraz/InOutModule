@@ -1,9 +1,10 @@
+import copy
 import warnings
 
 import numpy as np
 import pandas as pd
 
-import ExcelReader
+from InOutModule import ExcelReader
 
 
 class CaseStudy:
@@ -44,55 +45,19 @@ class CaseStudy:
             self.dPower_BusInfo = dPower_BusInfo
         else:
             self.power_businfo_file = power_businfo_file
-            self.dPower_BusInfo = self.get_dPower_BusInfo()
+            self.dPower_BusInfo = ExcelReader.get_dPower_BusInfo(self.example_folder + self.power_businfo_file)
 
         if dPower_Network is not None:
             self.dPower_Network = dPower_Network
         else:
             self.power_network_file = power_network_file
-            self.dPower_Network = self.get_dPower_Network()
-
-        if dPower_ThermalGen is not None:
-            self.dPower_ThermalGen = dPower_ThermalGen
-        else:
-            self.power_thermalgen_file = power_thermalgen_file
-            self.dPower_ThermalGen = self.get_dPower_ThermalGen()
-
-        if dPower_RoR is not None:
-            self.dPower_RoR = dPower_RoR
-        else:
-            self.power_ror_file = power_ror_file
-            self.dPower_RoR = self.get_dPower_RoR()
-
-        if dPower_VRES is not None:
-            self.dPower_VRES = dPower_VRES
-        else:
-            self.power_vres_file = power_vres_file
-            self.dPower_VRES = ExcelReader.get_dPower_VRES(self.example_folder + self.power_vres_file)
+            self.dPower_Network = ExcelReader.get_dPower_Network(self.example_folder + self.power_network_file)
 
         if dPower_Demand is not None:
             self.dPower_Demand = dPower_Demand
         else:
             self.power_demand_file = power_demand_file
             self.dPower_Demand = self.get_dPower_Demand()
-
-        if dPower_Inflows is not None:
-            self.dPower_Inflows = dPower_Inflows
-        else:
-            self.power_inflows_file = power_inflows_file
-            self.dPower_Inflows = self.get_dPower_Inflows()
-
-        if dPower_VRESProfiles is not None:
-            self.dPower_VRESProfiles = dPower_VRESProfiles
-        else:
-            self.power_vresprofiles_file = power_vresprofiles_file
-            self.dPower_VRESProfiles = ExcelReader.get_dPower_VRESProfiles(self.example_folder + self.power_vresprofiles_file)
-
-        if dPower_Storage is not None:
-            self.dPower_Storage = dPower_Storage
-        else:
-            self.power_storage_file = power_storage_file
-            self.dPower_Storage = self.get_dPower_Storage()
 
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -111,6 +76,48 @@ class CaseStudy:
         else:
             self.power_hindex_file = power_hindex_file
             self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.example_folder + self.power_hindex_file)
+
+        self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices()
+
+        if self.dPower_Parameters["pEnableThermalGen"]:
+            if dPower_ThermalGen is not None:
+                self.dPower_ThermalGen = dPower_ThermalGen
+            else:
+                self.power_thermalgen_file = power_thermalgen_file
+                self.dPower_ThermalGen = self.get_dPower_ThermalGen()
+
+        if self.dPower_Parameters["pEnableRoR"]:
+            if dPower_RoR is not None:
+                self.dPower_RoR = dPower_RoR
+            else:
+                self.power_ror_file = power_ror_file
+                self.dPower_RoR = self.get_dPower_RoR()
+
+            if dPower_Inflows is not None:
+                self.dPower_Inflows = dPower_Inflows
+            else:
+                self.power_inflows_file = power_inflows_file
+                self.dPower_Inflows = self.get_dPower_Inflows()
+
+        if self.dPower_Parameters["pEnableVRES"]:
+            if dPower_VRES is not None:
+                self.dPower_VRES = dPower_VRES
+            else:
+                self.power_vres_file = power_vres_file
+                self.dPower_VRES = ExcelReader.get_dPower_VRES(self.example_folder + self.power_vres_file)
+
+            if dPower_VRESProfiles is not None:
+                self.dPower_VRESProfiles = dPower_VRESProfiles
+            else:
+                self.power_vresprofiles_file = power_vresprofiles_file
+                self.dPower_VRESProfiles = ExcelReader.get_dPower_VRESProfiles(self.example_folder + self.power_vresprofiles_file)
+
+        if self.dPower_Parameters["pEnableStorage"]:
+            if dPower_Storage is not None:
+                self.dPower_Storage = dPower_Storage
+            else:
+                self.power_storage_file = power_storage_file
+                self.dPower_Storage = self.get_dPower_Storage()
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             if dPower_ImpExpHubs is not None:
@@ -132,11 +139,7 @@ class CaseStudy:
             self.merge_single_node_buses()
 
     def copy(self):
-        return CaseStudy(example_folder=self.example_folder, do_not_merge_single_node_buses=True,
-                         dPower_Parameters=self.dPower_Parameters.copy(), dPower_BusInfo=self.dPower_BusInfo.copy(),
-                         dPower_Network=self.dPower_Network.copy(), dPower_ThermalGen=self.dPower_ThermalGen.copy(),
-                         dPower_RoR=self.dPower_RoR.copy(), dPower_VRES=self.dPower_VRES.copy(), dPower_Demand=self.dPower_Demand.copy(),
-                         dPower_Inflows=self.dPower_Inflows.copy(), dPower_VRESProfiles=self.dPower_VRESProfiles.copy())
+        return copy.deepcopy(self)
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
@@ -155,7 +158,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnablePowerImportExport', 'pEnableSoftLineLoadLimits'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
@@ -180,24 +183,6 @@ class CaseStudy:
                 case _:
                     raise ValueError(f"Value for {column} must be either 'Yes' or 'No'.")
         return df
-
-    def get_dPower_BusInfo(self):
-        dPower_BusInfo = pd.read_excel(self.example_folder + self.power_businfo_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_BusInfo = dPower_BusInfo.drop(dPower_BusInfo.columns[0], axis=1)
-        dPower_BusInfo = dPower_BusInfo.rename(columns={dPower_BusInfo.columns[0]: "i", dPower_BusInfo.columns[1]: "System"})
-        dPower_BusInfo = dPower_BusInfo.set_index('i')
-        return dPower_BusInfo
-
-    def get_dPower_Network(self):
-        dPower_Network = pd.read_excel(self.example_folder + self.power_network_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_Network = dPower_Network.drop(dPower_Network.columns[0], axis=1)
-        dPower_Network = dPower_Network.rename(columns={dPower_Network.columns[0]: "i", dPower_Network.columns[1]: "j", dPower_Network.columns[2]: "Circuit ID"})
-
-        dPower_Network["FixedCostEUR"] = dPower_Network["FixedCost"].fillna(0) * dPower_Network["FxChargeRate"].fillna(0)
-        dPower_Network["Pmax"] *= 1e-3
-
-        dPower_Network = dPower_Network.set_index(['i', 'j', 'Circuit ID'])
-        return dPower_Network
 
     def get_dPower_ThermalGen(self):
         dPower_ThermalGen = pd.read_excel(self.example_folder + self.power_thermalgen_file, skiprows=[0, 1, 3, 4, 5])
@@ -233,14 +218,14 @@ class CaseStudy:
         return dPower_ThermalGen
 
     def get_dPower_RoR(self):
-        dPower_RoR = ExcelReader.__read_generator_data(self.example_folder + self.power_ror_file)
+        dPower_RoR = self.read_generator_data(self.example_folder + self.power_ror_file)
 
         dPower_RoR['InvestCostEUR'] = dPower_RoR['MaxProd'] * 1e-3 * (dPower_RoR['InvestCostPerMW'] * 1e-3 + dPower_RoR['InvestCostPerMWh'] * 1e-3 * dPower_RoR['Ene2PowRatio'])
         dPower_RoR['MaxProd'] *= 1e-3
         return dPower_RoR
 
     def get_dPower_Storage(self):
-        dPower_Storage = ExcelReader.__read_generator_data(self.example_folder + self.power_storage_file)
+        dPower_Storage = self.read_generator_data(self.example_folder + self.power_storage_file)
         dPower_Storage['pOMVarCostEUR'] = dPower_Storage['OMVarCost'] * 1e-3
         dPower_Storage['IniReserve'] = dPower_Storage['IniReserve'].fillna(0)
         dPower_Storage['MinReserve'] = dPower_Storage['MinReserve'].fillna(0)
@@ -394,7 +379,7 @@ class CaseStudy:
 
             ### Adapt dPower_BusInfo
             dPower_BusInfo_entry = self.dPower_BusInfo.loc[connected_buses]  # Entry for the new bus
-            zoneOfInterest = "yes" if any(dPower_BusInfo_entry['ZoneOfInterest'] == "yes") else "no"
+            zoneOfInterest = 1 if any(dPower_BusInfo_entry['ZoneOfInterest'] == 1) else 0
             aggregation_methods_for_columns = {
                 # 'System': 'max',
                 # 'BaseVolt': 'mean',
@@ -500,3 +485,33 @@ class CaseStudy:
 
             self.dPower_VRESProfiles = self.dPower_VRESProfiles.groupby(['rp', 'i', 'k', 'tec']).mean()  # TODO: Aggregate using more complex method (capacity * productionCapacity * ... * / Total Production Capacity)
             self.dPower_VRESProfiles.sort_index(inplace=True)
+
+    # Function to read generator data
+    @staticmethod
+    def read_generator_data(file_path):
+        d_generator = pd.read_excel(file_path, skiprows=[0, 1, 3, 4, 5])
+        d_generator = d_generator.drop(d_generator.columns[0], axis=1)
+        d_generator = d_generator[(d_generator["ExisUnits"] > 0) | (d_generator["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
+        d_generator = d_generator.rename(columns={d_generator.columns[0]: "g", d_generator.columns[1]: "tec", d_generator.columns[2]: "i"})
+        d_generator = d_generator.set_index('g')
+        return d_generator
+
+    # Create transition matrix from Hindex
+    def get_rpTransitionMatrices(self):
+        rps = sorted(self.dPower_Hindex.index.get_level_values('rp').unique().tolist())
+        ks = sorted(self.dPower_Hindex.index.get_level_values('k').unique().tolist())
+        rpTransitionMatrixAbsolute = pd.DataFrame(0, index=rps, columns=rps)  # Initialize with zeros
+
+        # Reduce rps in hindex to only include one rp per row (e.g., if it's 24 hours per rp, only take hours 0, 24, 48, ...)
+        hindex_rps = self.dPower_Hindex.index.get_level_values('rp').tolist()[::len(ks)]
+
+        # Iterate through rps in hindex
+        previous_rp = hindex_rps[-1]  # Initialize with last rp to make it circular
+        for rp in hindex_rps:
+            rpTransitionMatrixAbsolute.at[previous_rp, rp] += 1
+            previous_rp = rp
+
+        # Calculate relative transition matrix (nerd info: for the sum, the axis is irrelevant, as there are the same number of transitions to an rp as there are transitions from an rp away. For the division however, the axis matters)
+        rpTransitionMatrixRelativeTo = rpTransitionMatrixAbsolute.div(rpTransitionMatrixAbsolute.sum(axis=1), axis=0)  # Sum of probabilities is 1 for r -> all others
+        rpTransitionMatrixRelativeFrom = rpTransitionMatrixAbsolute.div(rpTransitionMatrixAbsolute.sum(axis=0), axis=1)  # Sum of probabilities is 1 for all others -> r
+        return rpTransitionMatrixAbsolute, rpTransitionMatrixRelativeTo, rpTransitionMatrixRelativeFrom
