@@ -63,7 +63,7 @@ class CaseStudy:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
             self.power_weightsrp_file = power_weightsrp_file
-            self.dPower_WeightsRP = self.get_dPower_WeightsRP()
+            self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.example_folder + self.power_weightsrp_file)
 
         if dPower_WeightsK is not None:
             self.dPower_WeightsK = dPower_WeightsK
@@ -251,13 +251,6 @@ class CaseStudy:
         dPower_Inflows = dPower_Inflows.melt(id_vars=['rp', 'g'], var_name='k', value_name='Inflow')
         dPower_Inflows = dPower_Inflows.set_index(['rp', 'g', 'k'])
         return dPower_Inflows
-
-    def get_dPower_WeightsRP(self):
-        dPower_WeightsRP = pd.read_excel(self.example_folder + self.power_weightsrp_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_WeightsRP = dPower_WeightsRP.drop(dPower_WeightsRP.columns[0], axis=1)
-        dPower_WeightsRP = dPower_WeightsRP.rename(columns={dPower_WeightsRP.columns[0]: "rp", dPower_WeightsRP.columns[1]: "Weight"})
-        dPower_WeightsRP = dPower_WeightsRP.set_index('rp')
-        return dPower_WeightsRP
 
     def get_dPower_WeightsK(self):
         dPower_WeightsK = pd.read_excel(self.example_folder + self.power_weightsk_file, skiprows=[0, 1, 3, 4, 5])
