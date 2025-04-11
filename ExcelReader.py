@@ -35,6 +35,13 @@ def get_dPower_WeightsRP(excel_file_path: str):
     return dPower_WeightsRP
 
 
+def get_dPower_WeightsK(excel_file_path: str):
+    __check_LEGOExcel_version(excel_file_path, "v0.0.2r")
+    dPower_WeightsK = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_WeightsK = dPower_WeightsK.set_index('k')
+    return dPower_WeightsK
+
+
 def get_dPower_BusInfo(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.3")
     dPower_BusInfo = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
