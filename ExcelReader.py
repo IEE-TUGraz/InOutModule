@@ -64,7 +64,7 @@ def get_dPower_Network(excel_file_path: str):
 
 
 def get_dPower_VRES(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
+    __check_LEGOExcel_version(excel_file_path, "v0.0.3r")
     dPower_VRES = __read_generator_data(excel_file_path)
     if "MinProd" not in dPower_VRES.columns:
         dPower_VRES['MinProd'] = 0
