@@ -84,7 +84,7 @@ class CaseStudy:
                 self.dPower_ThermalGen = dPower_ThermalGen
             else:
                 self.power_thermalgen_file = power_thermalgen_file
-                self.dPower_ThermalGen = self.get_dPower_ThermalGen()
+                self.dPower_ThermalGen = ExcelReader.get_dPower_ThermalGen(self.example_folder + self.power_thermalgen_file)
 
         if self.dPower_Parameters["pEnableRoR"]:
             if dPower_RoR is not None:
@@ -183,39 +183,6 @@ class CaseStudy:
                 case _:
                     raise ValueError(f"Value for {column} must be either 'Yes' or 'No'.")
         return df
-
-    def get_dPower_ThermalGen(self):
-        dPower_ThermalGen = pd.read_excel(self.example_folder + self.power_thermalgen_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_ThermalGen = dPower_ThermalGen.drop(dPower_ThermalGen.columns[0], axis=1)
-        dPower_ThermalGen = dPower_ThermalGen.rename(columns={dPower_ThermalGen.columns[0]: "g", dPower_ThermalGen.columns[1]: "tec", dPower_ThermalGen.columns[2]: "i"})
-        dPower_ThermalGen = dPower_ThermalGen.set_index('g')
-        dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
-
-        dPower_ThermalGen['pSlopeVarCostEUR'] = (dPower_ThermalGen['OMVarCost'] * 1e-3 +
-                                                 dPower_ThermalGen['SlopeVarCost'] * 1e-3 * dPower_ThermalGen['FuelCost'])
-
-        dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['InterVarCost'] * 1e-6 * dPower_ThermalGen['FuelCost']
-        dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupCost'] * 1e-6 * dPower_ThermalGen['FuelCost']
-        dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
-        dPower_ThermalGen['RampUp'] *= 1e-3
-        dPower_ThermalGen['RampDw'] *= 1e-3
-        dPower_ThermalGen['MaxProd'] *= 1e-3  # TODO: Include EFOR here
-        dPower_ThermalGen['MinProd'] *= 1e-3
-        dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
-
-        # Fill NaN values with 0 for MinUpTime and MinDownTime
-        dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].fillna(0)
-        dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].fillna(0)
-
-        # Check that both MinUpTime and MinDownTime are integers and raise error if not
-        if not dPower_ThermalGen.MinUpTime.dtype == np.int64:
-            raise ValueError("MinUpTime must be an integer for all entries.")
-        if not dPower_ThermalGen.MinDownTime.dtype == np.int64:
-            raise ValueError("MinDownTime must be an integer for all entries.")
-        dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].astype(int)
-        dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].astype(int)
-
-        return dPower_ThermalGen
 
     def get_dPower_RoR(self):
         dPower_RoR = self.read_generator_data(self.example_folder + self.power_ror_file)

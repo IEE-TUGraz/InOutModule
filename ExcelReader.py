@@ -1,3 +1,4 @@
+import numpy as np
 import openpyxl
 import pandas as pd
 
@@ -61,6 +62,40 @@ def get_dPower_Network(excel_file_path: str):
 
     dPower_Network = dPower_Network.set_index(['i', 'j', 'c'])
     return dPower_Network
+
+
+def get_dPower_ThermalGen(excel_file_path: str):
+    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
+    dPower_ThermalGen = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_ThermalGen = dPower_ThermalGen[dPower_ThermalGen["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+    dPower_ThermalGen = dPower_ThermalGen.set_index('g')
+    dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
+
+    dPower_ThermalGen['pSlopeVarCostEUR'] = (dPower_ThermalGen['OMVarCost'] * 1e-3 +
+                                             dPower_ThermalGen['FuelCost']) / dPower_ThermalGen['Efficiency'] * 1e-3
+
+    dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['CommitConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
+    dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
+    dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
+    dPower_ThermalGen['RampUp'] *= 1e-3
+    dPower_ThermalGen['RampDw'] *= 1e-3
+    dPower_ThermalGen['MaxProd'] *= 1e-3  # TODO: Include EFOR here
+    dPower_ThermalGen['MinProd'] *= 1e-3
+    dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
+
+    # Fill NaN values with 0 for MinUpTime and MinDownTime
+    dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].fillna(0)
+    dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].fillna(0)
+
+    # Check that both MinUpTime and MinDownTime are integers and raise error if not
+    if not dPower_ThermalGen.MinUpTime.dtype == np.int64:
+        raise ValueError("MinUpTime must be an integer for all entries.")
+    if not dPower_ThermalGen.MinDownTime.dtype == np.int64:
+        raise ValueError("MinDownTime must be an integer for all entries.")
+    dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].astype(int)
+    dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].astype(int)
+
+    return dPower_ThermalGen
 
 
 def get_dPower_VRES(excel_file_path: str):
