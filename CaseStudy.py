@@ -57,7 +57,7 @@ class CaseStudy:
             self.dPower_Demand = dPower_Demand
         else:
             self.power_demand_file = power_demand_file
-            self.dPower_Demand = self.get_dPower_Demand()
+            self.dPower_Demand = ExcelReader.get_dPower_Demand(self.example_folder + self.power_demand_file)
 
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -201,15 +201,6 @@ class CaseStudy:
         dPower_Storage['MaxProd'] *= 1e-3
         dPower_Storage['MaxCons'] *= 1e-3
         return dPower_Storage
-
-    def get_dPower_Demand(self):
-        dPower_Demand = pd.read_excel(self.example_folder + self.power_demand_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_Demand = dPower_Demand.drop(dPower_Demand.columns[0], axis=1)
-        dPower_Demand = dPower_Demand.rename(columns={dPower_Demand.columns[0]: "rp", dPower_Demand.columns[1]: "i"})
-        dPower_Demand = dPower_Demand.melt(id_vars=['rp', 'i'], var_name='k', value_name='Demand')
-        dPower_Demand = dPower_Demand.set_index(['rp', 'k', 'i'])
-        dPower_Demand = dPower_Demand * 1e-3
-        return dPower_Demand
 
     def get_dPower_Inflows(self):
         dPower_Inflows = pd.read_excel(self.example_folder + self.power_inflows_file, skiprows=[0, 1, 3, 4, 5])

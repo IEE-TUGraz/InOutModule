@@ -64,6 +64,17 @@ def get_dPower_Network(excel_file_path: str):
     return dPower_Network
 
 
+def get_dPower_Demand(excel_file_path: str):
+    __check_LEGOExcel_version(excel_file_path, "v0.0.2")
+    dPower_Demand = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_Demand = dPower_Demand.drop(dPower_Demand.columns[0], axis=1)  # Drop the first column
+
+    dPower_Demand = dPower_Demand.melt(id_vars=['rp', 'i', 'dataPackage', 'dataSource', 'id'], var_name='k', value_name='Demand')
+    dPower_Demand = dPower_Demand.set_index(['rp', 'k', 'i'])
+    dPower_Demand["Demand"] = dPower_Demand["Demand"] * 1e-3
+    return dPower_Demand
+
+
 def get_dPower_ThermalGen(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.3")
     dPower_ThermalGen = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
