@@ -44,9 +44,9 @@ def get_dPower_WeightsK(excel_file_path: str):
 
 
 def get_dPower_BusInfo(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.3r")
+    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
     dPower_BusInfo = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_BusInfo = dPower_BusInfo[dPower_BusInfo["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+    dPower_BusInfo = dPower_BusInfo[dPower_BusInfo["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
 
     dPower_BusInfo = dPower_BusInfo.set_index('i')
     return dPower_BusInfo

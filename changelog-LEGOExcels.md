@@ -1,4 +1,6 @@
-# Power_Network v0.0.2 >> v0.0.3
+# Power_Network
+
+## v0.0.2 → v0.0.3
 
 | Sheet         | Range           | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description             |
 |---------------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
@@ -9,7 +11,9 @@
 | Power_Network | L8 (and others) | 'No'                                                                                                                                                                                          | '0'                                                                                                                                                                                                               | Entered Value Changed.  |
 | Power_Network | A4              | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed |
 
-# Power_VRES v0.0.2r >> v0.0.3r
+# Power_VRES
+
+## v0.0.2r → v0.0.3r
 
 | Sheet      | Range | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description                                                                    |
 |------------|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
@@ -35,7 +39,9 @@
 | Power_VRES | S4    | ''                                                                                                                                                                                            | 'long'                                                                                                                                                                                                            | Entered Value Added.                                                           |
 | Power_VRES | A4    | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed                                                        |
 
-# Power_ThermalGen v0.0.2 >> v0.0.3
+# Power_ThermalGen
+
+## v0.0.2 → v0.0.3
 
 | Sheet            | Range | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description             |
 |------------------|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
@@ -69,7 +75,29 @@
 | Power_ThermalGen | A4    | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed |
 | Power_ThermalGen | A4    | ''                                                                                                                                                                                            | 'Excl.'                                                                                                                                                                                                           | Entered Value Added.    |
 
-# Power_BusInfo v0.0.2r >> v0.0.3r
+# Power_BusInfo
+
+## v0.0.4 → v0.0.4r
+
+| Sheet     | Range | Old Value | New Value | Description            |
+|-----------|-------|-----------|-----------|------------------------|
+| scenarioA | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
+| scenarioA | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
+| scenarioB | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
+| scenarioB | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
+
+## v0.0.3r → v0.0.4
+
+| Sheet     | Range | Old Value   | New Value   | Description            |
+|-----------|-------|-------------|-------------|------------------------|
+| scenarioA | C2    | 'v0.0.3r'   | 'v0.0.4'    | Entered Value Changed. |
+| scenarioA | K4    | 'comYear'   | 'YearCom'   | Entered Value Changed. |
+| scenarioA | L4    | 'decomYear' | 'YearDecom' | Entered Value Changed. |
+| scenarioB | C2    | 'v0.0.3r'   | 'v0.0.4'    | Entered Value Changed. |
+| scenarioB | K4    | 'comYear'   | 'YearCom'   | Entered Value Changed. |
+| scenarioB | L4    | 'decomYear' | 'YearDecom' | Entered Value Changed. |
+
+# v0.0.2r → v0.0.3r
 
 | Sheet         | Range           | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description             |
 |---------------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
