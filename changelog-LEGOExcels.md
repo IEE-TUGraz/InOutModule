@@ -63,6 +63,35 @@
 
 # Power_ThermalGen
 
+## v0.0.4 → v0.0.4r
+
+| Sheet     | Range | Old Value   | New Value           | Description            |
+|-----------|-------|-------------|---------------------|------------------------|
+| ScenarioA | A4    | 'Excl.'     | 'excl'              | Entered Value Changed. |
+| ScenarioA | C2    | 'v0.0.4'    | 'v0.0.4r'           | Entered Value Changed. |
+| ScenarioA | Z3    | 'YearCom'   | 'Commission Year'   | Entered Value Changed. |
+| ScenarioA | AA3   | 'YearDecom' | 'Decommission Year' | Entered Value Changed. |
+| ScenarioA | AB3   | 'lat'       | 'Latitude'          | Entered Value Changed. |
+| ScenarioA | AC3   | 'lon'       | 'Longitude'         | Entered Value Changed. |
+| ScenarioB | A4    | 'Excl.'     | 'excl'              | Entered Value Changed. |
+| ScenarioB | C2    | 'v0.0.3'    | 'v0.0.4r'           | Entered Value Changed. |
+| ScenarioB | R2    | 'v0.0.4'    | ''                  | Entered Value Deleted. |
+| ScenarioB | Z3    | 'YearCom'   | 'Commission Year'   | Entered Value Changed. |
+| ScenarioB | AA3   | 'YearDecom' | 'Decommission Year' | Entered Value Changed. |
+| ScenarioB | AB3   | 'lat'       | 'Latitude'          | Entered Value Changed. |
+| ScenarioB | AC3   | 'lon'       | 'Longitude'         | Entered Value Changed. |
+
+## v0.0.3 → v0.0.4
+
+| Sheet     | Range | Old Value | New Value | Description            |
+|-----------|-------|-----------|-----------|------------------------|
+| ScenarioA | C2    | 'v0.0.3'  | 'v0.0.4'  | Entered Value Changed. |
+| ScenarioA | AC3   | 'long'    | 'lon'     | Entered Value Changed. |
+| ScenarioA | AC4   | 'long'    | 'lon'     | Entered Value Changed. |
+| ScenarioB | R2    | ''        | 'v0.0.4'  | Entered Value Added.   |
+| ScenarioB | AC3   | 'long'    | 'lon'     | Entered Value Changed. |
+| ScenarioB | AC4   | 'long'    | 'lon'     | Entered Value Changed. |
+
 ## v0.0.2 → v0.0.3
 
 | Sheet            | Range | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description             |

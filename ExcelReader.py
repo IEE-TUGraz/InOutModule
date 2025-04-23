@@ -76,9 +76,9 @@ def get_dPower_Demand(excel_file_path: str):
 
 
 def get_dPower_ThermalGen(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
+    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
     dPower_ThermalGen = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_ThermalGen = dPower_ThermalGen[dPower_ThermalGen["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+    dPower_ThermalGen = dPower_ThermalGen[dPower_ThermalGen["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
     dPower_ThermalGen = dPower_ThermalGen.set_index('g')
     dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
 
