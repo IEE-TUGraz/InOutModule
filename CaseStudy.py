@@ -304,7 +304,7 @@ class CaseStudy:
         connectionMatrix = pd.DataFrame(index=self.dPower_BusInfo.index, columns=[self.dPower_BusInfo.index], data=False)
 
         for index, entry in self.dPower_Network.iterrows():
-            if entry["Technical Representation"] == "SN":
+            if entry["pTecRepr"] == "SN":
                 connectionMatrix.loc[index] = True
                 connectionMatrix.loc[index[1], index[0]] = True
 
@@ -323,7 +323,7 @@ class CaseStudy:
 
             ### Adapt dPower_BusInfo
             dPower_BusInfo_entry = self.dPower_BusInfo.loc[connected_buses]  # Entry for the new bus
-            zoneOfInterest = 1 if any(dPower_BusInfo_entry['ZoneOfInterest'] == 1) else 0
+            zoneOfInterest = 1 if any(dPower_BusInfo_entry['zoi'] == 1) else 0
             aggregation_methods_for_columns = {
                 # 'System': 'max',
                 # 'BaseVolt': 'mean',
@@ -338,7 +338,7 @@ class CaseStudy:
                 'long': 'mean'
             }
             dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
-            dPower_BusInfo_entry['ZoneOfInterest'] = zoneOfInterest
+            dPower_BusInfo_entry['zoi'] = zoneOfInterest
             dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
             dPower_BusInfo_entry.index = [new_bus_name]
 

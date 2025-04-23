@@ -24,7 +24,7 @@ def __read_generator_data(file_path):
 def get_dPower_Hindex(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.2r")
     dPower_Hindex = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_Hindex = dPower_Hindex.drop(dPower_Hindex.columns[0], axis=1)
+    dPower_Hindex = dPower_Hindex.drop(dPower_Hindex.columns[0], axis=1)  # Drop the first column (which is empty)
     dPower_Hindex = dPower_Hindex.set_index(['p', 'rp', 'k'])
     return dPower_Hindex
 
@@ -32,6 +32,7 @@ def get_dPower_Hindex(excel_file_path: str):
 def get_dPower_WeightsRP(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.2")
     dPower_WeightsRP = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_WeightsRP = dPower_WeightsRP.drop(dPower_WeightsRP.columns[0], axis=1)  # Drop the first column (which is empty)
     dPower_WeightsRP = dPower_WeightsRP.set_index('rp')
     return dPower_WeightsRP
 
@@ -39,6 +40,7 @@ def get_dPower_WeightsRP(excel_file_path: str):
 def get_dPower_WeightsK(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.2r")
     dPower_WeightsK = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+    dPower_WeightsK = dPower_WeightsK.drop(dPower_WeightsK.columns[0], axis=1)  # Drop the first column (which is empty)
     dPower_WeightsK = dPower_WeightsK.set_index('k')
     return dPower_WeightsK
 
@@ -124,7 +126,7 @@ def get_dPower_VRES(excel_file_path: str):
 def get_dPower_VRESProfiles(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.3")
     dPower_VRESProfiles = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_VRESProfiles = dPower_VRESProfiles.drop(dPower_VRESProfiles.columns[0], axis=1)
+    dPower_VRESProfiles = dPower_VRESProfiles.drop(dPower_VRESProfiles.columns[0], axis=1)  # Drop the first column (which is empty)
     dPower_VRESProfiles = dPower_VRESProfiles.melt(id_vars=['id', 'rp', 'g', 'dataPackage', 'dataSource'], var_name='k', value_name='Capacity')
     dPower_VRESProfiles = dPower_VRESProfiles.set_index(['rp', 'k', 'g'])
     return dPower_VRESProfiles
