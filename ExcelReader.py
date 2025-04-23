@@ -53,9 +53,9 @@ def get_dPower_BusInfo(excel_file_path: str):
 
 
 def get_dPower_Network(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
+    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
     dPower_Network = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_Network = dPower_Network[dPower_Network["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+    dPower_Network = dPower_Network[dPower_Network["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
 
     dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
     dPower_Network["pPmax"] *= 1e-3

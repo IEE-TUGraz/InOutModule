@@ -1,5 +1,25 @@
 # Power_Network
 
+## v0.0.4 → v0.0.4r
+
+| Sheet     | Range | Old Value | New Value | Description            |
+|-----------|-------|-----------|-----------|------------------------|
+| scenarioA | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
+| scenarioA | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
+| scenarioB | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
+| scenarioB | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
+
+## v0.0.3 → v0.0.4
+
+| Sheet     | Range | Old Value   | New Value   | Description            |
+|-----------|-------|-------------|-------------|------------------------|
+| scenarioA | C2    | 'v0.0.3'    | 'v0.0.4'    | Entered Value Changed. |
+| scenarioA | P4    | 'comYear'   | 'YearCom'   | Entered Value Changed. |
+| scenarioA | Q4    | 'decomYear' | 'YearDecom' | Entered Value Changed. |
+| scenarioB | C2    | 'v0.0.3'    | 'v0.0.4'    | Entered Value Changed. |
+| scenarioB | P4    | 'comYear'   | 'YearCom'   | Entered Value Changed. |
+| scenarioB | Q4    | 'decomYear' | 'YearDecom' | Entered Value Changed. |
+
 ## v0.0.2 → v0.0.3
 
 | Sheet         | Range           | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description             |
