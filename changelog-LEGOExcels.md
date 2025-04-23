@@ -2,12 +2,14 @@
 
 ## v0.0.4 → v0.0.4r
 
-| Sheet     | Range | Old Value | New Value | Description            |
-|-----------|-------|-----------|-----------|------------------------|
-| scenarioA | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
-| scenarioA | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
-| scenarioB | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
-| scenarioB | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
+| Sheet     | Range | Old Value   | New Value   | Description                  |
+|-----------|-------|-------------|-------------|------------------------------|
+| ScenarioA |       | 'scenarioA' | 'ScenarioA' | Renamed Sheet At Position 1. |
+| ScenarioB |       | 'scenarioB' | 'ScenarioB' | Renamed Sheet At Position 2. |
+| ScenarioA | A4    | 'Excl.'     | 'excl'      | Entered Value Changed.       |
+| ScenarioA | C2    | 'v0.0.4'    | 'v0.0.4r'   | Entered Value Changed.       |
+| ScenarioB | A4    | 'Excl.'     | 'excl'      | Entered Value Changed.       |
+| ScenarioB | C2    | 'v0.0.4'    | 'v0.0.4r'   | Entered Value Changed.       |
 
 ## v0.0.3 → v0.0.4
 
@@ -99,12 +101,18 @@
 
 ## v0.0.4 → v0.0.4r
 
-| Sheet     | Range | Old Value | New Value | Description            |
-|-----------|-------|-----------|-----------|------------------------|
-| scenarioA | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
-| scenarioA | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
-| scenarioB | A4    | 'Excl.'   | 'excl'    | Entered Value Changed. |
-| scenarioB | C2    | 'v0.0.4'  | 'v0.0.4r' | Entered Value Changed. |
+| Sheet     | Range | Old Value   | New Value   | Description                  |
+|-----------|-------|-------------|-------------|------------------------------|
+| ScenarioA |       | 'scenarioA' | 'ScenarioA' | Renamed Sheet At Position 1. |
+| ScenarioB |       | 'scenarioB' | 'ScenarioB' | Renamed Sheet At Position 2. |
+| ScenarioA | A4    | 'Excl.'     | 'excl'      | Entered Value Changed.       |
+| ScenarioA | C2    | 'v0.0.4'    | 'v0.0.4r'   | Entered Value Changed.       |
+| ScenarioA | M3    | 'lat'       | 'Latitude'  | Entered Value Changed.       |
+| ScenarioA | N3    | 'lon'       | 'Longitude' | Entered Value Changed.       |
+| ScenarioB | A4    | 'Excl.'     | 'excl'      | Entered Value Changed.       |
+| ScenarioB | C2    | 'v0.0.4'    | 'v0.0.4r'   | Entered Value Changed.       |
+| ScenarioB | M3    | 'lat'       | 'Latitude'  | Entered Value Changed.       |
+| ScenarioB | N3    | 'lon'       | 'Longitude' | Entered Value Changed.       |
 
 ## v0.0.3r → v0.0.4
 
