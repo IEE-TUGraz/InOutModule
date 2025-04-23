@@ -15,7 +15,7 @@ def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str):
 # Function to read generator data
 def __read_generator_data(file_path):
     d_generator = pd.read_excel(file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    d_generator = d_generator[d_generator["Excl."].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+    d_generator = d_generator[d_generator["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
     d_generator = d_generator[(d_generator["ExisUnits"] > 0) | (d_generator["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not invest-able
     d_generator = d_generator.set_index('g')
     return d_generator
@@ -110,7 +110,7 @@ def get_dPower_ThermalGen(excel_file_path: str):
 
 
 def get_dPower_VRES(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.3r")
+    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
     dPower_VRES = __read_generator_data(excel_file_path)
     if "MinProd" not in dPower_VRES.columns:
         dPower_VRES['MinProd'] = 0
