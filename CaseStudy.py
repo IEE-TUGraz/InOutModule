@@ -1,5 +1,6 @@
 import copy
 import warnings
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -459,3 +460,58 @@ class CaseStudy:
         rpTransitionMatrixRelativeTo = rpTransitionMatrixAbsolute.div(rpTransitionMatrixAbsolute.sum(axis=1), axis=0)  # Sum of probabilities is 1 for r -> all others
         rpTransitionMatrixRelativeFrom = rpTransitionMatrixAbsolute.div(rpTransitionMatrixAbsolute.sum(axis=0), axis=1)  # Sum of probabilities is 1 for all others -> r
         return rpTransitionMatrixAbsolute, rpTransitionMatrixRelativeTo, rpTransitionMatrixRelativeFrom
+
+    def to_full_hourly_model(self, inplace: bool) -> Optional['CaseStudy']:
+        """
+        Transforms the given `CaseStudy` with representative periods into a full hourly model by adjusting demand,
+        VRES profiles, Hindex, and weights data. Can update in place if `inplace` is set to `True`,
+        or return a new `CaseStudy` instance if `inplace` is `False`. The adjustments align the data
+        to represent hourly indices and corresponding weights.
+
+        :param inplace: If `True`, modifies the given instance. If `False`, returns a new `CaseStudy` instance.
+        :return: Adjusted `CaseStudy` instance if `inplace` is `False`, otherwise `None`.
+        """
+        caseStudy = self.copy() if not inplace else self
+
+        # Adjust Demand
+        adjusted_demand = []
+        for i, _ in caseStudy.dPower_BusInfo.iterrows():
+            for h, row in caseStudy.dPower_Hindex.iterrows():
+                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "Demand"]])
+
+        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "Demand"])
+        caseStudy.dPower_Demand = caseStudy.dPower_Demand.set_index(["rp", "k", "i"])
+
+        # Adjust VRESProfiles
+        if hasattr(caseStudy, "dPower_VRESProfiles"):
+            adjusted_vresprofiles = []
+            caseStudy.dPower_VRESProfiles.sort_index(inplace=True)
+            for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
+                if len(caseStudy.dPower_VRESProfiles.loc[:, :, g]) > 0:  # Check if VRESProfiles has entries for g
+                    for h, row in caseStudy.dPower_Hindex.iterrows():
+                        adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "Capacity"]])
+
+            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "Capacity"])
+            caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
+
+        # Adjust Hindex
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
+        for i, row in caseStudy.dPower_Hindex.iterrows():
+            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+
+        # Adjust WeightsK
+        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.reset_index()
+        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.drop(caseStudy.dPower_WeightsK.index)
+        for i in range(len(caseStudy.dPower_Hindex)):
+            caseStudy.dPower_WeightsK.loc[i] = f"k{i + 1:0>4}", None, 1, None, None
+        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.set_index("k")
+
+        # Adjust WeightsRP
+        caseStudy.dPower_WeightsRP = caseStudy.dPower_WeightsRP.drop(caseStudy.dPower_WeightsRP.index)
+        caseStudy.dPower_WeightsRP.loc["rp01"] = 1
+
+        if not inplace:
+            return caseStudy
+        else:
+            return None
