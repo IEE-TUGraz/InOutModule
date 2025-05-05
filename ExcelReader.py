@@ -22,10 +22,18 @@ def __read_generator_data(file_path):
 
 
 def get_dPower_Hindex(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.2r")
-    dPower_Hindex = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_Hindex = dPower_Hindex.drop(dPower_Hindex.columns[0], axis=1)  # Drop the first column (which is empty)
-    dPower_Hindex = dPower_Hindex.set_index(['p', 'rp', 'k'])
+    __check_LEGOExcel_version(excel_file_path, "v0.1.0")
+    xls = pd.ExcelFile(excel_file_path)
+    dPower_Hindex = pd.DataFrame()
+
+    for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
+        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
+        df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
+        df = df.set_index(['p', 'rp', 'k'])
+        df["scenario"] = scenario
+
+        dPower_Hindex = pd.concat([dPower_Hindex, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
+
     return dPower_Hindex
 
 
