@@ -39,9 +39,17 @@ def get_dPower_Hindex(excel_file_path: str):
 
 def get_dPower_WeightsRP(excel_file_path: str):
     __check_LEGOExcel_version(excel_file_path, "v0.0.2")
-    dPower_WeightsRP = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_WeightsRP = dPower_WeightsRP.drop(dPower_WeightsRP.columns[0], axis=1)  # Drop the first column (which is empty)
-    dPower_WeightsRP = dPower_WeightsRP.set_index('rp')
+    xls = pd.ExcelFile(excel_file_path)
+    dPower_WeightsRP = pd.DataFrame()
+
+    for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
+        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
+        df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
+        df = df.set_index('rp')
+        df["scenario"] = scenario
+
+        dPower_WeightsRP = pd.concat([dPower_WeightsRP, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
+
     return dPower_WeightsRP
 
 

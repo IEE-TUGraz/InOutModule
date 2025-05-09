@@ -1,179 +1,219 @@
-import typing
+import xml
 from copy import copy
+from typing import Optional, Self
 
 import openpyxl
 
 
-class DatabaseBehavior:
-    FILLED_BY_DATABASE = "Filled automatically by database"
-    SCENARIO_DEPENDENT = "Scenario-dependent"
-    NO_BEHAVIOR = "-"
+class Alignment(openpyxl.styles.Alignment):
+    """
+    Wrapper for openpyxl.styles.Alignment to provide a more user-friendly interface.
+    """
+
+    @classmethod
+    def dict_from_xml(cls, alignments: xml.etree.ElementTree.Element) -> dict[str, Self]:
+        """
+        Converts a list of XML alignment elements into a dictionary of Alignment objects.
+        :param alignments: XML element containing alignment definitions.
+        :return: A dictionary mapping alignment IDs to Alignment objects.
+        """
+        return {alignment.get("id"): Alignment(horizontal=alignment.find("horizontal").text if alignment.find("horizontal").text is not None else None,
+                                               vertical=alignment.find("vertical").text if alignment.find("vertical").text is not None else None,
+                                               wrap_text=alignment.find("wrapText").text == "True" if alignment.find("wrapText").text is not None else None,
+                                               indent=float(alignment.find("indent").text) if alignment.find("indent").text is not None else 0) for alignment in alignments
+                }
 
 
-class ColumnNote:
-    EXCL_DESCRIPTION = "If a line has a value in this column, it is not read in (i.e., does not exist)."
-    READABLE_NAME = "Readable name"
-    VALUE_SPECIFIER_DB = "Value specifier in database"
-    DESCRIPTION = "Description"
-    DB_BEHAVIOR = "Details on database behavior"
-    UNIT = "Unit or valid values"
+class NumberFormat(str):
+    """
+    Wrapper for number format strings to provide a more user-friendly interface.
+    """
+
+    @classmethod
+    def dict_from_xml(cls, number_formats: xml.etree.ElementTree.Element) -> dict[str, Self]:
+        """
+        Converts a list of XML number format elements into a dictionary of NumberFormat objects.
+        :param number_formats: XML element containing number format definitions.
+        :return: A dictionary mapping number format IDs to NumberFormat objects.
+        """
+        return {number_format.get("id"): NumberFormat(number_format.text) for number_format in number_formats}
+
+
+class Color(str):
+    """
+    Wrapper for hex-formatted color strings to provide a more user-friendly interface.
+    """
+
+    def to_patternFill(self) -> openpyxl.styles.fills.PatternFill:
+        """
+        Converts the hex color string to an openpyxl PatternFill object.
+        :return: An openpyxl PatternFill object with the specified color.
+        """
+        return openpyxl.styles.PatternFill(start_color=self, end_color=self, fill_type="solid")
+
+    @classmethod
+    def dict_from_xml(cls, colors: xml.etree.ElementTree.Element) -> dict[str, Self]:
+        """
+        Converts a list of XML color elements into a dictionary of Color objects.
+        :param colors: XML element containing color definitions.
+        :return: A dictionary mapping color IDs to Color objects.
+        """
+        return {color.get("id"): Color(color.text) for color in colors}
+
+
+class Font(openpyxl.styles.fonts.Font):
+    """
+    Wrapper for openpyxl.styles.fonts.Font to provide a more user-friendly interface.
+    """
+
+    @classmethod
+    def dict_from_xml(cls, fonts: xml.etree.ElementTree.Element, color_dict: dict[str, Color]) -> dict[str, Self]:
+        """
+        Converts a list of XML font elements into a dictionary of Font objects.
+        :param fonts: XML element containing font definitions.
+        :param color_dict: Dictionary mapping color IDs to Color objects.
+        :return: A dictionary mapping font IDs to Font objects.
+        """
+        return {font.get("id"): Font(name=font.find("name").text,
+                                     size=int(font.find("size").text),
+                                     bold=font.find("bold").text == "True",
+                                     italic=font.find("italic").text == "True",
+                                     color=color_dict[font.find("Color").text] if font.find("Color").text is not None else None) for font in fonts}
+
+
+class Text(str):
+    """
+    Wrapper for text strings to provide a more user-friendly interface.
+    """
+
+    @classmethod
+    def dict_from_xml(cls, texts: xml.etree.ElementTree.Element) -> dict[str, Self]:
+        """
+        Converts a list of XML text elements into a dictionary of Text objects.
+        :param texts: XML element containing text definitions.
+        :return: A dictionary mapping text IDs to Text objects.
+        """
+        return {text.get("id"): Text(text.text) for text in texts}
 
 
 class CellStyle:
     def __init__(self, font: openpyxl.styles.fonts.Font,
                  fill: openpyxl.styles.fills.PatternFill,
-                 number_format: typing.Optional[str],
+                 number_format: Optional[str],
                  alignment: openpyxl.styles.alignment.Alignment):
-        self.font = font  # openpyxl.styles.fonts.Font
-        self.fill = fill  # openpyxl.styles.fills.PatternFill
-        self.number_format = number_format  # string?
-        self.alignment = alignment  # openpyxl.styles.alignment.Alignment
+        self.font = font
+        self.fill = fill
+        self.number_format = number_format
+        self.alignment = alignment
 
-
-CellStyle.NONE = CellStyle(None, None, None, None)
-
-# Header & Title
-CellStyle.TITLE_CELL = CellStyle(openpyxl.styles.Font(name="Aptos", bold=True, size=18, color="FFFFFF"),
-                                 openpyxl.styles.PatternFill(start_color="008080", end_color="008080", fill_type="solid"),
-                                 None,
-                                 None
-                                 )
-CellStyle.HEADER_ROW = CellStyle(None,
-                                 openpyxl.styles.PatternFill(start_color="008080", end_color="008080", fill_type="solid"),
-                                 None,
-                                 None
-                                 )
-CellStyle.FORMAT_DESCRIPTION = CellStyle(openpyxl.styles.Font(name="Aptos", italic=True, size=11),
-                                         None,
-                                         None,
-                                         openpyxl.styles.Alignment(horizontal="right", vertical="center")
-                                         )
-CellStyle.FORMAT_VALUE = CellStyle(openpyxl.styles.Font(name="Aptos", italic=True, size=11),
-                                   None,
-                                   None,
-                                   None
-                                   )
-
-# Column headers
-CellStyle.READABLE_NAME = CellStyle(openpyxl.styles.Font(name="Aptos", bold=True, size=11),
-                                    openpyxl.styles.PatternFill(start_color="DAEEF3", end_color="DAEEF3", fill_type="solid"),
-                                    None,
-                                    None
-                                    )
-CellStyle.DB_NAME = CellStyle(openpyxl.styles.Font(name="Aptos", bold=True, size=11),
-                              openpyxl.styles.PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid"),
-                              None,
-                              None
-                              )
-CellStyle.DESCRIPTION = CellStyle(openpyxl.styles.Font(name="Aptos", italic=True, size=11),
-                                  openpyxl.styles.PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid"),
-                                  None,
-                                  openpyxl.styles.Alignment(wrap_text=True, vertical="top")
-                                  )
-CellStyle.DB_BEHAVIOR = CellStyle(openpyxl.styles.Font(name="Aptos", italic=True, size=11),
-                                  openpyxl.styles.PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid"),
-                                  None,
-                                  openpyxl.styles.Alignment(wrap_text=True, vertical="top")
-                                  )
-CellStyle.UNIT = CellStyle(openpyxl.styles.Font(name="Aptos", size=11, color="0000FF"),
-                           openpyxl.styles.PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid"),
-                           None,
-                           openpyxl.styles.Alignment(horizontal="center", vertical="center")
-                           )
-
-# Values
-CellStyle.VALUE_DB_KEY = CellStyle(openpyxl.styles.Font(name="Aptos", size=11),
-                                   openpyxl.styles.PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid"),
-                                   None,
-                                   openpyxl.styles.Alignment(indent=1)
-                                   )
-
-CellStyle.VALUE_GENERAL_NOSCENARIO = CellStyle(openpyxl.styles.Font(name="Aptos", size=11),
-                                               openpyxl.styles.PatternFill(start_color="CCFFCC", end_color="CCFFCC", fill_type="solid"),
-                                               None,
-                                               openpyxl.styles.Alignment(indent=1)
-                                               )
-
-CellStyle.VALUE_GENERAL_SCENARIO = copy(CellStyle.VALUE_GENERAL_NOSCENARIO)
-CellStyle.VALUE_GENERAL_SCENARIO.fill = openpyxl.styles.PatternFill(start_color="B8CCE4", end_color="B8CCE4", fill_type="solid")
-
-CellStyle.VALUE_GENERAL_NOSCENARIO_BOLD = copy(CellStyle.VALUE_GENERAL_NOSCENARIO)
-CellStyle.VALUE_GENERAL_NOSCENARIO_BOLD.font = openpyxl.styles.Font(name="Aptos", size=11, bold=True)
-
-CellStyle.VALUE_GENERAL_SCENARIO_BOLD = copy(CellStyle.VALUE_GENERAL_NOSCENARIO_BOLD)
-CellStyle.VALUE_GENERAL_SCENARIO_BOLD.fill = openpyxl.styles.PatternFill(start_color="B8CCE4", end_color="B8CCE4", fill_type="solid")
-
-
-class ColumnDefinition:
-    def __init__(self, readable_name: str, db_name: str, description: str, database_behavior: str, unit: str, column_width: float, column_style: CellStyle):
+    def get_copy_with_scenario_dependent(self, scenario_dependent: bool, color_dict: dict[str, Color]) -> Self:
         """
-        Represents a column definition in a spreadsheet.
+        Sets the fill color of the cell style based on whether the cell is scenario dependent or not and returns a copy of the object.
 
-        :param readable_name: The name of the column as it appears in the spreadsheet.
-        :param db_name: The name of the column as it appears in the database.
-        :param description: A description of the column's purpose or content.
-        :param database_behavior: The behavior of the column in relation to the database.
-        :param unit: The unit of measurement for the column's values.
-        :param column_width: The width of the columns in the spreadsheet. Can be None (which will keep Excel's default).
-        :param column_style: The style of the column in the spreadsheet.
+        :param scenario_dependent: Boolean indicating if the cell is scenario dependent.
+        :param color_dict: Dictionary mapping color IDs to Color objects.
+        :return: Copy of the updated CellStyle object.
         """
+        obj = copy(self)
+        if scenario_dependent:
+            obj.fill = color_dict["darkBlue"].to_patternFill()
+        else:
+            obj.fill = color_dict["lightGreen"].to_patternFill()
+        return obj
+
+    @classmethod
+    def dict_from_xml(cls, cell_styles: xml.etree.ElementTree.Element, font_dict: Optional[dict[str, Font]], color_dict: Optional[dict[str, Color]], number_format_dict: Optional[dict[str, str]], alignment_dict: Optional[dict[str, Alignment]]) -> dict[str, Self]:
+        """
+        Converts a list of XML cell style elements into a dictionary of CellStyle objects.
+        :param cell_styles: XML element containing cell style definitions.
+        :return: A dictionary mapping cell style IDs to CellStyle objects.
+        """
+        return {cell_style.get("id"): CellStyle(font=font_dict[cell_style.find("Font").text] if cell_style.find("Font").text is not None else None,
+                                                fill=color_dict[cell_style.find("Color").text].to_patternFill() if cell_style.find("Color").text is not None else None,
+                                                number_format=number_format_dict[cell_style.find("NumberFormat").text] if cell_style.find("NumberFormat").text is not None else None,
+                                                alignment=alignment_dict[cell_style.find("Alignment").text] if cell_style.find("Alignment").text is not None else None) for cell_style in cell_styles}
+
+
+class Column:
+    def __init__(self, readable_name: str, db_name: str, description: str, unit: str, column_width: float, cell_style: CellStyle, scenario_dependent: bool = False):
         self.readable_name = readable_name
         self.db_name = db_name
         self.description = description
-        self.database_behavior = database_behavior
         self.unit = unit
         self.column_width = column_width + 0.7109375  # Difference between Excel's default font and the shown column width (see https://foss.heptapod.net/openpyxl/openpyxl/-/issues/293)
-        self.column_style = column_style
+        self.cell_style = cell_style
+        self.scenario_dependent = scenario_dependent
 
+    def get_copy_with_scenario_dependent(self, scenario_dependent: bool, color_dict: dict[str, Color]) -> Self:
+        """
+        Sets the scenario_dependent attribute of the column and returns a copy of the object. Important since the column is used in multiple ExcelDefinition objects.
+        :param scenario_dependent: Boolean indicating if the column is scenario dependent.
+        :param color_dict: Dictionary mapping color IDs to Color objects.
+        :return: Copy of the updated Column object.
+        """
+        obj = copy(self)
+        obj.scenario_dependent = scenario_dependent
+        if obj.cell_style is not None and obj.db_name != "id":  # Don't set the color for the ID column
+            obj.cell_style = obj.cell_style.get_copy_with_scenario_dependent(scenario_dependent, color_dict)
+        return obj
 
-ColumnDefinition.EXCL = ColumnDefinition("Excl.", "excl", "", "", "", 4.86, CellStyle.VALUE_GENERAL_SCENARIO_BOLD)
-ColumnDefinition.NO_EXCL = ColumnDefinition("", "", "", "", "", 4.86, CellStyle.NONE)
-ColumnDefinition.ID = ColumnDefinition("Database ID", "id", "ID within database", DatabaseBehavior.FILLED_BY_DATABASE, "[db-key]", 19.57, CellStyle.VALUE_DB_KEY)
-ColumnDefinition.P = ColumnDefinition("p", "p", "Hour of the year", DatabaseBehavior.NO_BEHAVIOR, "[p]", 19.0, CellStyle.VALUE_GENERAL_NOSCENARIO)
-ColumnDefinition.RP = ColumnDefinition("rp", "rp", "Representative period for this hour", DatabaseBehavior.SCENARIO_DEPENDENT, "[rp]", 19.0, CellStyle.VALUE_GENERAL_SCENARIO)
-ColumnDefinition.K = ColumnDefinition("k", "k", "Representative hour in rp for this hour", DatabaseBehavior.SCENARIO_DEPENDENT, "[k]", 19.0, CellStyle.VALUE_GENERAL_SCENARIO)
-ColumnDefinition.DATAPACKAGE = ColumnDefinition("Data Package", "dataPackage", "Which package this belongs to", DatabaseBehavior.SCENARIO_DEPENDENT, "[DataPackage]", 23.86, CellStyle.VALUE_GENERAL_SCENARIO)
-ColumnDefinition.DATASOURCE = ColumnDefinition("Data Source", "dataSource", "Where the data for the entry comes from", DatabaseBehavior.SCENARIO_DEPENDENT, "[DataSource]", 23.86, CellStyle.VALUE_GENERAL_SCENARIO)
+    def get_db_behavior(self, text_dict: dict[str, Text]) -> str:
+        """
+        Returns the database behavior of the column.
+        :return: The database behavior of the column.
+        """
+        if self.db_name == "id":
+            return text_dict["databaseBehaviorFilledByDatabase"]
+        elif self.scenario_dependent:
+            return text_dict["databaseBehaviorScenarioDependent"]
+        else:
+            return text_dict["databaseBehaviorNoBehavior"]
+
+    @classmethod
+    def dict_from_xml(cls, columns: xml.etree.ElementTree.Element, cell_style_dict: dict[str, CellStyle]) -> dict[str, Self]:
+        """
+        Converts a list of XML column elements into a dictionary of Column objects.
+        :param columns: XML element containing column definitions.
+        :param cell_style_dict: Dictionary mapping cell style IDs to CellStyle objects.
+        :return: A dictionary mapping column IDs to Column objects.
+        """
+        return {column.get("id"): Column(readable_name=column.find("ReadableName").text,
+                                         db_name=column.get("id"),
+                                         description=column.find("Description").text,
+                                         unit=column.find("Unit").text,
+                                         column_width=float(column.find("ColumnWidth").text),
+                                         cell_style=cell_style_dict[column.find("CellStyle").text] if column.find("CellStyle").text is not None else None) for column in columns}
 
 
 class ExcelDefinition:
-    def __init__(self, file_name: str, sheet_header: str, version: str, has_excl_column: bool, columns: list[ColumnDefinition], description_row_height: float):
+    def __init__(self, file_name: str, version: str, sheet_header: str, description_row_height: float, columns: list[Column]):
         """
         Represents a configuration for a spreadsheet.
 
         :param file_name: The name of the file.
-        :param sheet_header: The header of the spreadsheet.
         :param version: The version identifier of the spreadsheet configuration.
-        :param has_excl_column: Flag indicating whether the spreadsheet includes an
-            exclusion column.
-        :param columns: List of columns of the spreadsheet.
+        :param sheet_header: The header of the spreadsheet.
         :param description_row_height: Height of the description row in the spreadsheet.
+        :param columns: List of columns of the spreadsheet.
         """
+
         self.file_name = file_name
-        self.sheet_header = sheet_header
         self.version = version
-        self.has_excl_column = has_excl_column
+        self.sheet_header = sheet_header
         self.columns = columns
         self.description_row_height = description_row_height
 
-        if has_excl_column:
-            self.columns.insert(0, ColumnDefinition.EXCL)
-        else:
-            self.columns.insert(0, ColumnDefinition.NO_EXCL)
-
-
-ExcelDefinition.POWER_HINDEX = ExcelDefinition(
-    "Power_Hindex",
-    "Power - Relation among periods and representative periods",
-    "v0.1.0",
-    False,
-    [
-        ColumnDefinition.ID,
-        ColumnDefinition.P,
-        ColumnDefinition.RP,
-        ColumnDefinition.K,
-        ColumnDefinition.DATAPACKAGE,
-        ColumnDefinition.DATASOURCE,
-    ],
-    30.0
-)
+    @classmethod
+    def dict_from_xml(cls, excel_definitions: xml.etree.ElementTree.Element, column_dict: dict[str, Column], color_dict: dict[str, Color]) -> dict[str, Self]:
+        """
+        Converts a list of XML excel definition elements into a dictionary of ExcelDefinition objects.
+        :param excel_definitions: XML element containing excel definition definitions.
+        :param column_dict: Dictionary mapping column IDs to Column objects.
+        :param color_dict: Dictionary mapping color IDs to Color objects.
+        :return: A dictionary mapping excel definition IDs to ExcelDefinition objects.
+        """
+        return {excel_definition.get("id"): ExcelDefinition(file_name=excel_definition.get("id"),
+                                                            version=excel_definition.find("Version").text,
+                                                            sheet_header=excel_definition.find("SheetHeader").text,
+                                                            description_row_height=float(excel_definition.find("DescriptionRowHeight").text),
+                                                            columns=[column_dict[column.get("id")].get_copy_with_scenario_dependent(column.get("scenarioDependent") == "True", color_dict) for column in excel_definition.find("Columns")]) for excel_definition in excel_definitions}

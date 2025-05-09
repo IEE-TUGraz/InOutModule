@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+    <ExcelDefinitions>
+        <ExcelDefinition id="Power_Hindex">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Relation among periods and representative periods</SheetHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="p" scenarioDependent="False"/>
+                <Column id="rp" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
+    </ExcelDefinitions>
+
+    <Columns>
+        <Column id="excl">
+            <ReadableName>Excl.</ReadableName>
+            <Description/>
+            <Unit/>
+            <ColumnWidth>4.86</ColumnWidth>
+            <CellStyle>bold</CellStyle>
+        </Column>
+        <Column id="NOEXCL">
+            <ReadableName/>
+            <Description/>
+            <Unit/>
+            <ColumnWidth>4.86</ColumnWidth>
+            <CellStyle/>
+        </Column>
+        <Column id="id">
+            <ReadableName>Database ID</ReadableName>
+            <Description>ID within database</Description>
+            <Unit>[db-key]</Unit>
+            <ColumnWidth>19.57</ColumnWidth>
+            <CellStyle>dbKey</CellStyle>
+        </Column>
+        <Column id="p">
+            <ReadableName>p</ReadableName>
+            <Description>Hour of the year</Description>
+            <Unit>[p]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="rp">
+            <ReadableName>rp</ReadableName>
+            <Description>Representative period for this hour</Description>
+            <Unit>[rp]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="k">
+            <ReadableName>k</ReadableName>
+            <Description>Representative hour in rp for this hour</Description>
+            <Unit>[k]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="dataPackage">
+            <ReadableName>Data Package</ReadableName>
+            <Description>Which package this belongs to</Description>
+            <Unit>[dataPackage]</Unit>
+            <ColumnWidth>23.86</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="dataSource">
+            <ReadableName>Data Source</ReadableName>
+            <Description>Where the data for the entry comes from</Description>
+            <Unit>[dataSource]</Unit>
+            <ColumnWidth>23.86</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pWeight_rp">
+            <ReadableName>Representative period's weight</ReadableName>
+            <Description>Weight of representative period within full timespan</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.14</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+    </Columns>
+
+    <CellStyles>
+        <CellStyle id="title">
+            <Font>title</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>IEEGreen</Color>
+        </CellStyle>
+        <CellStyle id="header">
+            <Font/>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>IEEGreen</Color>
+        </CellStyle>
+        <CellStyle id="formatDescription">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="formatValue">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="readableName">
+            <Font>bold</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>lightBlue</Color>
+        </CellStyle>
+        <CellStyle id="dbName">
+            <Font>bold</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>darkGray</Color>
+        </CellStyle>
+        <CellStyle id="description">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment>topWrap</Alignment>
+            <Color>lightGray</Color>
+        </CellStyle>
+        <CellStyle id="dbBehavior">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment>topWrap</Alignment>
+            <Color>darkGray</Color>
+        </CellStyle>
+        <CellStyle id="unit">
+            <Font>blue</Font>
+            <NumberFormat/>
+            <Alignment>center</Alignment>
+            <Color>lightGray</Color>
+        </CellStyle>
+        <CellStyle id="dbKey">
+            <Font>standard</Font>
+            <NumberFormat/>
+            <Alignment>indent</Alignment>
+            <Color>lightGray</Color>
+        </CellStyle>
+        <CellStyle id="general">
+            <Font>standard</Font>
+            <NumberFormat/>
+            <Alignment>indent</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="bold">
+            <Font>bold</Font>
+            <NumberFormat/>
+            <Alignment>indent</Alignment>
+            <Color/>
+        </CellStyle>
+    </CellStyles>
+
+    <Texts>
+        <Text id="databaseBehaviorFilledByDatabase">Filled automatically by database</Text>
+        <Text id="databaseBehaviorScenarioDependent">Scenario-dependent</Text>
+        <Text id="databaseBehaviorNoBehavior">-</Text>
+        <Text id="colHeaderExclDescription">
+            If a line has a value in this column, it is not read in (i.e., does not exist).
+        </Text>
+        <Text id="colHeaderReadableName">Readable name</Text>
+        <Text id="colHeaderValueSpecifierDB">Value specifier in database</Text>
+        <Text id="colHeaderDescription">Description</Text>
+        <Text id="colHeaderDBBehavior">Details on database behavior</Text>
+        <Text id="colHeaderUnit">Unit or valid values</Text>
+    </Texts>
+
+    <Fonts>
+        <Font id="title">
+            <name>Aptos</name>
+            <size>18</size>
+            <bold>True</bold>
+            <italic/>
+            <Color>white</Color>
+        </Font>
+        <Font id="standard">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold/>
+            <italic/>
+            <Color/>
+        </Font>
+        <Font id="italic">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold/>
+            <italic>True</italic>
+            <Color/>
+        </Font>
+        <Font id="bold">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold>True</bold>
+            <italic/>
+            <Color/>
+        </Font>
+        <Font id="blue">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold/>
+            <italic/>
+            <Color>blue</Color>
+        </Font>
+    </Fonts>
+
+    <Colors>
+        <Color id="IEEGreen">008080</Color>
+        <Color id="lightGreen">CCFFCC</Color>
+        <Color id="darkBlue">B8CCE4</Color>
+        <Color id="lightBlue">DAEEF3</Color>
+        <Color id="darkGray">D9D9D9</Color>
+        <Color id="lightGray">F2F2F2</Color>
+        <Color id="blue">0000FF</Color>
+        <Color id="white">FFFFFF</Color>
+    </Colors>
+
+    <NumberFormats>
+        <NumberFormat id="General">General</NumberFormat>
+    </NumberFormats>
+
+    <Alignments>
+        <Alignment id="right">
+            <horizontal>right</horizontal>
+            <vertical>center</vertical>
+            <wrapText/>
+            <indent/>
+        </Alignment>
+        <Alignment id="topWrap">
+            <horizontal/>
+            <vertical>top</vertical>
+            <wrapText>True</wrapText>
+            <indent/>
+        </Alignment>
+        <Alignment id="center">
+            <horizontal>center</horizontal>
+            <vertical>center</vertical>
+            <wrapText/>
+            <indent/>
+        </Alignment>
+        <Alignment id="indent">
+            <horizontal/>
+            <vertical/>
+            <wrapText/>
+            <indent>1</indent>
+        </Alignment>
+    </Alignments>
+</root>
