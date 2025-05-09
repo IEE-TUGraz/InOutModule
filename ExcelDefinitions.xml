@@ -15,6 +15,19 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
+        <ExcelDefinition id="Power_WeightsRP">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Weights of representative periods</SheetHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="pWeight_rp" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
     </ExcelDefinitions>
 
     <Columns>
@@ -52,6 +65,13 @@
             <Unit>[rp]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pWeight_rp">
+            <ReadableName>Representative period's weight</ReadableName>
+            <Description>Weight of representative period within full timespan</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.14</ColumnWidth>
+            <CellStyle>right</CellStyle>
         </Column>
         <Column id="k">
             <ReadableName>k</ReadableName>
@@ -154,6 +174,12 @@
             <Font>bold</Font>
             <NumberFormat/>
             <Alignment>indent</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="right">
+            <Font>standard</Font>
+            <NumberFormat/>
+            <Alignment>right</Alignment>
             <Color/>
         </CellStyle>
     </CellStyles>

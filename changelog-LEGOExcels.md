@@ -5,6 +5,13 @@
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
 
+# Power_WeightsRP
+
+## v0.0.2 -> v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
 # Power_Network
 
 ## v0.0.4 → v0.0.4r

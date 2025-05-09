@@ -178,6 +178,15 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Hindex, folder_path, "Power_Hindex")
 
+    def write_dPower_WeightsRP(self, dPower_WeightsRP: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_WeightsRP DataFrame to an Excel file in LEGO format.
+        :param dPower_WeightsRP: DataFrame containing the dPower_WeightsRP data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_WeightsRP, folder_path, "Power_WeightsRP")
+
 
 def write_VRESProfiles(data: pd.DataFrame, file_path: str):
     templateName = "Power_VRESProfiles"
@@ -251,7 +260,7 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
 
 
 if __name__ == "__main__":
-    data = ExcelReader.get_dPower_Hindex("examples/Power_Hindex.xlsx")
+    data = ExcelReader.get_dPower_WeightsRP("examples/Power_WeightsRP.xlsx")
 
     ew = ExcelWriter("ExcelDefinitions.xml")
-    ew.write_dPower_Hindex(data, "examples/output")
+    ew.write_dPower_WeightsRP(data, "examples/output")
