@@ -41,6 +41,30 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
+        <ExcelDefinition id="Power_BusInfo">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Bus information</SheetHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="z" scenarioDependent="False"/>
+                <Column id="pBusBaseV" scenarioDependent="False"/>
+                <Column id="pBusMaxV" scenarioDependent="False"/>
+                <Column id="pBusMinV" scenarioDependent="False"/>
+                <Column id="pBusB" scenarioDependent="False"/>
+                <Column id="pBusG" scenarioDependent="False"/>
+                <Column id="pBus_pf" scenarioDependent="False"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="zoi" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
     </ExcelDefinitions>
 
     <Columns>
@@ -120,6 +144,97 @@
             <Unit>[h]</Unit>
             <ColumnWidth>31.14</ColumnWidth>
             <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="i">
+            <ReadableName>Name</ReadableName>
+            <Description>Name of node</Description>
+            <Unit>[i]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="z">
+            <ReadableName>Zone</ReadableName>
+            <Description>Zone in which node lies</Description>
+            <Unit>[z]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pBusBaseV">
+            <ReadableName>Base Voltage</ReadableName>
+            <Description>Base voltage at node</Description>
+            <Unit>[kV]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pBusMaxV">
+            <ReadableName>Maximum Voltage</ReadableName>
+            <Description>Maximum voltage (in % of bae voltage)</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusMinV">
+            <ReadableName>Minimum Voltage</ReadableName>
+            <Description>Minimum voltage (in % of base voltage)</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusB">
+            <ReadableName>Bs</ReadableName>
+            <Description>Susceptance B connected to node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusG">
+            <ReadableName>Gs</ReadableName>
+            <Description>Conductance G connected to node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBus_pf">
+            <ReadableName>Power Factor</ReadableName>
+            <Description>Power factor at node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="YearCom">
+            <ReadableName>Commission Year</ReadableName>
+            <Description>Year where it is commissioned (1.1.xxxx)</Description>
+            <Unit>[Year]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="YearDecom">
+            <ReadableName>Decommission Year</ReadableName>
+            <Description>Year where it is decommissioned (31.12.xxxx)</Description>
+            <Unit>[Year]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="lat">
+            <ReadableName>Latitude</ReadableName>
+            <Description>Latitude</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="lon">
+            <ReadableName>Longitude</ReadableName>
+            <Description>Longitude</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="zoi">
+            <ReadableName>Zone of Interest</ReadableName>
+            <Description>Whether node is relevant for end result (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>19.3</ColumnWidth>
+            <CellStyle>right</CellStyle>
         </Column>
     </Columns>
 
@@ -202,6 +317,30 @@
             <Alignment>right</Alignment>
             <Color/>
         </CellStyle>
+        <CellStyle id="rightInt">
+            <Font>standard</Font>
+            <NumberFormat>int</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat1">
+            <Font>standard</Font>
+            <NumberFormat>float1</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat2">
+            <Font>standard</Font>
+            <NumberFormat>float2</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat4">
+            <Font>standard</Font>
+            <NumberFormat>float4</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
     </CellStyles>
 
     <Texts>
@@ -269,6 +408,10 @@
 
     <NumberFormats>
         <NumberFormat id="General">General</NumberFormat>
+        <NumberFormat id="int">0</NumberFormat>
+        <NumberFormat id="float1">0.0</NumberFormat>
+        <NumberFormat id="float2">0.00</NumberFormat>
+        <NumberFormat id="float4">0.0000</NumberFormat>
     </NumberFormats>
 
     <Alignments>

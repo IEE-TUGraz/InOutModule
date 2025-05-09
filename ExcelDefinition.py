@@ -177,12 +177,34 @@ class Column:
         :param cell_style_dict: Dictionary mapping cell style IDs to CellStyle objects.
         :return: A dictionary mapping column IDs to Column objects.
         """
-        return {column.get("id"): Column(readable_name=column.find("ReadableName").text,
-                                         db_name=column.get("id"),
-                                         description=column.find("Description").text,
-                                         unit=column.find("Unit").text,
-                                         column_width=float(column.find("ColumnWidth").text),
-                                         cell_style=cell_style_dict[column.find("CellStyle").text] if column.find("CellStyle").text is not None else None) for column in columns}
+
+        return_dict = {}
+
+        try:
+            for column in columns:
+                column_id = column.get("id")
+                readable_name = column.find("ReadableName").text
+                description = column.find("Description").text
+                unit = column.find("Unit").text
+                column_width = float(column.find("ColumnWidth").text)
+                cell_style = cell_style_dict[column.find("CellStyle").text] if column.find("CellStyle").text is not None else None
+
+                return_dict[column_id] = Column(readable_name=readable_name,
+                                                db_name=column_id,
+                                                description=description,
+                                                unit=unit,
+                                                column_width=column_width,
+                                                cell_style=cell_style)
+        except KeyError as e:
+            missing_styles = []
+            for column in columns:
+                if column.find("CellStyle").text not in cell_style_dict and column.find("CellStyle").text is not None:
+                    if column.find("CellStyle").text not in missing_styles:
+                        missing_styles.append(column.find("CellStyle").text)
+
+            raise ValueError(f"Cell style definition(s) {missing_styles} not found for column '{column_id}' in the xml-file. Please define it/them.")
+
+        return return_dict
 
 
 class ExcelDefinition:
@@ -212,8 +234,31 @@ class ExcelDefinition:
         :param color_dict: Dictionary mapping color IDs to Color objects.
         :return: A dictionary mapping excel definition IDs to ExcelDefinition objects.
         """
-        return {excel_definition.get("id"): ExcelDefinition(file_name=excel_definition.get("id"),
-                                                            version=excel_definition.find("Version").text,
-                                                            sheet_header=excel_definition.find("SheetHeader").text,
-                                                            description_row_height=float(excel_definition.find("DescriptionRowHeight").text),
-                                                            columns=[column_dict[column.get("id")].get_copy_with_scenario_dependent(column.get("scenarioDependent") == "True", color_dict) for column in excel_definition.find("Columns")]) for excel_definition in excel_definitions}
+        return_dict = {}
+
+        for excel_definition in excel_definitions:
+            file_name = excel_definition.get("id")
+            version = excel_definition.find("Version").text
+            sheet_header = excel_definition.find("SheetHeader").text
+            description_row_height = float(excel_definition.find("DescriptionRowHeight").text)
+            columns = []
+
+            try:
+                for column in excel_definition.find("Columns"):
+                    column_definition = column_dict[column.get("id")]
+                    columns.append(column_definition.get_copy_with_scenario_dependent(column.get("scenarioDependent") == "True", color_dict))
+            except KeyError as e:
+                missing_columns = []
+                for column in excel_definition.find("Columns"):
+                    if column.get("id") not in column_dict:
+                        missing_columns.append(column.get("id"))
+
+                raise ValueError(f"Column definition(s) {missing_columns} not found for excel definition '{file_name}' in the xml-file. Please define it/them.")
+
+            return_dict[file_name] = ExcelDefinition(file_name=file_name,
+                                                     version=version,
+                                                     sheet_header=sheet_header,
+                                                     description_row_height=description_row_height,
+                                                     columns=columns)
+
+        return return_dict

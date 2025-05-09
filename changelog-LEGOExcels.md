@@ -179,6 +179,11 @@ formatting and description texts.
 
 # Power_BusInfo
 
+## v0.0.4r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
 ## v0.0.4 → v0.0.4r
 
 | Sheet     | Range | Old Value   | New Value   | Description                  |

@@ -29,7 +29,7 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
         df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         if has_excl_column:
-            data = data[data["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+            df = df[df["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
         else:
             df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
         df = df.set_index(indices)
@@ -56,11 +56,7 @@ def get_dPower_WeightsK(excel_file_path: str):
 
 
 def get_dPower_BusInfo(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
-    dPower_BusInfo = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_BusInfo = dPower_BusInfo[dPower_BusInfo["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
-
-    dPower_BusInfo = dPower_BusInfo.set_index('i')
+    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["i"], True)
     return dPower_BusInfo
 
 
