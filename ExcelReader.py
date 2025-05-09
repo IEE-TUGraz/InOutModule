@@ -21,43 +21,37 @@ def __read_generator_data(file_path):
     return d_generator
 
 
-def get_dPower_Hindex(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.1.0")
+def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], has_excl_column: bool):
+    __check_LEGOExcel_version(excel_file_path, version_specifier)
     xls = pd.ExcelFile(excel_file_path)
-    dPower_Hindex = pd.DataFrame()
+    data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
         df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
-        df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
-        df = df.set_index(['p', 'rp', 'k'])
+        if has_excl_column:
+            data = data[data["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+        else:
+            df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
+        df = df.set_index(indices)
         df["scenario"] = scenario
 
-        dPower_Hindex = pd.concat([dPower_Hindex, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
+        data = pd.concat([data, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
 
+    return data
+
+
+def get_dPower_Hindex(excel_file_path: str):
+    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["p", "rp", "k"], False)
     return dPower_Hindex
 
 
 def get_dPower_WeightsRP(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.1.0")
-    xls = pd.ExcelFile(excel_file_path)
-    dPower_WeightsRP = pd.DataFrame()
-
-    for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
-        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
-        df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
-        df = df.set_index('rp')
-        df["scenario"] = scenario
-
-        dPower_WeightsRP = pd.concat([dPower_WeightsRP, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
-
+    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["rp"], False)
     return dPower_WeightsRP
 
 
 def get_dPower_WeightsK(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.2r")
-    dPower_WeightsK = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_WeightsK = dPower_WeightsK.drop(dPower_WeightsK.columns[0], axis=1)  # Drop the first column (which is empty)
-    dPower_WeightsK = dPower_WeightsK.set_index('k')
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["k"], False)
     return dPower_WeightsK
 
 

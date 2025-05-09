@@ -28,6 +28,19 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
+        <ExcelDefinition id="Power_WeightsK">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Weights of representative hours</SheetHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="pWeight_k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
     </ExcelDefinitions>
 
     <Columns>
@@ -79,6 +92,13 @@
             <Unit>[k]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pWeight_k">
+            <ReadableName>Representative hour's weight</ReadableName>
+            <Description>Weight of representative hour within representative period</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.14</ColumnWidth>
+            <CellStyle>right</CellStyle>
         </Column>
         <Column id="dataPackage">
             <ReadableName>Data Package</ReadableName>
