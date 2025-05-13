@@ -33,6 +33,22 @@ formatting and description texts.
 
 # Power_Network
 
+## v0.0.4r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
+# Power_Demand
+
+## v0.1.0 → v0.1.1
+
+Fix readable name for 'i' column to 'Node'.
+
+## v0.0.4r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
 ## v0.0.4 → v0.0.4r
 
 | Sheet     | Range | Old Value   | New Value   | Description                  |
@@ -190,6 +206,10 @@ formatting and description texts.
 | Power_ThermalGen | A4    | ''                                                                                                                                                                                            | 'Excl.'                                                                                                                                                                                                           | Entered Value Added.    |
 
 # Power_BusInfo
+
+## v0.1.0 → v0.1.1
+
+Fix readable name for 'i' column to 'Node'.
 
 ## v0.0.4r → v0.1.0
 

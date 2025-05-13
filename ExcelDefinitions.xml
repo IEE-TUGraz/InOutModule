@@ -42,7 +42,7 @@
             </Columns>
         </ExcelDefinition>
         <ExcelDefinition id="Power_BusInfo">
-            <Version>v0.1.0</Version>
+            <Version>v0.1.1</Version>
             <SheetHeader>Power - Bus information</SheetHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
@@ -65,8 +65,34 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
-        <ExcelDefinition id="Power_Demand">
+        <ExcelDefinition id="Power_Network">
             <Version>v0.1.0</Version>
+            <SheetHeader>Power - Network</SheetHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="i" scenarioDependent="False" readableName="From Node" description="From which node"/>
+                <Column id="j" scenarioDependent="False"/>
+                <Column id="c" scenarioDependent="False"/>
+                <Column id="pRline" scenarioDependent="False"/>
+                <Column id="pXline" scenarioDependent="False"/>
+                <Column id="pBcline" scenarioDependent="False"/>
+                <Column id="pAngle" scenarioDependent="False"/>
+                <Column id="pRatio" scenarioDependent="False"/>
+                <Column id="pPmax" scenarioDependent="False"/>
+                <Column id="pEnableInvest" scenarioDependent="True"/>
+                <Column id="pFOMCost" scenarioDependent="True"/>
+                <Column id="pInvestCost" scenarioDependent="True"/>
+                <Column id="pTecRepr" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
+        <ExcelDefinition id="Power_Demand">
+            <Version>v0.1.1</Version>
             <SheetHeader>Power - Demand</SheetHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
@@ -160,10 +186,94 @@
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="i">
-            <ReadableName>Name</ReadableName>
+            <ReadableName>Node</ReadableName>
             <Description>Name of node</Description>
             <Unit>[i]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="j">
+            <ReadableName>To Node</ReadableName>
+            <Description>To which node</Description>
+            <Unit>[i]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="c">
+            <ReadableName>Circuit / Name</ReadableName>
+            <Description>Name of line (or circuit)</Description>
+            <Unit>[c]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pRline">
+            <ReadableName>R</ReadableName>
+            <Description>Resistance R of line</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pXline">
+            <ReadableName>X</ReadableName>
+            <Description>Reactance X of line</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pBcline">
+            <ReadableName>Bc</ReadableName>
+            <Description>Branch charging susceptance</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pAngle">
+            <ReadableName>Tap Angle</ReadableName>
+            <Description>Transformer angle shift</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pRatio">
+            <ReadableName>Tap Ratio</ReadableName>
+            <Description>Transformer ratio</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pPmax">
+            <ReadableName>Pmax</ReadableName>
+            <Description>Maximum active power transfer</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pEnableInvest">
+            <ReadableName>Enable Investment</ReadableName>
+            <Description>Whether object exists (0) or can be invested in (1)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>19.3</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pFOMCost">
+            <ReadableName>Fixed OM Cost</ReadableName>
+            <Description>Per anno fixed O&amp;M cost</Description>
+            <Unit>[M€]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pInvestCost">
+            <ReadableName>Investment Cost</ReadableName>
+            <Description>Equivalent per anno investment cost</Description>
+            <Unit>[M€]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pTecRepr">
+            <ReadableName>Technical Representation</ReadableName>
+            <Description>Technical representation of line in model</Description>
+            <Unit>[DC-OPF,TP,SN]</Unit>
+            <ColumnWidth>27.7</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="z">

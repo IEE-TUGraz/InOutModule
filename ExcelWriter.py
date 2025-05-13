@@ -195,7 +195,7 @@ class ExcelWriter:
                 for j, col in enumerate(excel_definition.columns):
                     if col.readable_name is None and j == 0: continue  # Skip first column if it is empty, since it is the (unused) placeholder for the excl column
                     if col.db_name == "excl":  # Excl. column is written by placing 'X' in lines which should be excluded
-                        ws.cell(row=i + 8, column=j + 1, value='X' if not np.isnan(values[col.db_name]) else None)
+                        ws.cell(row=i + 8, column=j + 1, value='X' if isinstance(values[col.db_name], str) or not np.isnan(values[col.db_name]) else None)
                     else:
                         ws.cell(row=i + 8, column=j + 1, value=values[col.db_name])
                     ExcelWriter.__setCellStyle(col.cell_style, ws.cell(row=i + 8, column=j + 1))
@@ -242,6 +242,15 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
+
+    def write_dPower_Network(self, dPower_Network: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Network DataFrame to an Excel file in LEGO format.
+        :param dPower_Network: DataFrame containing the dPower_Network data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_Network, folder_path, "Power_Network")
 
     def write_dPower_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
         """
@@ -326,7 +335,7 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
 
 
 if __name__ == "__main__":
-    data = ExcelReader.get_dPower_Hindex("examples/Power_Hindex.xlsx", True, True)
+    data = ExcelReader.get_dPower_Network("examples/Power_Network.xlsx", True, True)
 
     ew = ExcelWriter("ExcelDefinitions.xml")
-    ew.write_dPower_Hindex(data, "examples/output")
+    ew.write_dPower_Network(data, "examples/output")

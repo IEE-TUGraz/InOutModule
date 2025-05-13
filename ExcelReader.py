@@ -86,25 +86,30 @@ def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = Fals
     return dPower_WeightsK
 
 
-def get_dPower_BusInfo(excel_file_path: str):
-    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["i"], True)
+def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i"], True, keep_excluded_entries)
+
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_BusInfo', although no values are converted anyway - please check if this is intended.")
+
     return dPower_BusInfo
 
 
-def get_dPower_Network(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
-    dPower_Network = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_Network = dPower_Network[dPower_Network["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["i", "j", "c"], True, keep_excluded_entries)
 
-    dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
-    dPower_Network["pPmax"] *= 1e-3
+    if not do_not_convert_values:
+        dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
+        dPower_Network["pPmax"] *= 1e-3
 
-    dPower_Network = dPower_Network.set_index(['i', 'j', 'c'])
     return dPower_Network
 
 
 def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
-    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, keep_excluded_entries)
+    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
 
     if not do_not_convert_values:
         dPower_Demand["value"] = dPower_Demand["value"] * 1e-3

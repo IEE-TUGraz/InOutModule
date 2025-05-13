@@ -128,10 +128,29 @@ class CellStyle:
         :param cell_styles: XML element containing cell style definitions.
         :return: A dictionary mapping cell style IDs to CellStyle objects.
         """
-        return {cell_style.get("id"): CellStyle(font=font_dict[cell_style.find("Font").text] if cell_style.find("Font").text is not None else None,
-                                                fill=color_dict[cell_style.find("Color").text].to_patternFill() if cell_style.find("Color").text is not None else None,
-                                                number_format=number_format_dict[cell_style.find("NumberFormat").text] if cell_style.find("NumberFormat").text is not None else None,
-                                                alignment=alignment_dict[cell_style.find("Alignment").text] if cell_style.find("Alignment").text is not None else None) for cell_style in cell_styles}
+        return_dict = {}
+        for cell_style in cell_styles:
+            try:
+                font = font_dict[cell_style.find("Font").text] if cell_style.find("Font").text is not None else None
+            except KeyError as e:
+                raise ValueError(f"Font definition '{cell_style.find('Font').text}' not found for cell style '{cell_style.get('id')}' in the xml-file. Please define it.")
+            try:
+                fill = color_dict[cell_style.find("Color").text].to_patternFill() if cell_style.find("Color").text is not None else None
+            except KeyError as e:
+                raise ValueError(f"Color definition '{cell_style.find('Color').text}' not found for cell style '{cell_style.get('id')}' in the xml-file. Please define it.")
+            try:
+                number_format = number_format_dict[cell_style.find("NumberFormat").text] if cell_style.find("NumberFormat").text is not None else None
+            except KeyError as e:
+                raise ValueError(f"Number format definition '{cell_style.find('NumberFormat').text}' not found for cell style '{cell_style.get('id')}' in the xml-file. Please define it.")
+            try:
+                alignment = alignment_dict[cell_style.find("Alignment").text] if cell_style.find("Alignment").text is not None else None
+            except KeyError as e:
+                raise ValueError(f"Alignment definition '{cell_style.find('Alignment').text}' not found for cell style '{cell_style.get('id')}' in the xml-file. Please define it.")
+            return_dict[cell_style.get("id")] = CellStyle(font=font,
+                                                          fill=fill,
+                                                          number_format=number_format,
+                                                          alignment=alignment)
+        return return_dict
 
 
 class Column:
@@ -248,6 +267,10 @@ class ExcelDefinition:
             try:
                 for column in excel_definition.find("Columns"):
                     column_definition = column_dict[column.get("id")]
+                    if column.get("readableName") is not None or column.get("description") is not None:  # Handle overriding of readable name and description
+                        column_definition = copy(column_definition)
+                        column_definition.readable_name = column.get("readableName") if column.get("readableName") is not None else column_definition.readable_name
+                        column_definition.description = column.get("description") if column.get("description") is not None else column_definition.description
                     columns.append(column_definition.get_copy_with_scenario_dependent(column.get("scenarioDependent") == "True", color_dict))
             except KeyError as e:
                 missing_columns = []
