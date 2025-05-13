@@ -53,8 +53,14 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
     return df
 
 
-def get_dPower_Hindex(excel_file_path: str):
-    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["p", "rp", "k"], False)
+def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["p", "rp", "k"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Hindex', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_Hindex', although no values are converted anyway - please check if this is intended.")
+
     return dPower_Hindex
 
 

@@ -2,7 +2,7 @@
 <root>
     <ExcelDefinitions>
         <ExcelDefinition id="Power_Hindex">
-            <Version>v0.1.0</Version>
+            <Version>v0.1.1</Version>
             <SheetHeader>Power - Relation among periods and representative periods</SheetHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>

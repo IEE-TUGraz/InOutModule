@@ -1,5 +1,9 @@
 # Power_Hindex
 
+## v0.1.0 -> v0.1.1
+
+Fix description for columns 'rp' and 'k' to be more general.
+
 ## v0.0.2r -> v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
@@ -7,12 +11,20 @@ formatting and description texts.
 
 # Power_WeightsRP
 
+## v0.1.0 -> v0.1.1
+
+Fix description for column 'rp' to be more general.
+
 ## v0.0.2 -> v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
 
 # Power_WeightsK
+
+## v0.1.0 -> v0.1.1
+
+Fix description for column 'k' to be more general.
 
 ## v0.0.2r -> v0.1.0
 
