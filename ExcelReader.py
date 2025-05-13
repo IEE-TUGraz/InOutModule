@@ -21,7 +21,7 @@ def __read_generator_data(file_path):
     return d_generator
 
 
-def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], has_excl_column: bool):
+def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], has_excl_column: bool, keep_excl_columns: bool = False) -> pd.DataFrame:
     __check_LEGOExcel_version(excel_file_path, version_specifier)
     xls = pd.ExcelFile(excel_file_path)
     data = pd.DataFrame()
@@ -29,15 +29,24 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
         df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         if has_excl_column:
-            df = df[df["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+            if not keep_excl_columns:
+                df = df[df["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
         else:
             df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
-        df = df.set_index(indices)
+        df = df.set_index(indices) if len(indices) > 0 else df
         df["scenario"] = scenario
 
         data = pd.concat([data, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
 
     return data
+
+
+def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], pivoted_variable_name: str, melt_indices: list[str], has_excl_column: bool, keep_excluded_columns: bool = False) -> pd.DataFrame:
+    df = __read_non_pivoted_file(excel_file_path, version_specifier, [], has_excl_column, keep_excluded_columns)
+
+    df = df.melt(id_vars=melt_indices + ["scenario"], var_name=pivoted_variable_name, value_name="value")
+    df = df.set_index(indices)
+    return df
 
 
 def get_dPower_Hindex(excel_file_path: str):
@@ -72,14 +81,12 @@ def get_dPower_Network(excel_file_path: str):
     return dPower_Network
 
 
-def get_dPower_Demand(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.2")
-    dPower_Demand = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_Demand = dPower_Demand.drop(dPower_Demand.columns[0], axis=1)  # Drop the first column
+def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, keep_excluded_entries)
 
-    dPower_Demand = dPower_Demand.melt(id_vars=['rp', 'i', 'dataPackage', 'dataSource', 'id'], var_name='k', value_name='Demand')
-    dPower_Demand = dPower_Demand.set_index(['rp', 'k', 'i'])
-    dPower_Demand["Demand"] = dPower_Demand["Demand"] * 1e-3
+    if not do_not_convert_values:
+        dPower_Demand["value"] = dPower_Demand["value"] * 1e-3
+
     return dPower_Demand
 
 

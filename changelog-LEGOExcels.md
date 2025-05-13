@@ -220,3 +220,10 @@ formatting and description texts.
 | Power_BusInfo | O7              | '[Yes, No]'                                                                                                                                                                                   | '[0, 1]'                                                                                                                                                                                                          | Entered Value Changed.  |
 | Power_BusInfo | O8 (and others) | 'Yes'                                                                                                                                                                                         | '1'                                                                                                                                                                                                               | Entered Value Changed.  |
 | Power_BusInfo | A4              | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed |
+
+## Power_BusInfo
+
+### v0.0.2 → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.

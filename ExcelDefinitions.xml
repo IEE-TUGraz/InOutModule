@@ -65,6 +65,20 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
+        <ExcelDefinition id="Power_Demand">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Demand</SheetHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="demand_by_k" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
     </ExcelDefinitions>
 
     <Columns>
@@ -237,6 +251,17 @@
             <CellStyle>right</CellStyle>
         </Column>
     </Columns>
+
+    <PivotColumns>
+        <PivotColumn id="demand_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Demand at node for representative hour k</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+    </PivotColumns>
 
     <CellStyles>
         <CellStyle id="title">

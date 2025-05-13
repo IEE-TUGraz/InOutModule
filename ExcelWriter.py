@@ -1,7 +1,7 @@
 import os
 import time
 import xml.etree.ElementTree as ET
-from copy import copy
+from copy import copy, deepcopy
 
 import numpy as np
 import openpyxl
@@ -51,7 +51,7 @@ class ExcelWriter:
         self.fonts = Font.dict_from_xml(self.xml_root.find("Fonts"), self.colors)
         self.texts = Text.dict_from_xml(self.xml_root.find("Texts"))
         self.cell_styles = CellStyle.dict_from_xml(self.xml_root.find("CellStyles"), self.fonts, self.colors, self.number_formats, self.alignments)
-        self.columns = Column.dict_from_xml(self.xml_root.find("Columns"), self.cell_styles)
+        self.columns = Column.dict_from_xml(self.xml_root.find("Columns"), self.cell_styles) | Column.dict_from_xml(self.xml_root.find("PivotColumns"), self.cell_styles)
         self.excel_definitions = ExcelDefinition.dict_from_xml(self.xml_root.find("ExcelDefinitions"), self.columns, self.colors)
         pass
 
@@ -87,6 +87,36 @@ class ExcelWriter:
         excel_definition = self.excel_definitions[excel_definition_id]
         wb = openpyxl.Workbook()
         scenarios = data["scenario"].unique()
+
+        data = data.copy()  # Create a copy of the DataFrame to avoid modifying the original data
+
+        # Prepare columns if data should be pivoted
+        pivot_columns = []
+        target_column = None
+        target_column_index = None
+        for i, column in enumerate(excel_definition.columns):
+            if column.pivoted:
+                if target_column is not None:
+                    raise ValueError(f"Excel definition '{excel_definition_id}' has (at least) two pivot columns defined: '{target_column.db_name}' and '{column.db_name}'. Only one pivot column is allowed.")
+                target_column = column
+                target_column_index = i
+            else:
+                if column.db_name != "NOEXCL":  # Skip first column if it is the (empty and thus unused) placeholder for the excl column
+                    pivot_columns.append(column.db_name)
+
+        if target_column is not None:
+            data.reset_index(inplace=True)
+            data = data.pivot(index=pivot_columns + ["scenario"], columns=target_column.db_name, values="value")
+            excel_definition.columns.remove(target_column)  # Remove the pivot column from the list of columns
+            for i, column in enumerate(data.columns):
+                col_definition = copy(target_column)
+                col_definition.db_name = column
+                col_definition.readable_name = column
+                if i != 0:  # Remove description for all but the first pivoted column
+                    col_definition.description = None
+                excel_definition.columns.append(col_definition)  # Add the new column definition to the list of columns
+
+            data.reset_index(inplace=True)
 
         for scenario_index, scenario in enumerate(scenarios):
             scenario_data = data[data["scenario"] == scenario]
@@ -143,7 +173,12 @@ class ExcelWriter:
 
                     # Description
                     ws.cell(row=5, column=i + 1, value=column.description)
-                    ExcelWriter.__setCellStyle(self.cell_styles["description"], ws.cell(row=5, column=i + 1))
+                    if i != target_column_index:
+                        ExcelWriter.__setCellStyle(self.cell_styles["description"], ws.cell(row=5, column=i + 1))
+                    else:  # If the column is a pivoted column, set the style without wrapping text
+                        cell_style_withou_wrap_text = deepcopy(self.cell_styles["description"])
+                        cell_style_withou_wrap_text.alignment.wrap_text = False
+                        ExcelWriter.__setCellStyle(cell_style_withou_wrap_text, ws.cell(row=5, column=i + 1))
 
                     # Database behavior
                     if i != 0:  # Skip db-behavior for the first column (excl)
@@ -207,6 +242,16 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
+
+    def write_dPower_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Demand DataFrame to an Excel file in LEGO format.
+        :param dPower_Demand: DataFrame containing the dPower_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
 
 def write_VRESProfiles(data: pd.DataFrame, file_path: str):
@@ -281,7 +326,7 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
 
 
 if __name__ == "__main__":
-    data = ExcelReader.get_dPower_BusInfo("examples/Power_BusInfo.xlsx")
+    data = ExcelReader.get_dPower_Demand("examples/Power_Demand.xlsx", True, True)
 
     ew = ExcelWriter("ExcelDefinitions.xml")
-    ew.write_dPower_BusInfo(data, "examples/output")
+    ew.write_dPower_Demand(data, "examples/output")
