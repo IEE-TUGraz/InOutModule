@@ -2,6 +2,10 @@ import numpy as np
 import openpyxl
 import pandas as pd
 
+from InOutModule.printer import Printer
+
+printer = Printer.getInstance()
+
 
 def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str):
     # Check if the file has the correct version specifier
@@ -54,8 +58,14 @@ def get_dPower_Hindex(excel_file_path: str):
     return dPower_Hindex
 
 
-def get_dPower_WeightsRP(excel_file_path: str):
-    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["rp"], False)
+def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["rp"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsRP', although no values are converted anyway - please check if this is intended.")
+
     return dPower_WeightsRP
 
 

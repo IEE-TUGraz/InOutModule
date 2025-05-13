@@ -16,7 +16,7 @@
             </Columns>
         </ExcelDefinition>
         <ExcelDefinition id="Power_WeightsRP">
-            <Version>v0.1.0</Version>
+            <Version>v0.1.1</Version>
             <SheetHeader>Power - Weights of representative periods</SheetHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
@@ -112,7 +112,7 @@
         </Column>
         <Column id="rp">
             <ReadableName>rp</ReadableName>
-            <Description>Representative period for this hour</Description>
+            <Description>Representative period</Description>
             <Unit>[rp]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>general</CellStyle>

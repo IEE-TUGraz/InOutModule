@@ -326,7 +326,7 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
 
 
 if __name__ == "__main__":
-    data = ExcelReader.get_dPower_Demand("examples/Power_Demand.xlsx", True, True)
+    data = ExcelReader.get_dPower_WeightsRP("examples/Power_WeightsRP.xlsx", True, True)
 
     ew = ExcelWriter("ExcelDefinitions.xml")
-    ew.write_dPower_Demand(data, "examples/output")
+    ew.write_dPower_WeightsRP(data, "examples/output")
