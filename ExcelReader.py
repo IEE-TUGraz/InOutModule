@@ -69,8 +69,14 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
     return dPower_WeightsRP
 
 
-def get_dPower_WeightsK(excel_file_path: str):
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["k"], False)
+def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["k"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsK', although no values are converted anyway - please check if this is intended.")
+
     return dPower_WeightsK
 
 
