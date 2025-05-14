@@ -193,6 +193,16 @@ class Printer:
                         f.write(line + "\n")
         return None
 
+    def separator(self) -> None:
+        """
+        Prints a separator line to the console. The line is made up of dashes and
+        is as long as the console width. The line is printed in white.
+        :return: None
+        """
+        self.console.print("-" * self.console.width, style="white")
+        self._log("-" * self.console.width)
+        pass
+
 
 # Helper function to pretty-print the values of a Pyomo indexed variable within zone of interest
 def pprint_zoi_var(var, zoi, index_positions: list = None, decimals: int = 2):

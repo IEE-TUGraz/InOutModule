@@ -1,6 +1,9 @@
+import time
+
 import numpy as np
 import openpyxl
 import pandas as pd
+from openpyxl import load_workbook
 
 from InOutModule.printer import Printer
 
@@ -12,7 +15,8 @@ def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str):
     wb = openpyxl.load_workbook(excel_file_path)
     for sheet in wb.sheetnames:
         if wb[sheet].cell(row=2, column=3).value != version_specifier:
-            raise ValueError(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
+            printer.error(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
+            printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
     pass
 
 
@@ -54,6 +58,13 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
 
 
 def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    """
+    Read the dPower_Hindex data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: None
+    """
     dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["p", "rp", "k"], False, False)
 
     if keep_excluded_entries:
@@ -65,6 +76,13 @@ def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False,
 
 
 def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    """
+    Read the dPower_WeightsRP data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: None
+    """
     dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["rp"], False, False)
 
     if keep_excluded_entries:
@@ -76,7 +94,14 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
 
 
 def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["k"], False, False)
+    """
+    Read the dPower_WeightsK data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: None
+    """
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["k"], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
@@ -87,6 +112,13 @@ def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = Fals
 
 
 def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    """
+    Read the dPower_BusInfo data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: None
+    """
     dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i"], True, keep_excluded_entries)
 
     if do_not_convert_values:
@@ -96,6 +128,13 @@ def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False
 
 
 def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    """
+    Read the dPower_Network data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: None
+    """
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["i", "j", "c"], True, keep_excluded_entries)
 
     if not do_not_convert_values:
@@ -106,6 +145,14 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
 
 
 def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    """
+    Read the dPower_Demand data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Skip the conversion of values
+    :return: None
+    """
+
     dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
 
     if keep_excluded_entries:
@@ -117,28 +164,34 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Demand
 
 
-def get_dPower_ThermalGen(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
-    dPower_ThermalGen = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_ThermalGen = dPower_ThermalGen[dPower_ThermalGen["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
-    dPower_ThermalGen = dPower_ThermalGen.set_index('g')
-    dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
+def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+    """
+    Read the dPower_ThermalGen data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param do_not_convert_values: Skip the conversion of values
+    :return: None
+    """
+    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.0.4r", ["g"], False, keep_excluded_entries)
 
-    dPower_ThermalGen['pSlopeVarCostEUR'] = (dPower_ThermalGen['OMVarCost'] * 1e-3 +
-                                             dPower_ThermalGen['FuelCost']) / dPower_ThermalGen['Efficiency'] * 1e-3
+    if not do_not_convert_values:
+        dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
 
-    dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['CommitConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
-    dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
-    dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
-    dPower_ThermalGen['RampUp'] *= 1e-3
-    dPower_ThermalGen['RampDw'] *= 1e-3
-    dPower_ThermalGen['MaxProd'] *= 1e-3  # TODO: Include EFOR here
-    dPower_ThermalGen['MinProd'] *= 1e-3
-    dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
+        dPower_ThermalGen['pSlopeVarCostEUR'] = (dPower_ThermalGen['OMVarCost'] * 1e-3 +
+                                                 dPower_ThermalGen['FuelCost']) / dPower_ThermalGen['Efficiency'] * 1e-3
 
-    # Fill NaN values with 0 for MinUpTime and MinDownTime
-    dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].fillna(0)
-    dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].fillna(0)
+        dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['CommitConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
+        dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
+        dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
+        dPower_ThermalGen['RampUp'] *= 1e-3
+        dPower_ThermalGen['RampDw'] *= 1e-3
+        dPower_ThermalGen['MaxProd'] *= 1e-3  # TODO: Include EFOR here
+        dPower_ThermalGen['MinProd'] *= 1e-3
+        dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
+
+        # Fill NaN values with 0 for MinUpTime and MinDownTime
+        dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].fillna(0)
+        dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].fillna(0)
 
     # Check that both MinUpTime and MinDownTime are integers and raise error if not
     if not dPower_ThermalGen.MinUpTime.dtype == np.int64:
@@ -170,3 +223,76 @@ def get_dPower_VRESProfiles(excel_file_path: str):
     dPower_VRESProfiles = dPower_VRESProfiles.melt(id_vars=['id', 'rp', 'g', 'dataPackage', 'dataSource'], var_name='k', value_name='Capacity')
     dPower_VRESProfiles = dPower_VRESProfiles.set_index(['rp', 'k', 'g'])
     return dPower_VRESProfiles
+
+
+def compare_Excels(source_path: str, target_path: str) -> bool:
+    start_time = time.time()
+    source = load_workbook(source_path)
+    target = load_workbook(target_path)
+
+    equal = True
+
+    for sheet in source.sheetnames:
+        source_sheet = source[sheet]
+        target_sheet = target[sheet]
+
+        for row in range(1, source_sheet.max_row + 1):
+            if source_sheet.row_dimensions[row].height != target_sheet.row_dimensions[row].height:
+                printer.error(f"Mismatch in row height at {source_cell.coordinate}: {source_sheet.row_dimensions[row].height} != {target_sheet.row_dimensions[row].height}")
+                equal = False
+
+            for col in range(1, source_sheet.max_column + 1):
+                source_cell = source_sheet.cell(row=row, column=col)
+                target_cell = target_sheet.cell(row=row, column=col)
+
+                # Value
+                if source_cell.value != target_cell.value:
+                    printer.error(f"Mismatch in value at {source_cell.coordinate}: {source_cell.value} != {target_cell.value}")
+                    equal = False
+
+                # Font
+                for k, v in source_cell.font.__dict__.items():
+                    if k == "color" and v is not None:
+                        for k2, v2 in v.__dict__.items():
+                            if v2 != getattr(target_cell.font.color, k2):
+                                printer.error(f"Mismatch in font color at {source_cell.coordinate}: {v2} != {getattr(target_cell.font.color, k2)}")
+                                equal = False
+                    elif getattr(target_cell.font, k) != v:
+                        printer.error(f"Mismatch in font property '{k}' at {source_cell.coordinate}: {getattr(target_cell.font, k)} != {v}")
+                        equal = False
+
+                # Fill
+                for k, v in source_cell.fill.__dict__.items():
+                    if k == "color" and v is not None:
+                        for k2, v2 in v.__dict__.items():
+                            if v2 != getattr(target_cell.fill.color, k2):
+                                printer.error(f"Mismatch in fill color at {source_cell.coordinate}: {v2} != {getattr(target_cell.fill.color, k2)}")
+                                equal = False
+                    elif getattr(target_cell.fill, k) != v:
+                        printer.error(f"Mismatch in fill property '{k}' at {source_cell.coordinate}: {getattr(target_cell.fill, k)} != {v}")
+                        equal = False
+
+                # Number format
+                if source_cell.number_format != target_cell.number_format:
+                    printer.error(f"Mismatch in number format at {source_cell.coordinate}: {source_cell.number_format} != {target_cell.number_format}")
+                    equal = False
+
+                # Alignment
+                for k, v in source_cell.alignment.__dict__.items():
+                    if getattr(target_cell.alignment, k) != v:
+                        printer.error(f"Mismatch in alignment property '{k}' at {source_cell.coordinate}: {getattr(target_cell.alignment, k)} != {v}")
+                        equal = False
+
+                # Comment
+                if source_cell.comment != target_cell.comment:
+                    printer.error(f"Mismatch in comment at {source_cell.coordinate}: {source_cell.comment} != {target_cell.comment}")
+                    equal = False
+
+                # Column width
+                if row == 1:  # Only need to check column width for the first row
+                    if source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width != target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width:
+                        printer.error(f"Mismatch in column width at {source_cell.coordinate}: {source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width} != {target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width}")
+                        equal = False
+
+    printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")
+    return equal

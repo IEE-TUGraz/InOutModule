@@ -84,6 +84,8 @@ class ExcelWriter:
         :return: None
         """
         start_time = time.time()
+        if excel_definition_id not in self.excel_definitions:
+            raise ValueError(f"Excel definition '{excel_definition_id}' not found in the definitions. Please define it in the XML file.")
         excel_definition = self.excel_definitions[excel_definition_id]
         wb = openpyxl.Workbook()
         scenarios = data["scenario"].unique()
@@ -335,7 +337,29 @@ def write_VRESProfiles(data: pd.DataFrame, file_path: str):
 
 
 if __name__ == "__main__":
-    data = ExcelReader.get_dPower_Network("examples/Power_Network.xlsx", True, True)
+    printer.set_width(300)
 
     ew = ExcelWriter("ExcelDefinitions.xml")
-    ew.write_dPower_Network(data, "examples/output")
+
+    combinations = [
+        ("Power_Hindex", "examples/Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
+        ("Power_WeightsRP", "examples/Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
+        ("Power_WeightsK", "examples/Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
+        ("Power_BusInfo", "examples/Power_BusInfo.xlsx", ExcelReader.get_dPower_BusInfo, ew.write_dPower_BusInfo),
+        ("Power_Network", "examples/Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
+        ("Power_Demand", "examples/Power_Demand.xlsx", ExcelReader.get_dPower_Demand, ew.write_dPower_Demand),
+    ]
+
+    for excel_definition_id, file_path, read, write in combinations:
+        printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
+        data = read(file_path, True, True)
+        write(data, "examples/output")
+
+        printer.information(f"Comparing '{excel_definition_id}' against source file '{file_path}'")
+        filesEqual = ExcelReader.compare_Excels(file_path, f"examples/output/{excel_definition_id}.xlsx")
+        if filesEqual:
+            printer.success(f"Excel files are equal")
+        else:
+            printer.error(f"Excel files are NOT equal - see above for details")
+
+        printer.separator()
