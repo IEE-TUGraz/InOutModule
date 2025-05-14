@@ -83,7 +83,7 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: None
     """
-    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["rp"], False, False)
+    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["rp"], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
@@ -101,7 +101,7 @@ def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = Fals
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: None
     """
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["k"], False, False)
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["k"], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
@@ -172,7 +172,7 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     :param do_not_convert_values: Skip the conversion of values
     :return: None
     """
-    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.0.4r", ["g"], False, keep_excluded_entries)
+    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
 
     if not do_not_convert_values:
         dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
@@ -238,7 +238,7 @@ def compare_Excels(source_path: str, target_path: str) -> bool:
 
         for row in range(1, source_sheet.max_row + 1):
             if source_sheet.row_dimensions[row].height != target_sheet.row_dimensions[row].height:
-                printer.error(f"Mismatch in row height at {source_cell.coordinate}: {source_sheet.row_dimensions[row].height} != {target_sheet.row_dimensions[row].height}")
+                printer.error(f"Mismatch in row height at {sheet}/row {row}: {source_sheet.row_dimensions[row].height} != {target_sheet.row_dimensions[row].height}")
                 equal = False
 
             for col in range(1, source_sheet.max_column + 1):
@@ -247,7 +247,7 @@ def compare_Excels(source_path: str, target_path: str) -> bool:
 
                 # Value
                 if source_cell.value != target_cell.value:
-                    printer.error(f"Mismatch in value at {source_cell.coordinate}: {source_cell.value} != {target_cell.value}")
+                    printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_cell.value} != {target_cell.value}")
                     equal = False
 
                 # Font
@@ -255,10 +255,10 @@ def compare_Excels(source_path: str, target_path: str) -> bool:
                     if k == "color" and v is not None:
                         for k2, v2 in v.__dict__.items():
                             if v2 != getattr(target_cell.font.color, k2):
-                                printer.error(f"Mismatch in font color at {source_cell.coordinate}: {v2} != {getattr(target_cell.font.color, k2)}")
+                                printer.error(f"Mismatch in font color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.font.color, k2)}")
                                 equal = False
                     elif getattr(target_cell.font, k) != v:
-                        printer.error(f"Mismatch in font property '{k}' at {source_cell.coordinate}: {getattr(target_cell.font, k)} != {v}")
+                        printer.error(f"Mismatch in font property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.font, k)} != {v}")
                         equal = False
 
                 # Fill
@@ -266,32 +266,32 @@ def compare_Excels(source_path: str, target_path: str) -> bool:
                     if k == "color" and v is not None:
                         for k2, v2 in v.__dict__.items():
                             if v2 != getattr(target_cell.fill.color, k2):
-                                printer.error(f"Mismatch in fill color at {source_cell.coordinate}: {v2} != {getattr(target_cell.fill.color, k2)}")
+                                printer.error(f"Mismatch in fill color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.fill.color, k2)}")
                                 equal = False
                     elif getattr(target_cell.fill, k) != v:
-                        printer.error(f"Mismatch in fill property '{k}' at {source_cell.coordinate}: {getattr(target_cell.fill, k)} != {v}")
+                        printer.error(f"Mismatch in fill property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.fill, k)} != {v}")
                         equal = False
 
                 # Number format
                 if source_cell.number_format != target_cell.number_format:
-                    printer.error(f"Mismatch in number format at {source_cell.coordinate}: {source_cell.number_format} != {target_cell.number_format}")
+                    printer.error(f"Mismatch in number format at {sheet}/{source_cell.coordinate}: {source_cell.number_format} != {target_cell.number_format}")
                     equal = False
 
                 # Alignment
                 for k, v in source_cell.alignment.__dict__.items():
                     if getattr(target_cell.alignment, k) != v:
-                        printer.error(f"Mismatch in alignment property '{k}' at {source_cell.coordinate}: {getattr(target_cell.alignment, k)} != {v}")
+                        printer.error(f"Mismatch in alignment property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.alignment, k)} != {v}")
                         equal = False
 
                 # Comment
                 if source_cell.comment != target_cell.comment:
-                    printer.error(f"Mismatch in comment at {source_cell.coordinate}: {source_cell.comment} != {target_cell.comment}")
+                    printer.error(f"Mismatch in comment at {sheet}/{source_cell.coordinate}: {source_cell.comment} != {target_cell.comment}")
                     equal = False
 
                 # Column width
                 if row == 1:  # Only need to check column width for the first row
                     if source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width != target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width:
-                        printer.error(f"Mismatch in column width at {source_cell.coordinate}: {source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width} != {target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width}")
+                        printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width} != {target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width}")
                         equal = False
 
     printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")

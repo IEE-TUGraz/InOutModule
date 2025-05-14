@@ -11,6 +11,10 @@ formatting and description texts.
 
 # Power_WeightsRP
 
+## v0.1.1 -> v0.1.2
+
+Fix formatting of pWeight_rp column.
+
 ## v0.1.0 -> v0.1.1
 
 Fix description for column 'rp' to be more general.
@@ -21,6 +25,10 @@ Switching to "scripted" method when writing Excel-File (instead of copying from 
 formatting and description texts.
 
 # Power_WeightsK
+
+## v0.1.1 -> v0.1.2
+
+Fix formatting of pWeight_k column.
 
 ## v0.1.0 -> v0.1.1
 
@@ -141,6 +149,11 @@ formatting and description texts.
 | Power_VRES | A4    | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed                                                        |
 
 # Power_ThermalGen
+
+## v0.0.4r -> v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
 
 ## v0.0.4 → v0.0.4r
 

@@ -203,6 +203,8 @@ class Column:
         try:
             for column in columns:
                 column_id = column.get("id")
+                if column_id in return_dict:
+                    raise ValueError(f"Column ID '{column_id}' is not unique in the xml-file. Please define it only once.")
                 readable_name = column.find("ReadableName").text
                 description = column.find("Description").text
                 unit = column.find("Unit").text

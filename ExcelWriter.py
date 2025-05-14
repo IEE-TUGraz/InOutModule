@@ -264,6 +264,15 @@ class ExcelWriter:
 
         self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
+    def write_dPower_ThermalGen(self, dPower_ThermalGen: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_ThermalGen DataFrame to an Excel file in LEGO format.
+        :param dPower_ThermalGen: DataFrame containing the dPower_ThermalGen data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_ThermalGen, folder_path, "Power_ThermalGen")
+
 
 def write_VRESProfiles(data: pd.DataFrame, file_path: str):
     templateName = "Power_VRESProfiles"
@@ -348,6 +357,7 @@ if __name__ == "__main__":
         ("Power_BusInfo", "examples/Power_BusInfo.xlsx", ExcelReader.get_dPower_BusInfo, ew.write_dPower_BusInfo),
         ("Power_Network", "examples/Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
         ("Power_Demand", "examples/Power_Demand.xlsx", ExcelReader.get_dPower_Demand, ew.write_dPower_Demand),
+        ("Power_ThermalGen", "examples/Power_ThermalGen.xlsx", ExcelReader.get_dPower_ThermalGen, ew.write_dPower_ThermalGen)
     ]
 
     for excel_definition_id, file_path, read, write in combinations:

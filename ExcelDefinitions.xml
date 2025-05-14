@@ -16,7 +16,7 @@
             </Columns>
         </ExcelDefinition>
         <ExcelDefinition id="Power_WeightsRP">
-            <Version>v0.1.1</Version>
+            <Version>v0.1.2</Version>
             <SheetHeader>Power - Weights of representative periods</SheetHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
@@ -29,7 +29,7 @@
             </Columns>
         </ExcelDefinition>
         <ExcelDefinition id="Power_WeightsK">
-            <Version>v0.1.1</Version>
+            <Version>v0.1.2</Version>
             <SheetHeader>Power - Weights of representative hours</SheetHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
@@ -105,6 +105,44 @@
                 <PivotColumn id="demand_by_k" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
+        <ExcelDefinition id="Power_ThermalGen">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Thermal Generators</SheetHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="tec" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="MinProd" scenarioDependent="True"/>
+                <Column id="RampUp" scenarioDependent="True"/>
+                <Column id="RampDw" scenarioDependent="True"/>
+                <Column id="MinUpTime" scenarioDependent="True"/>
+                <Column id="MinDownTime" scenarioDependent="True"/>
+                <Column id="Qmax" scenarioDependent="True"/>
+                <Column id="Qmin" scenarioDependent="True"/>
+                <Column id="InertiaConst" scenarioDependent="True"/>
+                <Column id="FuelCost" scenarioDependent="True"/>
+                <Column id="Efficiency" scenarioDependent="True"/>
+                <Column id="CommitConsumption" scenarioDependent="True"/>
+                <Column id="OMVarCost" scenarioDependent="True"/>
+                <Column id="StartupConsumption" scenarioDependent="True"/>
+                <Column id="EFOR" scenarioDependent="True"/>
+                <Column id="EnableInvest" scenarioDependent="True"/>
+                <Column id="InvestCost" scenarioDependent="True"/>
+                <Column id="FirmCapCoef" scenarioDependent="True"/>
+                <Column id="CO2Emis" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
     </ExcelDefinitions>
 
     <Columns>
@@ -129,6 +167,20 @@
             <ColumnWidth>19.57</ColumnWidth>
             <CellStyle>dbKey</CellStyle>
         </Column>
+        <Column id="g">
+            <ReadableName>Generator</ReadableName>
+            <Description>Generator name</Description>
+            <Unit>[g]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="tec">
+            <ReadableName>Technology</ReadableName>
+            <Description>Corresponding technology</Description>
+            <Unit>[tec]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="p">
             <ReadableName>p</ReadableName>
             <Description>Hour of the year</Description>
@@ -148,7 +200,7 @@
             <Description>Weight of representative period within full timespan</Description>
             <Unit>[h]</Unit>
             <ColumnWidth>31.14</ColumnWidth>
-            <CellStyle>right</CellStyle>
+            <CellStyle>rightFloat1</CellStyle>
         </Column>
         <Column id="k">
             <ReadableName>k</ReadableName>
@@ -162,7 +214,7 @@
             <Description>Weight of representative hour within representative period</Description>
             <Unit>[h]</Unit>
             <ColumnWidth>31.14</ColumnWidth>
-            <CellStyle>right</CellStyle>
+            <CellStyle>rightFloat1</CellStyle>
         </Column>
         <Column id="dataPackage">
             <ReadableName>Data Package</ReadableName>
@@ -176,13 +228,6 @@
             <Description>Where the data for the entry comes from</Description>
             <Unit>[dataSource]</Unit>
             <ColumnWidth>23.86</ColumnWidth>
-            <CellStyle>general</CellStyle>
-        </Column>
-        <Column id="pWeight_rp">
-            <ReadableName>Representative period's weight</ReadableName>
-            <Description>Weight of representative period within full timespan</Description>
-            <Unit>[h]</Unit>
-            <ColumnWidth>31.14</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="i">
@@ -359,6 +404,148 @@
             <Unit>[0, 1]</Unit>
             <ColumnWidth>19.3</ColumnWidth>
             <CellStyle>right</CellStyle>
+        </Column>
+        <Column id="ExisUnits">
+            <ReadableName>ExisUnits</ReadableName>
+            <Description>Whether unit exists (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>19.3</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="MaxProd">
+            <ReadableName>MaxProd</ReadableName>
+            <Description>Maximum active power output of the generator</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinProd">
+            <ReadableName>MinProd</ReadableName>
+            <Description>Minimum active power output of the generator</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="RampUp">
+            <ReadableName>RampUp</ReadableName>
+            <Description>Rate at which the generator can increase its output per time step</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="RampDw">
+            <ReadableName>RampDw</ReadableName>
+            <Description>Rate at which the generator can decrease its output per time step</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinUpTime">
+            <ReadableName>MinUpTime</ReadableName>
+            <Description>Minimum time the generator has to be on after a startup</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="MinDownTime">
+            <ReadableName>MinDownTime</ReadableName>
+            <Description>Minimum time the generator has to be off after a shutdown</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="Qmax">
+            <ReadableName>Qmax</ReadableName>
+            <Description>Maximum reactive power output of the generator</Description>
+            <Unit>[MVAr]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="Qmin">
+            <ReadableName>Qmin</ReadableName>
+            <Description>Minimum reactive power of the generator</Description>
+            <Unit>[MVAr]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="InertiaConst">
+            <ReadableName>InertiaConst</ReadableName>
+            <Description>Inertia constant H of the generator</Description>
+            <Unit>[s]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="FuelCost">
+            <ReadableName>FuelCost</ReadableName>
+            <Description>Fuel cost of the thermal generator</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="Efficiency">
+            <ReadableName>Efficiency</ReadableName>
+            <Description>Efficiency calculated as 1/input for 1 MWh, i.e. 0.5 (or 50%) if 2 MWh fuel are required for 1
+                MWh electricity
+            </Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>29.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="CommitConsumption">
+            <ReadableName>CommitConsumption</ReadableName>
+            <Description>Consumption while unit is turned on (regardless of output)</Description>
+            <Unit>[MWh/h]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="OMVarCost">
+            <ReadableName>OMVarCost</ReadableName>
+            <Description>Operation and maintenance cost of the generator</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="StartupConsumption">
+            <ReadableName>StartupConsumption</ReadableName>
+            <Description>Consumption for each startup</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="EFOR">
+            <ReadableName>EFOR</ReadableName>
+            <Description>Equivalent forced outage rate of the generator</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="EnableInvest">
+            <ReadableName>EnableInvest</ReadableName>
+            <Description>Whether the model can invest in the generator (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>17.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="InvestCost">
+            <ReadableName>InvestCost</ReadableName>
+            <Description>Annualized investment cost for the generator</Description>
+            <Unit>[€/MW/year]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="FirmCapCoef">
+            <ReadableName>FirmCapCoef</ReadableName>
+            <Description>Firm capacity coefficient of the generator</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="CO2Emis">
+            <ReadableName>CO2Emis</ReadableName>
+            <Description>Specific CO2 emissions of the generator</Description>
+            <Unit>[tCO2/MWh]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
         </Column>
     </Columns>
 
