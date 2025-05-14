@@ -145,76 +145,27 @@
         </ExcelDefinition>
     </ExcelDefinitions>
 
-    <Columns>
-        <Column id="excl">
-            <ReadableName>Excl.</ReadableName>
-            <Description/>
-            <Unit/>
-            <ColumnWidth>4.86</ColumnWidth>
-            <CellStyle>bold</CellStyle>
-        </Column>
-        <Column id="NOEXCL">
-            <ReadableName/>
-            <Description/>
-            <Unit/>
-            <ColumnWidth>4.86</ColumnWidth>
-            <CellStyle/>
-        </Column>
-        <Column id="id">
-            <ReadableName>Database ID</ReadableName>
-            <Description>ID within database</Description>
-            <Unit>[db-key]</Unit>
-            <ColumnWidth>19.57</ColumnWidth>
-            <CellStyle>dbKey</CellStyle>
-        </Column>
-        <Column id="g">
-            <ReadableName>Generator</ReadableName>
-            <Description>Generator name</Description>
-            <Unit>[g]</Unit>
+    <Columns> <!-- NOTE: Columns are sorted alphabetically (by id) -->
+        <Column id="c">
+            <ReadableName>Circuit / Name</ReadableName>
+            <Description>Name of line (or circuit)</Description>
+            <Unit>[c]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
-        <Column id="tec">
-            <ReadableName>Technology</ReadableName>
-            <Description>Corresponding technology</Description>
-            <Unit>[tec]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
-        </Column>
-        <Column id="p">
-            <ReadableName>p</ReadableName>
-            <Description>Hour of the year</Description>
-            <Unit>[p]</Unit>
+        <Column id="CO2Emis">
+            <ReadableName>CO2Emis</ReadableName>
+            <Description>Specific CO2 emissions of the generator</Description>
+            <Unit>[tCO2/MWh]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
+            <CellStyle>rightFloat4</CellStyle>
         </Column>
-        <Column id="rp">
-            <ReadableName>rp</ReadableName>
-            <Description>Representative period</Description>
-            <Unit>[rp]</Unit>
+        <Column id="CommitConsumption">
+            <ReadableName>CommitConsumption</ReadableName>
+            <Description>Consumption while unit is turned on (regardless of output)</Description>
+            <Unit>[MWh/h]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
-        </Column>
-        <Column id="pWeight_rp">
-            <ReadableName>Representative period's weight</ReadableName>
-            <Description>Weight of representative period within full timespan</Description>
-            <Unit>[h]</Unit>
-            <ColumnWidth>31.14</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="k">
-            <ReadableName>k</ReadableName>
-            <Description>Representative hour within rp</Description>
-            <Unit>[k]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
-        </Column>
-        <Column id="pWeight_k">
-            <ReadableName>Representative hour's weight</ReadableName>
-            <Description>Weight of representative hour within representative period</Description>
-            <Unit>[h]</Unit>
-            <ColumnWidth>31.14</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
+            <CellStyle>rightFloat2</CellStyle>
         </Column>
         <Column id="dataPackage">
             <ReadableName>Data Package</ReadableName>
@@ -230,12 +181,89 @@
             <ColumnWidth>23.86</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="Efficiency">
+            <ReadableName>Efficiency</ReadableName>
+            <Description>Efficiency calculated as 1/input for 1 MWh, i.e. 0.5 (or 50%) if 2 MWh fuel are required for 1 MWh electricity</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>29.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="EFOR">
+            <ReadableName>EFOR</ReadableName>
+            <Description>Equivalent forced outage rate of the generator</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="EnableInvest">
+            <ReadableName>EnableInvest</ReadableName>
+            <Description>Whether the model can invest in the generator (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>17.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="excl">
+            <ReadableName>Excl.</ReadableName>
+            <Description/>
+            <Unit/>
+            <ColumnWidth>4.86</ColumnWidth>
+            <CellStyle>bold</CellStyle>
+        </Column>
+        <Column id="ExisUnits">
+            <ReadableName>ExisUnits</ReadableName>
+            <Description>Whether unit exists (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>19.3</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="FirmCapCoef">
+            <ReadableName>FirmCapCoef</ReadableName>
+            <Description>Firm capacity coefficient of the generator</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="FuelCost">
+            <ReadableName>FuelCost</ReadableName>
+            <Description>Fuel cost of the thermal generator</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="g">
+            <ReadableName>Generator</ReadableName>
+            <Description>Generator name</Description>
+            <Unit>[g]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="i">
             <ReadableName>Node</ReadableName>
             <Description>Name of node</Description>
             <Unit>[i]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="id">
+            <ReadableName>Database ID</ReadableName>
+            <Description>ID within database</Description>
+            <Unit>[db-key]</Unit>
+            <ColumnWidth>19.57</ColumnWidth>
+            <CellStyle>dbKey</CellStyle>
+        </Column>
+        <Column id="InertiaConst">
+            <ReadableName>InertiaConst</ReadableName>
+            <Description>Inertia constant H of the generator</Description>
+            <Unit>[s]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="InvestCost">
+            <ReadableName>InvestCost</ReadableName>
+            <Description>Annualized investment cost for the generator</Description>
+            <Unit>[€/MW/year]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </Column>
         <Column id="j">
             <ReadableName>To Node</ReadableName>
@@ -244,24 +272,80 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
-        <Column id="c">
-            <ReadableName>Circuit / Name</ReadableName>
-            <Description>Name of line (or circuit)</Description>
-            <Unit>[c]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
+        <Column id="k">
+            <ReadableName>k</ReadableName>
+            <Description>Representative hour within rp</Description>
+            <Unit>[k]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
-        <Column id="pRline">
-            <ReadableName>R</ReadableName>
-            <Description>Resistance R of line</Description>
-            <Unit>[p.u.]</Unit>
+        <Column id="lat">
+            <ReadableName>Latitude</ReadableName>
+            <Description>Latitude</Description>
+            <Unit>[°]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
         </Column>
-        <Column id="pXline">
-            <ReadableName>X</ReadableName>
-            <Description>Reactance X of line</Description>
-            <Unit>[p.u.]</Unit>
+        <Column id="lon">
+            <ReadableName>Longitude</ReadableName>
+            <Description>Longitude</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="MaxProd">
+            <ReadableName>MaxProd</ReadableName>
+            <Description>Maximum active power output of the generator</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinDownTime">
+            <ReadableName>MinDownTime</ReadableName>
+            <Description>Minimum time the generator has to be off after a shutdown</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="MinProd">
+            <ReadableName>MinProd</ReadableName>
+            <Description>Minimum active power output of the generator</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinUpTime">
+            <ReadableName>MinUpTime</ReadableName>
+            <Description>Minimum time the generator has to be on after a startup</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="NOEXCL">
+            <ReadableName/>
+            <Description/>
+            <Unit/>
+            <ColumnWidth>4.86</ColumnWidth>
+            <CellStyle/>
+        </Column>
+        <Column id="OMVarCost">
+            <ReadableName>OMVarCost</ReadableName>
+            <Description>Operation and maintenance cost of the generator</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="p">
+            <ReadableName>p</ReadableName>
+            <Description>Hour of the year</Description>
+            <Unit>[p]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pAngle">
+            <ReadableName>Tap Angle</ReadableName>
+            <Description>Transformer angle shift</Description>
+            <Unit>[°]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
         </Column>
@@ -272,26 +356,47 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
         </Column>
-        <Column id="pAngle">
-            <ReadableName>Tap Angle</ReadableName>
-            <Description>Transformer angle shift</Description>
-            <Unit>[°]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
-            <CellStyle>rightFloat4</CellStyle>
-        </Column>
-        <Column id="pRatio">
-            <ReadableName>Tap Ratio</ReadableName>
-            <Description>Transformer ratio</Description>
+        <Column id="pBus_pf">
+            <ReadableName>Power Factor</ReadableName>
+            <Description>Power factor at node</Description>
             <Unit>[p.u.]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
-            <CellStyle>rightFloat4</CellStyle>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </Column>
-        <Column id="pPmax">
-            <ReadableName>Pmax</ReadableName>
-            <Description>Maximum active power transfer</Description>
-            <Unit>[MW]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
+        <Column id="pBusB">
+            <ReadableName>Bs</ReadableName>
+            <Description>Susceptance B connected to node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusBaseV">
+            <ReadableName>Base Voltage</ReadableName>
+            <Description>Base voltage at node</Description>
+            <Unit>[kV]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pBusG">
+            <ReadableName>Gs</ReadableName>
+            <Description>Conductance G connected to node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusMaxV">
+            <ReadableName>Maximum Voltage</ReadableName>
+            <Description>Maximum voltage (in % of bae voltage)</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusMinV">
+            <ReadableName>Minimum Voltage</ReadableName>
+            <Description>Minimum voltage (in % of base voltage)</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
         </Column>
         <Column id="pEnableInvest">
             <ReadableName>Enable Investment</ReadableName>
@@ -314,6 +419,27 @@
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
+        <Column id="pPmax">
+            <ReadableName>Pmax</ReadableName>
+            <Description>Maximum active power transfer</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pRatio">
+            <ReadableName>Tap Ratio</ReadableName>
+            <Description>Transformer ratio</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pRline">
+            <ReadableName>R</ReadableName>
+            <Description>Resistance R of line</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
         <Column id="pTecRepr">
             <ReadableName>Technical Representation</ReadableName>
             <Description>Technical representation of line in model</Description>
@@ -321,138 +447,26 @@
             <ColumnWidth>27.7</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
-        <Column id="z">
-            <ReadableName>Zone</ReadableName>
-            <Description>Zone in which node lies</Description>
-            <Unit>[z]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
-        </Column>
-        <Column id="pBusBaseV">
-            <ReadableName>Base Voltage</ReadableName>
-            <Description>Base voltage at node</Description>
-            <Unit>[kV]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightInt</CellStyle>
-        </Column>
-        <Column id="pBusMaxV">
-            <ReadableName>Maximum Voltage</ReadableName>
-            <Description>Maximum voltage (in % of bae voltage)</Description>
-            <Unit>[p.u.]</Unit>
-            <ColumnWidth>20.0</ColumnWidth>
+        <Column id="pWeight_k">
+            <ReadableName>Representative hour's weight</ReadableName>
+            <Description>Weight of representative hour within representative period</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.14</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
-        <Column id="pBusMinV">
-            <ReadableName>Minimum Voltage</ReadableName>
-            <Description>Minimum voltage (in % of base voltage)</Description>
-            <Unit>[p.u.]</Unit>
-            <ColumnWidth>20.0</ColumnWidth>
+        <Column id="pWeight_rp">
+            <ReadableName>Representative period's weight</ReadableName>
+            <Description>Weight of representative period within full timespan</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.14</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
-        <Column id="pBusB">
-            <ReadableName>Bs</ReadableName>
-            <Description>Susceptance B connected to node</Description>
+        <Column id="pXline">
+            <ReadableName>X</ReadableName>
+            <Description>Reactance X of line</Description>
             <Unit>[p.u.]</Unit>
-            <ColumnWidth>20.0</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="pBusG">
-            <ReadableName>Gs</ReadableName>
-            <Description>Conductance G connected to node</Description>
-            <Unit>[p.u.]</Unit>
-            <ColumnWidth>20.0</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="pBus_pf">
-            <ReadableName>Power Factor</ReadableName>
-            <Description>Power factor at node</Description>
-            <Unit>[p.u.]</Unit>
-            <ColumnWidth>20.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
-        </Column>
-        <Column id="YearCom">
-            <ReadableName>Commission Year</ReadableName>
-            <Description>Year where it is commissioned (1.1.xxxx)</Description>
-            <Unit>[Year]</Unit>
-            <ColumnWidth>19.5</ColumnWidth>
-            <CellStyle>rightInt</CellStyle>
-        </Column>
-        <Column id="YearDecom">
-            <ReadableName>Decommission Year</ReadableName>
-            <Description>Year where it is decommissioned (31.12.xxxx)</Description>
-            <Unit>[Year]</Unit>
-            <ColumnWidth>19.5</ColumnWidth>
-            <CellStyle>rightInt</CellStyle>
-        </Column>
-        <Column id="lat">
-            <ReadableName>Latitude</ReadableName>
-            <Description>Latitude</Description>
-            <Unit>[°]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
-        </Column>
-        <Column id="lon">
-            <ReadableName>Longitude</ReadableName>
-            <Description>Longitude</Description>
-            <Unit>[°]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
-            <CellStyle>rightFloat4</CellStyle>
-        </Column>
-        <Column id="zoi">
-            <ReadableName>Zone of Interest</ReadableName>
-            <Description>Whether node is relevant for end result (1) or not (0)</Description>
-            <Unit>[0, 1]</Unit>
-            <ColumnWidth>19.3</ColumnWidth>
-            <CellStyle>right</CellStyle>
-        </Column>
-        <Column id="ExisUnits">
-            <ReadableName>ExisUnits</ReadableName>
-            <Description>Whether unit exists (1) or not (0)</Description>
-            <Unit>[0, 1]</Unit>
-            <ColumnWidth>19.3</ColumnWidth>
-            <CellStyle>rightInt</CellStyle>
-        </Column>
-        <Column id="MaxProd">
-            <ReadableName>MaxProd</ReadableName>
-            <Description>Maximum active power output of the generator</Description>
-            <Unit>[MW]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="MinProd">
-            <ReadableName>MinProd</ReadableName>
-            <Description>Minimum active power output of the generator</Description>
-            <Unit>[MW]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="RampUp">
-            <ReadableName>RampUp</ReadableName>
-            <Description>Rate at which the generator can increase its output per time step</Description>
-            <Unit>[MW]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="RampDw">
-            <ReadableName>RampDw</ReadableName>
-            <Description>Rate at which the generator can decrease its output per time step</Description>
-            <Unit>[MW]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat1</CellStyle>
-        </Column>
-        <Column id="MinUpTime">
-            <ReadableName>MinUpTime</ReadableName>
-            <Description>Minimum time the generator has to be on after a startup</Description>
-            <Unit>[h]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightInt</CellStyle>
-        </Column>
-        <Column id="MinDownTime">
-            <ReadableName>MinDownTime</ReadableName>
-            <Description>Minimum time the generator has to be off after a shutdown</Description>
-            <Unit>[h]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightInt</CellStyle>
         </Column>
         <Column id="Qmax">
             <ReadableName>Qmax</ReadableName>
@@ -468,42 +482,26 @@
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
-        <Column id="InertiaConst">
-            <ReadableName>InertiaConst</ReadableName>
-            <Description>Inertia constant H of the generator</Description>
-            <Unit>[s]</Unit>
+        <Column id="RampDw">
+            <ReadableName>RampDw</ReadableName>
+            <Description>Rate at which the generator can decrease its output per time step</Description>
+            <Unit>[MW]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
-        <Column id="FuelCost">
-            <ReadableName>FuelCost</ReadableName>
-            <Description>Fuel cost of the thermal generator</Description>
-            <Unit>[€/MWh]</Unit>
+        <Column id="RampUp">
+            <ReadableName>RampUp</ReadableName>
+            <Description>Rate at which the generator can increase its output per time step</Description>
+            <Unit>[MW]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
+            <CellStyle>rightFloat1</CellStyle>
         </Column>
-        <Column id="Efficiency">
-            <ReadableName>Efficiency</ReadableName>
-            <Description>Efficiency calculated as 1/input for 1 MWh, i.e. 0.5 (or 50%) if 2 MWh fuel are required for 1
-                MWh electricity
-            </Description>
-            <Unit>[%, 0-1]</Unit>
-            <ColumnWidth>29.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
-        </Column>
-        <Column id="CommitConsumption">
-            <ReadableName>CommitConsumption</ReadableName>
-            <Description>Consumption while unit is turned on (regardless of output)</Description>
-            <Unit>[MWh/h]</Unit>
+        <Column id="rp">
+            <ReadableName>rp</ReadableName>
+            <Description>Representative period</Description>
+            <Unit>[rp]</Unit>
             <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
-        </Column>
-        <Column id="OMVarCost">
-            <ReadableName>OMVarCost</ReadableName>
-            <Description>Operation and maintenance cost of the generator</Description>
-            <Unit>[€/MWh]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
+            <CellStyle>general</CellStyle>
         </Column>
         <Column id="StartupConsumption">
             <ReadableName>StartupConsumption</ReadableName>
@@ -512,40 +510,40 @@
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </Column>
-        <Column id="EFOR">
-            <ReadableName>EFOR</ReadableName>
-            <Description>Equivalent forced outage rate of the generator</Description>
-            <Unit>[%, 0-1]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
+        <Column id="tec">
+            <ReadableName>Technology</ReadableName>
+            <Description>Corresponding technology</Description>
+            <Unit>[tec]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
-        <Column id="EnableInvest">
-            <ReadableName>EnableInvest</ReadableName>
-            <Description>Whether the model can invest in the generator (1) or not (0)</Description>
-            <Unit>[0, 1]</Unit>
-            <ColumnWidth>17.0</ColumnWidth>
+        <Column id="YearCom">
+            <ReadableName>Commission Year</ReadableName>
+            <Description>Year where it is commissioned (1.1.xxxx)</Description>
+            <Unit>[Year]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </Column>
-        <Column id="InvestCost">
-            <ReadableName>InvestCost</ReadableName>
-            <Description>Annualized investment cost for the generator</Description>
-            <Unit>[€/MW/year]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
+        <Column id="YearDecom">
+            <ReadableName>Decommission Year</ReadableName>
+            <Description>Year where it is decommissioned (31.12.xxxx)</Description>
+            <Unit>[Year]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
         </Column>
-        <Column id="FirmCapCoef">
-            <ReadableName>FirmCapCoef</ReadableName>
-            <Description>Firm capacity coefficient of the generator</Description>
-            <Unit>[%, 0-1]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat2</CellStyle>
+        <Column id="z">
+            <ReadableName>Zone</ReadableName>
+            <Description>Zone in which node lies</Description>
+            <Unit>[z]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
-        <Column id="CO2Emis">
-            <ReadableName>CO2Emis</ReadableName>
-            <Description>Specific CO2 emissions of the generator</Description>
-            <Unit>[tCO2/MWh]</Unit>
-            <ColumnWidth>19.0</ColumnWidth>
-            <CellStyle>rightFloat4</CellStyle>
+        <Column id="zoi">
+            <ReadableName>Zone of Interest</ReadableName>
+            <Description>Whether node is relevant for end result (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>19.3</ColumnWidth>
+            <CellStyle>right</CellStyle>
         </Column>
     </Columns>
 
