@@ -160,6 +160,7 @@ class CaseStudy:
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
         self.scale_dPower_Demand()
+        self.scale_dPower_ThermalGen()
 
     def remove_scaling(self):
         self.power_scaling_factor = 1/self.power_scaling_factor
@@ -186,12 +187,36 @@ class CaseStudy:
         self.dPower_Network["pInvestCost"] = self.dPower_Network["pInvestCost"].fillna(0)
         self.dPower_Network["pPmax"] *= self.power_scaling_factor
 
-
     def scale_dPower_Demand(self):
         self.dPower_Demand["value"] *= self.power_scaling_factor
 
     def scale_dPower_ThermalGen(self):
-        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost']) * (self.cost_scaling_factor/self.power_scaling_factor) / self.dPower_ThermalGen['Efficiency']
+        self.dPower_ThermalGen = self.dPower_ThermalGen[self.dPower_ThermalGen["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+        self.dPower_ThermalGen = self.dPower_ThermalGen.set_index('g')
+        self.dPower_ThermalGen = self.dPower_ThermalGen[(self.dPower_ThermalGen["ExisUnits"] > 0) | (self.dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
+
+        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost']) * (self.cost_scaling_factor / self.power_scaling_factor) / self.dPower_ThermalGen['Efficiency']
+
+        self.dPower_ThermalGen['pInterVarCostEUR'] = self.dPower_ThermalGen['CommitConsumption'] * self.power_scaling_factor * self.dPower_ThermalGen['FuelCost'] * (self.cost_scaling_factor/self.power_scaling_factor)
+        self.dPower_ThermalGen['pStartupCostEUR'] = self.dPower_ThermalGen['StartupConsumption'] * self.power_scaling_factor * self.dPower_ThermalGen['FuelCost'] * (self.cost_scaling_factor/self.power_scaling_factor)
+        self.dPower_ThermalGen['MaxInvest'] = self.dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
+        self.dPower_ThermalGen['RampUp'] *= self.power_scaling_factor
+        self.dPower_ThermalGen['RampDw'] *= self.power_scaling_factor
+        self.dPower_ThermalGen['MaxProd'] *= self.power_scaling_factor  # TODO: Include EFOR here
+        self.dPower_ThermalGen['MinProd'] *= self.power_scaling_factor
+        self.dPower_ThermalGen['InvestCostEUR'] = self.dPower_ThermalGen['InvestCost'] * (self.cost_scaling_factor/self.power_scaling_factor) * self.dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
+
+        # Fill NaN values with 0 for MinUpTime and MinDownTime
+        self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].fillna(0)
+        self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].fillna(0)
+
+        # Check that both MinUpTime and MinDownTime are integers and raise error if not
+        if not self.dPower_ThermalGen.MinUpTime.dtype == np.int64:
+            raise ValueError("MinUpTime must be an integer for all entries.")
+        if not self.dPower_ThermalGen.MinDownTime.dtype == np.int64:
+            raise ValueError("MinDownTime must be an integer for all entries.")
+        self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].astype(int)
+        self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].astype(int)
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])

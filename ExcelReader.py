@@ -166,36 +166,11 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     :return: dPower_thermalGen
     """
     dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["g"], True, keep_excluded_entries)
-
+    
     if not do_not_convert_values:
-        dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
-
-        dPower_ThermalGen['EFOR'] = dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
-
-        dPower_ThermalGen['pSlopeVarCostEUR'] = dPower_ThermalGen['OMVarCost'] * 1e-3 +
-                                                dPower_ThermalGen['FuelCost'] * 1e-3 / dPower_ThermalGen['Efficiency']
-
-        dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['CommitConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
-        dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
-        dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
-        dPower_ThermalGen['RampUp'] *= 1e-3
-        dPower_ThermalGen['RampDw'] *= 1e-3
         dPower_ThermalGen['MaxProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
         dPower_ThermalGen['MinProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
-        dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
-
-        # Fill NaN values with 0 for MinUpTime and MinDownTime
-        dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].fillna(0)
-        dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].fillna(0)
-
-    # Check that both MinUpTime and MinDownTime are integers and raise error if not
-    if not dPower_ThermalGen.MinUpTime.dtype == np.int64:
-        raise ValueError("MinUpTime must be an integer for all entries.")
-    if not dPower_ThermalGen.MinDownTime.dtype == np.int64:
-        raise ValueError("MinDownTime must be an integer for all entries.")
-    dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].astype(int)
-    dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].astype(int)
-
+        dPower_ThermalGen['EFOR'] = dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
     return dPower_ThermalGen
 
 
