@@ -234,6 +234,10 @@ class CaseStudy:
         self.dPower_Storage['MaxProd'] *= self.power_scaling_factor
         self.dPower_Storage['MaxCons'] *= self.power_scaling_factor
 
+    def scale_dPower_ImpExpHubs(self):
+        self.dPower_ImpExpHubs["Pmax Import"] *= self.power_scaling_factor
+        self.dPower_ImpExpHubs["Pmax Export"] *= self.power_scaling_factor
+
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
@@ -278,7 +282,7 @@ class CaseStudy:
 
     def get_dPower_Storage(self):
         dPower_Storage = self.read_generator_data(self.example_folder + self.power_storage_file)
-        
+
         return dPower_Storage
 
     def get_dPower_Inflows(self):
@@ -307,10 +311,6 @@ class CaseStudy:
         errors = errors[(errors['Import Type'] > 1) | (errors['Export Type'] > 1)]
         if len(errors) > 0:
             raise ValueError(f"Each hub must have the same Import Type (Fix or Max) and the same Export Type (Fix or Max) for each connection. Please check: \n{errors.index}\n")
-
-        # Adjust values
-        dPower_ImpExpHubs["Pmax Import"] *= 1e-3
-        dPower_ImpExpHubs["Pmax Export"] *= 1e-3
 
         return dPower_ImpExpHubs
 
