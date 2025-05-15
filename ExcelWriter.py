@@ -19,7 +19,7 @@ printer = Printer.getInstance()
 
 
 class ExcelWriter:
-    def __init__(self, excel_definitions_path: str):
+    def __init__(self, excel_definitions_path: str = "ExcelDefinitions.xml"):
         """
         Initialize the ExcelWriter with the XML root element.
 
@@ -295,28 +295,43 @@ class ExcelWriter:
 
 
 if __name__ == "__main__":
+    import argparse
+    from rich_argparse import RichHelpFormatter
+
+    parser = argparse.ArgumentParser(description="Re-write all files in given folder and compare against source", formatter_class=RichHelpFormatter)
+    parser.add_argument("caseStudyFolder", type=str, default="examples/", help="Path to folder containing data for LEGO model.", nargs="?")
+    parser.add_argument("excelDefinitionsPath", type=str, help="Path to the Excel definitions XML file. Uses default if none is supplied.", nargs="?")
+    args = parser.parse_args()
+
     printer.set_width(300)
 
-    ew = ExcelWriter("ExcelDefinitions.xml")
+    printer.information(f"Loading case study from '{args.caseStudyFolder}'")
+
+    if args.excelDefinitionsPath is None:
+        ew = ExcelWriter()
+    else:
+        ew = ExcelWriter(args.excelDefinitionsPath)
+        printer.information(f"Loading Excel definitions from '{args.excelDefinitionsPath}'")
+    printer.separator()
 
     combinations = [
-        ("Power_Hindex", "examples/Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
-        ("Power_WeightsRP", "examples/Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
-        ("Power_WeightsK", "examples/Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
-        ("Power_BusInfo", "examples/Power_BusInfo.xlsx", ExcelReader.get_dPower_BusInfo, ew.write_dPower_BusInfo),
-        ("Power_Network", "examples/Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
-        ("Power_Demand", "examples/Power_Demand.xlsx", ExcelReader.get_dPower_Demand, ew.write_dPower_Demand),
-        ("Power_ThermalGen", "examples/Power_ThermalGen.xlsx", ExcelReader.get_dPower_ThermalGen, ew.write_dPower_ThermalGen),
-        ("Power_VRES", "examples/Power_VRES.xlsx", ExcelReader.get_dPower_VRES, ew.write_VRES),
-        ("Power_VRESProfiles", "examples/Power_VRESProfiles.xlsx", ExcelReader.get_dPower_VRESProfiles, ew.write_VRESProfiles),
-        ("Data_Sources", "examples/Data_Sources.xlsx", ExcelReader.get_dData_Sources, ew.write_dData_Sources),
-        ("Data_Packages", "examples/Data_Packages.xlsx", ExcelReader.get_dData_Packages, ew.write_dData_Packages),
+        ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
+        ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
+        ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
+        ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_dPower_BusInfo, ew.write_dPower_BusInfo),
+        ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
+        ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_dPower_Demand, ew.write_dPower_Demand),
+        ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_dPower_ThermalGen, ew.write_dPower_ThermalGen),
+        ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_dPower_VRES, ew.write_VRES),
+        ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_dPower_VRESProfiles, ew.write_VRESProfiles),
+        ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_dData_Sources, ew.write_dData_Sources),
+        ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_dData_Packages, ew.write_dData_Packages),
     ]
 
     for excel_definition_id, file_path, read, write in combinations:
         printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
         data = read(file_path, True, True)
-        write(data, "examples/output")
+        write(data, f"{args.caseStudyFolder}output")
 
         printer.information(f"Comparing '{excel_definition_id}' against source file '{file_path}'")
         filesEqual = ExcelReader.compare_Excels(file_path, f"examples/output/{excel_definition_id}.xlsx")
