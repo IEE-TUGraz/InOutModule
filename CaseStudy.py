@@ -162,6 +162,7 @@ class CaseStudy:
         self.scale_dPower_Demand()
         self.scale_dPower_ThermalGen()
         self.scale_dPower_RoR()
+        self.scale_dPower_Storage()
 
     def remove_scaling(self):
         self.power_scaling_factor = 1/self.power_scaling_factor
@@ -224,6 +225,15 @@ class CaseStudy:
         self.dPower_RoR['InvestCostEUR'] = self.dPower_RoR['MaxProd'] * self.power_scaling_factor * (self.dPower_RoR['InvestCostPerMW'] + self.dPower_RoR['InvestCostPerMWh'] * self.dPower_RoR['Ene2PowRatio']) * (self.cost_scaling_factor/self.power_scaling_factor)
         self.dPower_RoR['MaxProd'] *= self.power_scaling_factor
 
+    def scale_dPower_Storage(self):
+        self.dPower_Storage['IniReserve'] = self.dPower_Storage['IniReserve'].fillna(0)
+        self.dPower_Storage['MinReserve'] = self.dPower_Storage['MinReserve'].fillna(0)
+        self.dPower_Storage['MinProd'] = self.dPower_Storage["MinProd"].fillna(0)
+        self.dPower_Storage['pOMVarCostEUR'] = self.dPower_Storage['OMVarCost'] * (self.cost_scaling_factor/self.power_scaling_factor)
+        self.dPower_Storage['InvestCostEUR'] = self.dPower_Storage['MaxProd'] * self.power_scaling_factor * (self.dPower_Storage['InvestCostPerMW'] + self.dPower_Storage['InvestCostPerMWh'] * self.dPower_Storage['Ene2PowRatio']) * (self.cost_scaling_factor/self.power_scaling_factor)
+        self.dPower_Storage['MaxProd'] *= self.power_scaling_factor
+        self.dPower_Storage['MaxCons'] *= self.power_scaling_factor
+
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
@@ -268,13 +278,7 @@ class CaseStudy:
 
     def get_dPower_Storage(self):
         dPower_Storage = self.read_generator_data(self.example_folder + self.power_storage_file)
-        dPower_Storage['pOMVarCostEUR'] = dPower_Storage['OMVarCost'] * 1e-3
-        dPower_Storage['IniReserve'] = dPower_Storage['IniReserve'].fillna(0)
-        dPower_Storage['MinReserve'] = dPower_Storage['MinReserve'].fillna(0)
-        dPower_Storage['MinProd'] = dPower_Storage["MinProd"].fillna(0)
-        dPower_Storage['InvestCostEUR'] = dPower_Storage['MaxProd'] * 1e-3 * (dPower_Storage['InvestCostPerMW'] * 1e-3 + dPower_Storage['InvestCostPerMWh'] * 1e-3 * dPower_Storage['Ene2PowRatio'])
-        dPower_Storage['MaxProd'] *= 1e-3
-        dPower_Storage['MaxCons'] *= 1e-3
+        
         return dPower_Storage
 
     def get_dPower_Inflows(self):
