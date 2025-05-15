@@ -301,6 +301,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Re-write all files in given folder and compare against source", formatter_class=RichHelpFormatter)
     parser.add_argument("caseStudyFolder", type=str, default="examples/", help="Path to folder containing data for LEGO model.", nargs="?")
     parser.add_argument("excelDefinitionsPath", type=str, help="Path to the Excel definitions XML file. Uses default if none is supplied.", nargs="?")
+    parser.add_argument("--dontCheckFormatting", action="store_true", help="Do not check formatting of the Excel files. Only check if they are equal.")
     args = parser.parse_args()
 
     printer.set_width(300)
@@ -333,8 +334,8 @@ if __name__ == "__main__":
         data = read(file_path, True, True)
         write(data, f"{args.caseStudyFolder}output")
 
-        printer.information(f"Comparing '{excel_definition_id}' against source file '{file_path}'")
-        filesEqual = ExcelReader.compare_Excels(file_path, f"examples/output/{excel_definition_id}.xlsx")
+        printer.information(f"Comparing '{args.caseStudyFolder}output/{excel_definition_id}.xlsx' against source file '{file_path}'")
+        filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting)
         if filesEqual:
             printer.success(f"Excel files are equal")
         else:
