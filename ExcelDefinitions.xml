@@ -185,6 +185,31 @@
                 <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
+        <ExcelDefinition id="Data_Sources">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Data Sources</SheetHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
+                <Column id="sources" scenarioDependent="False"/>
+                <Column id="licenseInfo" scenarioDependent="False"/>
+                <Column id="lastEdited" scenarioDependent="False"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </ExcelDefinition>
+        <ExcelDefinition id="Data_Packages">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Data Packages</SheetHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </ExcelDefinition>
     </ExcelDefinitions>
 
     <Columns> <!-- NOTE: Columns are sorted alphabetically (by id) -->
@@ -201,6 +226,13 @@
             <Unit>[tCO2/MWh]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="comments">
+            <ReadableName>Comments</ReadableName>
+            <Description>Additional comments, manual adjustments, etc.</Description>
+            <Unit>[text]</Unit>
+            <ColumnWidth>100.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
         <Column id="CommitConsumption">
             <ReadableName>CommitConsumption</ReadableName>
@@ -321,12 +353,26 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="lastEdited">
+            <ReadableName>Date Last Edited</ReadableName>
+            <Description>Date of last edit (most likely when it was created)</Description>
+            <Unit>[date]</Unit>
+            <ColumnWidth>25.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="lat">
             <ReadableName>Latitude</ReadableName>
             <Description>Latitude</Description>
             <Unit>[°]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="licenseInfo">
+            <ReadableName>License Info</ReadableName>
+            <Description>Information about re-usability</Description>
+            <Unit>[Public, Non-Public]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
         <Column id="lon">
             <ReadableName>Longitude</ReadableName>
@@ -454,6 +500,13 @@
             <ColumnWidth>19.0</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </Column>
+        <Column id="personResponsible">
+            <ReadableName>Person Responsible</ReadableName>
+            <Description>Person responsible that added this source and the corresponding entries</Description>
+            <Unit>[text]</Unit>
+            <ColumnWidth>25.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="pFOMCost">
             <ReadableName>Fixed OM Cost</ReadableName>
             <Description>Per anno fixed O&amp;M cost</Description>
@@ -550,6 +603,13 @@
             <Description>Representative period</Description>
             <Unit>[rp]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="sources">
+            <ReadableName>Source(s)</ReadableName>
+            <Description>List of used sources (detailing which values are from where)</Description>
+            <Unit>[text]</Unit>
+            <ColumnWidth>28.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="StartupConsumption">

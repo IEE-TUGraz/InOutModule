@@ -296,7 +296,7 @@ formatting and description texts.
 | scenarioB | K4    | 'comYear'   | 'YearCom'   | Entered Value Changed. |
 | scenarioB | L4    | 'decomYear' | 'YearDecom' | Entered Value Changed. |
 
-# v0.0.2r → v0.0.3r
+## v0.0.2r → v0.0.3r
 
 | Sheet         | Range           | Old Value                                                                                                                                                                                     | New Value                                                                                                                                                                                                         | Description             |
 |---------------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
@@ -307,9 +307,23 @@ formatting and description texts.
 | Power_BusInfo | O8 (and others) | 'Yes'                                                                                                                                                                                         | '1'                                                                                                                                                                                                               | Entered Value Changed.  |
 | Power_BusInfo | A4              | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed |
 
-## Power_BusInfo
+# Power_BusInfo
 
-### v0.0.2 → v0.1.0
+## v0.0.2 → v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
+
+# Data_Sources
+
+## v0.0.2 → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts. Change of identifier from 'sourceName' to 'dataSource'.
+
+# Data_Packages
+
+## v0.0.2 → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts. Change of identifier from 'packageName' to 'dataPackage'.

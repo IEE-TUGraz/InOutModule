@@ -242,6 +242,42 @@ def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = 
     return dPower_VRESProfiles
 
 
+def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dData_Sources data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dData_Sources
+    """
+    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dData_Sources', although no values are converted anyway - please check if this is intended.")
+
+    return dData_Sources
+
+
+def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dData_Packages data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dData_Packages
+    """
+    dData_Packages = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataPackage"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dData_Packages', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dData_Packages', although no values are converted anyway - please check if this is intended.")
+
+    return dData_Packages
+
+
 def compare_Excels(source_path: str, target_path: str) -> bool:
     start_time = time.time()
     source = load_workbook(source_path)
@@ -251,6 +287,10 @@ def compare_Excels(source_path: str, target_path: str) -> bool:
 
     for sheet in source.sheetnames:
         source_sheet = source[sheet]
+        if sheet not in target.sheetnames:
+            printer.error(f"Sheet '{sheet}' not found in target file '{target_path}'")
+            equal = False
+            continue
         target_sheet = target[sheet]
 
         for row in range(1, source_sheet.max_row + 1):

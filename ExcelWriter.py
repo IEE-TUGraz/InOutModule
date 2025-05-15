@@ -109,7 +109,7 @@ class ExcelWriter:
 
             if scenario_index == 0:
                 ws = wb.active
-                ws.title = "ScenarioA"
+                ws.title = scenario
             else:
                 ws = wb.create_sheet(title=scenario)
 
@@ -275,6 +275,24 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRESProfiles, folder_path, "Power_VRESProfiles")
 
+    def write_dData_Sources(self, dData_Sources: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dData_Sources DataFrame to an Excel file in LEGO format.
+        :param dData_Sources: DataFrame containing the dData_Sources data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
+
+    def write_dData_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dData_Packages DataFrame to an Excel file in LEGO format.
+        :param dData_Packages: DataFrame containing the dData_Packages data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dData_Packages, folder_path, "Data_Packages")
+
 
 if __name__ == "__main__":
     printer.set_width(300)
@@ -291,6 +309,8 @@ if __name__ == "__main__":
         ("Power_ThermalGen", "examples/Power_ThermalGen.xlsx", ExcelReader.get_dPower_ThermalGen, ew.write_dPower_ThermalGen),
         ("Power_VRES", "examples/Power_VRES.xlsx", ExcelReader.get_dPower_VRES, ew.write_VRES),
         ("Power_VRESProfiles", "examples/Power_VRESProfiles.xlsx", ExcelReader.get_dPower_VRESProfiles, ew.write_VRESProfiles),
+        ("Data_Sources", "examples/Data_Sources.xlsx", ExcelReader.get_dData_Sources, ew.write_dData_Sources),
+        ("Data_Packages", "examples/Data_Packages.xlsx", ExcelReader.get_dData_Packages, ew.write_dData_Packages),
     ]
 
     for excel_definition_id, file_path, read, write in combinations:
