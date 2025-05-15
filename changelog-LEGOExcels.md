@@ -1,6 +1,10 @@
 # Power_Hindex
 
-## v0.1.0 -> v0.1.1
+## v0.1.1 → v0.1.2
+
+Adjust column widths.
+
+## v0.1.0 → v0.1.1
 
 Fix description for columns 'rp' and 'k' to be more general.
 
@@ -11,7 +15,11 @@ formatting and description texts.
 
 # Power_WeightsRP
 
-## v0.1.1 -> v0.1.2
+## v0.1.2 → v0.1.3
+
+Adjust column widths and number formatting of weights.
+
+## v0.1.1 → v0.1.2
 
 Fix formatting of pWeight_rp column.
 
@@ -25,6 +33,10 @@ Switching to "scripted" method when writing Excel-File (instead of copying from 
 formatting and description texts.
 
 # Power_WeightsK
+
+## v0.1.2 → v0.1.3
+
+Adjust column widths.
 
 ## v0.1.1 → v0.1.2
 
@@ -41,12 +53,20 @@ formatting and description texts.
 
 # Power_Network
 
+## v0.1.0 → v0.1.1
+
+Fix comment in 'excl' column, adjust columnd widths.
+
 ## v0.0.4r → v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
 
 # Power_Demand
+
+## v0.1.1 → v0.1.2
+
+Adjust column widths.
 
 ## v0.1.0 → v0.1.1
 
@@ -162,7 +182,12 @@ formatting and description texts.
 
 # Power_ThermalGen
 
-## v0.0.4r -> v0.1.0
+## v0.1.0 → v0.1.1
+
+Adjust description of multiple columns to be more general ('generator' → 'unit'). Fix formatting for FirmCapCoef (to
+show 4 digits). Fix comment in 'excl' column. Adjust column widths.
+
+## v0.0.4r → v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
@@ -231,6 +256,10 @@ formatting and description texts.
 | Power_ThermalGen | A4    | ''                                                                                                                                                                                            | 'Excl.'                                                                                                                                                                                                           | Entered Value Added.    |
 
 # Power_BusInfo
+
+## v0.1.1 → v0.1.2
+
+Fix comment for 'excl' column, adjust column widths and fix typo in pBusMaxV.
 
 ## v0.1.0 → v0.1.1
 

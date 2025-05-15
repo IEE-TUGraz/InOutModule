@@ -65,7 +65,7 @@ def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False,
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: dPower_Hindex
     """
-    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["p", "rp", "k"], False, False)
+    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["p", "rp", "k"], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Hindex', although nothing is excluded anyway - please check if this is intended.")
@@ -83,7 +83,7 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: dPower_WeightsRP
     """
-    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["rp"], False, False)
+    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["rp"], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
@@ -101,7 +101,7 @@ def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = Fals
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: dPower_WeightsK
     """
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["k"], False, False)
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["k"], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
@@ -119,7 +119,7 @@ def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: dPower_BusInfo
     """
-    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i"], True, keep_excluded_entries)
+    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i"], True, keep_excluded_entries)
 
     if do_not_convert_values:
         printer.warning("'do_not_convert_values' is set for 'get_dPower_BusInfo', although no values are converted anyway - please check if this is intended.")
@@ -135,7 +135,7 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: dPower_Network
     """
-    dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["i", "j", "c"], True, keep_excluded_entries)
+    dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i", "j", "c"], True, keep_excluded_entries)
 
     if not do_not_convert_values:
         dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
@@ -153,7 +153,7 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     :return: dPower_Demand
     """
 
-    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
+    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
@@ -172,7 +172,7 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     :param do_not_convert_values: Skip the conversion of values
     :return: dPower_thermalGen
     """
-    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
+    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["g"], True, keep_excluded_entries)
 
     if not do_not_convert_values:
         dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
