@@ -147,12 +147,15 @@ class CaseStudy:
         self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
 
         if not do_not_scale_units:
-            self.scale_dPower_Parameters()
-            self.scale_dPower_Network()
+            self.scale_CaseStudy()
 
 
     def copy(self):
         return copy.deepcopy(self)
+
+    def scale_CaseStudy(self):
+        self.scale_dPower_Parameters()
+        self.scale_dPower_Network()
 
     def scale_dPower_Parameters(self):
 
