@@ -92,6 +92,11 @@ formatting and description texts.
 
 # Power_VRES
 
+## v0.0.4r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
 ## v0.0.4 → v0.0.4r
 
 | Sheet     | Range | Old Value                                                                                                                                                                                                    | New Value                                                                                                                                                                                     | Description             |
@@ -147,6 +152,13 @@ formatting and description texts.
 | Power_VRES | R4    | ''                                                                                                                                                                                            | 'lat'                                                                                                                                                                                                             | Entered Value Added.                                                           |
 | Power_VRES | S4    | ''                                                                                                                                                                                            | 'long'                                                                                                                                                                                                            | Entered Value Added.                                                           |
 | Power_VRES | A4    | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed                                                        |
+
+# Power_VRESProfiles
+
+## v0.0.3 → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
 
 # Power_ThermalGen
 

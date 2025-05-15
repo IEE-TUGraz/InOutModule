@@ -72,7 +72,7 @@
             <Columns>
                 <Column id="excl" scenarioDependent="True"/>
                 <Column id="id" scenarioDependent="True"/>
-                <Column id="i" scenarioDependent="False" readableName="From Node" description="From which node"/>
+                <Column id="i" scenarioDependent="False" ReadableName="From Node" Description="From which node"/>
                 <Column id="j" scenarioDependent="False"/>
                 <Column id="c" scenarioDependent="False"/>
                 <Column id="pRline" scenarioDependent="False"/>
@@ -115,7 +115,7 @@
                 <Column id="g" scenarioDependent="False"/>
                 <Column id="tec" scenarioDependent="False"/>
                 <Column id="i" scenarioDependent="False"/>
-                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="ExisUnits" scenarioDependent="True" Description="Whether unit exists (1) or not (0)" Unit="[0, 1]"/>
                 <Column id="MaxProd" scenarioDependent="True"/>
                 <Column id="MinProd" scenarioDependent="True"/>
                 <Column id="RampUp" scenarioDependent="True"/>
@@ -141,6 +141,48 @@
                 <Column id="lon" scenarioDependent="False"/>
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
+        <ExcelDefinition id="Power_VRES">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Variable Renewable Energy Sources</SheetHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="tec" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="EnableInvest" scenarioDependent="True"/>
+                <Column id="MaxInvest" scenarioDependent="True"/>
+                <Column id="InvestCost" scenarioDependent="True"/>
+                <Column id="OMVarCost" scenarioDependent="True"/>
+                <Column id="FirmCapCoef" scenarioDependent="True"/>
+                <Column id="Qmax" scenarioDependent="True"/>
+                <Column id="Qmin" scenarioDependent="True"/>
+                <Column id="InertiaConst" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </ExcelDefinition>
+        <ExcelDefinition id="Power_VRESProfiles">
+            <Version>v0.1.0</Version>
+            <SheetHeader>Power - Variable Renewable Energy Sources Profiles</SheetHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
             </Columns>
         </ExcelDefinition>
     </ExcelDefinitions>
@@ -292,6 +334,13 @@
             <Unit>[°]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="MaxInvest">
+            <ReadableName>MaxInvest</ReadableName>
+            <Description>Maximum number of units that can be invested in</Description>
+            <Unit>[0-N]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
         </Column>
         <Column id="MaxProd">
             <ReadableName>MaxProd</ReadableName>
@@ -547,7 +596,15 @@
         </Column>
     </Columns>
 
-    <PivotColumns>
+    <PivotColumns> <!-- NOTE: PivotColumns are sorted alphabetically (by id) -->
+        <PivotColumn id="capacity_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Capacity factor for each VRES unit at this k</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </PivotColumn>
         <PivotColumn id="demand_by_k">
             <ReadableName/>
             <DatabaseName>k</DatabaseName>
@@ -655,6 +712,12 @@
             <Alignment>right</Alignment>
             <Color/>
         </CellStyle>
+        <CellStyle id="rightFloat3">
+            <Font>standard</Font>
+            <NumberFormat>float3</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
         <CellStyle id="rightFloat4">
             <Font>standard</Font>
             <NumberFormat>float4</NumberFormat>
@@ -731,6 +794,7 @@
         <NumberFormat id="int">0</NumberFormat>
         <NumberFormat id="float1">0.0</NumberFormat>
         <NumberFormat id="float2">0.00</NumberFormat>
+        <NumberFormat id="float3">0.000</NumberFormat>
         <NumberFormat id="float4">0.0000</NumberFormat>
     </NumberFormats>
 

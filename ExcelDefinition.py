@@ -249,12 +249,13 @@ class ExcelDefinition:
         self.description_row_height = description_row_height
 
     @classmethod
-    def dict_from_xml(cls, excel_definitions: xml.etree.ElementTree.Element, column_dict: dict[str, Column], color_dict: dict[str, Color]) -> dict[str, Self]:
+    def dict_from_xml(cls, excel_definitions: xml.etree.ElementTree.Element, column_dict: dict[str, Column], color_dict: dict[str, Color], cell_style_dict: dict[str, CellStyle]) -> dict[str, Self]:
         """
         Converts a list of XML excel definition elements into a dictionary of ExcelDefinition objects.
         :param excel_definitions: XML element containing excel definition definitions.
         :param column_dict: Dictionary mapping column IDs to Column objects.
         :param color_dict: Dictionary mapping color IDs to Color objects.
+        :param cell_style_dict: Dictionary mapping cell style IDs to CellStyle objects.
         :return: A dictionary mapping excel definition IDs to ExcelDefinition objects.
         """
         return_dict = {}
@@ -269,10 +270,18 @@ class ExcelDefinition:
             try:
                 for column in excel_definition.find("Columns"):
                     column_definition = column_dict[column.get("id")]
-                    if column.get("readableName") is not None or column.get("description") is not None:  # Handle overriding of readable name and description
+                    # Handle overriding of any value
+                    if (column.get("ReadableName") is not None or
+                            column.get("Description") is not None or
+                            column.get("Unit") is not None or
+                            column.get("ColumnWidth") is not None or
+                            column.get("CellStyle") is not None):
                         column_definition = copy(column_definition)
-                        column_definition.readable_name = column.get("readableName") if column.get("readableName") is not None else column_definition.readable_name
-                        column_definition.description = column.get("description") if column.get("description") is not None else column_definition.description
+                        column_definition.readable_name = column.get("ReadableName") if column.get("ReadableName") is not None else column_definition.readable_name
+                        column_definition.description = column.get("Description") if column.get("Description") is not None else column_definition.description
+                        column_definition.unit = column.get("Unit") if column.get("Unit") is not None else column_definition.unit
+                        column_definition.column_width = float(column.get("ColumnWidth")) if column.get("ColumnWidth") is not None else column_definition.column_width
+                        column_definition.cell_style = cell_style_dict[column.get("CellStyle")] if column.get("CellStyle") is not None else column_definition.cell_style
                     columns.append(column_definition.get_copy_with_scenario_dependent(column.get("scenarioDependent") == "True", color_dict))
             except KeyError as e:
                 missing_columns = []

@@ -204,24 +204,41 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     return dPower_ThermalGen
 
 
-def get_dPower_VRES(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.4r")
-    dPower_VRES = __read_generator_data(excel_file_path)
-    if "MinProd" not in dPower_VRES.columns:
-        dPower_VRES['MinProd'] = 0
+def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_VRES data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param do_not_convert_values: Skip the conversion of values
+    :return: dPower_VRES
+    """
+    dPower_VRES = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
 
-    dPower_VRES['InvestCostEUR'] = dPower_VRES['InvestCost'] * 1e-3 * dPower_VRES['MaxProd'] * 1e-3
-    dPower_VRES['MaxProd'] *= 1e-3
-    dPower_VRES['OMVarCost'] *= 1e-3
+    if not do_not_convert_values:
+        if "MinProd" not in dPower_VRES.columns:
+            dPower_VRES['MinProd'] = 0
+
+        dPower_VRES['InvestCostEUR'] = dPower_VRES['InvestCost'] * 1e-3 * dPower_VRES['MaxProd'] * 1e-3
+        dPower_VRES['MaxProd'] *= 1e-3
+        dPower_VRES['OMVarCost'] *= 1e-3
     return dPower_VRES
 
 
-def get_dPower_VRESProfiles(excel_file_path: str):
-    __check_LEGOExcel_version(excel_file_path, "v0.0.3")
-    dPower_VRESProfiles = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    dPower_VRESProfiles = dPower_VRESProfiles.drop(dPower_VRESProfiles.columns[0], axis=1)  # Drop the first column (which is empty)
-    dPower_VRESProfiles = dPower_VRESProfiles.melt(id_vars=['id', 'rp', 'g', 'dataPackage', 'dataSource'], var_name='k', value_name='Capacity')
-    dPower_VRESProfiles = dPower_VRESProfiles.set_index(['rp', 'k', 'g'])
+def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_VRESProfiles data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dPower_VRES
+    """
+    dPower_VRESProfiles = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsK', although no values are converted anyway - please check if this is intended.")
+
     return dPower_VRESProfiles
 
 
