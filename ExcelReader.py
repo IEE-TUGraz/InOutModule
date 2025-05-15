@@ -57,13 +57,13 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
     return df
 
 
-def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Hindex data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: None
+    :return: dPower_Hindex
     """
     dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["p", "rp", "k"], False, False)
 
@@ -75,13 +75,13 @@ def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Hindex
 
 
-def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_WeightsRP data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: None
+    :return: dPower_WeightsRP
     """
     dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["rp"], False, False)
 
@@ -93,13 +93,13 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
     return dPower_WeightsRP
 
 
-def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_WeightsK data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: None
+    :return: dPower_WeightsK
     """
     dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["k"], False, False)
 
@@ -111,13 +111,13 @@ def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = Fals
     return dPower_WeightsK
 
 
-def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_BusInfo data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: None
+    :return: dPower_BusInfo
     """
     dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i"], True, keep_excluded_entries)
 
@@ -127,13 +127,13 @@ def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_BusInfo
 
 
-def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Network data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: None
+    :return: dPower_Network
     """
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["i", "j", "c"], True, keep_excluded_entries)
 
@@ -144,13 +144,13 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_Network
 
 
-def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Demand data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
     :param do_not_convert_values: Skip the conversion of values
-    :return: None
+    :return: dPower_Demand
     """
 
     dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
@@ -164,13 +164,13 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Demand
 
 
-def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False):
+def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_ThermalGen data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
     :param do_not_convert_values: Skip the conversion of values
-    :return: None
+    :return: dPower_thermalGen
     """
     dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
 
