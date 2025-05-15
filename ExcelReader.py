@@ -185,8 +185,8 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
         dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
         dPower_ThermalGen['RampUp'] *= 1e-3
         dPower_ThermalGen['RampDw'] *= 1e-3
-        dPower_ThermalGen['MaxProd'] *= 1e-3  # TODO: Include EFOR here
-        dPower_ThermalGen['MinProd'] *= 1e-3
+        dPower_ThermalGen['MaxProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
+        dPower_ThermalGen['MinProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
         dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
 
         # Fill NaN values with 0 for MinUpTime and MinDownTime
