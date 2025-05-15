@@ -137,10 +137,6 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
     """
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i", "j", "c"], True, keep_excluded_entries)
 
-    if not do_not_convert_values:
-        dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
-        # dPower_Network["pPmax"] *= 1e-3
-
     return dPower_Network
 
 
@@ -157,9 +153,6 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
-
-    # if not do_not_convert_values:
-    #     dPower_Demand["value"] = dPower_Demand["value"] * 1e-3
 
     return dPower_Demand
 
@@ -179,8 +172,8 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
 
         dPower_ThermalGen['EFOR'] = dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
 
-        dPower_ThermalGen['pSlopeVarCostEUR'] = (dPower_ThermalGen['OMVarCost'] * 1e-3 +
-                                                 dPower_ThermalGen['FuelCost']) / dPower_ThermalGen['Efficiency'] * 1e-3
+        dPower_ThermalGen['pSlopeVarCostEUR'] = dPower_ThermalGen['OMVarCost'] * 1e-3 +
+                                                dPower_ThermalGen['FuelCost'] * 1e-3 / dPower_ThermalGen['Efficiency']
 
         dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['CommitConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
         dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']

@@ -180,10 +180,16 @@ class CaseStudy:
         #     self.dPower_Parameters["pCO2Penalty"] *= self.cost_scaling_factor
 
     def scale_dPower_Network(self):
+        self.dPower_Network["pInvestCost"] = self.dPower_Network["pInvestCost"].fillna(0)
         self.dPower_Network["pPmax"] *= self.power_scaling_factor
 
+
     def scale_dPower_Demand(self):
-        self.dPower_Demand["value"] = self.dPower_Demand["value"] * self.power_scaling_factor
+        self.dPower_Demand["value"] *= self.power_scaling_factor
+
+    def scale_dPower_ThermalGen(self):
+        # Is this definition of pSlopeVarCostEUR correct? OMVarCost and FuelCost are in EUR/MWh, why do they get scaled differently??
+        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] * 1e-3 + self.dPower_ThermalGen['FuelCost']) / self.dPower_ThermalGen['Efficiency'] * 1e-3
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
