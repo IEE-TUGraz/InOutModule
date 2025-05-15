@@ -166,11 +166,7 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     :return: dPower_thermalGen
     """
     dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["g"], True, keep_excluded_entries)
-    
-    if not do_not_convert_values:
-        dPower_ThermalGen['MaxProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
-        dPower_ThermalGen['MinProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
-        dPower_ThermalGen['EFOR'] = dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
+
     return dPower_ThermalGen
 
 
