@@ -10,7 +10,9 @@ from InOutModule import ExcelReader
 
 class CaseStudy:
 
-    def __init__(self, example_folder: str, do_not_merge_single_node_buses: bool = False,
+    def __init__(self, example_folder: str,
+                 do_not_scale_units: bool = False,
+                 do_not_merge_single_node_buses: bool = False,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
@@ -28,7 +30,9 @@ class CaseStudy:
                  power_impexphubs_file: str = "Power_ImpExpHubs.xlsx", dPower_ImpExpHubs: pd.DataFrame = None,
                  power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None):
         self.example_folder = example_folder if example_folder.endswith("/") else example_folder + "/"
+        self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
+
 
         if dGlobal_Parameters is not None:
             self.dGlobal_Parameters = dGlobal_Parameters
@@ -139,8 +143,31 @@ class CaseStudy:
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
 
+        self.power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"]
+        self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
+
+        if not do_not_scale_units:
+            self.scale_dPower_Parameters()
+            self.scale_dPower_Network()
+
+
     def copy(self):
         return copy.deepcopy(self)
+
+    def scale_dPower_Parameters(self):
+
+        self.dPower_Parameters["pSBase"] *= self.power_scaling_factor
+        self.dPower_Parameters["pENSCost"] *= self.cost_scaling_factor/self.power_scaling_factor
+        self.dPower_Parameters["pLOLCost"] *= self.cost_scaling_factor/self.power_scaling_factor
+
+        # not implemented yet!?
+        # if self.dPower_Parameters["pEnableCO2"]:
+        #     self.dPower_Parameters["pCO2Cost"] *= self.cost_scaling_factor
+        #     self.dPower_Parameters["pCO2Penalty"] *= self.cost_scaling_factor
+
+    def scale_dPower_Network(self):
+
+        self.dPower_Network["pPmax"] *= self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
@@ -167,9 +194,6 @@ class CaseStudy:
 
         # Value adjustments
         dPower_Parameters["pMaxAngleDCOPF"] = dPower_Parameters["pMaxAngleDCOPF"] * np.pi / 180  # Convert angle from degrees to radians
-        dPower_Parameters["pSBase"] *= 1e-3
-        dPower_Parameters["pENSCost"] *= 1e-3
-        dPower_Parameters["pLOLCost"] *= 1e-3
 
         return dPower_Parameters
 

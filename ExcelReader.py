@@ -139,7 +139,7 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
 
     if not do_not_convert_values:
         dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
-        dPower_Network["pPmax"] *= 1e-3
+        # dPower_Network["pPmax"] *= 1e-3
 
     return dPower_Network
 
