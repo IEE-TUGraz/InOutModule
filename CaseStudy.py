@@ -160,9 +160,17 @@ class CaseStudy:
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
         self.scale_dPower_Demand()
-        self.scale_dPower_ThermalGen()
-        self.scale_dPower_RoR()
-        self.scale_dPower_Storage()
+        if self.dPower_Parameters["pEnableThermalGen"]:
+            self.scale_dPower_ThermalGen()
+        if self.dPower_Parameters["pEnableRoR"]:
+            self.scale_dPower_RoR()
+        if self.dPower_Parameters["pEnableVRES"]:
+            self.scale_dPower_VRES()
+        if self.dPower_Parameters["pEnableStorage"]:
+            self.scale_dPower_Storage()
+        if self.dPower_Parameters["pEnablePowerImportExport"]:
+            self.scale_dPower_ImpExpHubs()
+            self.scale_dPower_ImpExpProfiles()
 
     def remove_scaling(self):
         self.power_scaling_factor = 1/self.power_scaling_factor
@@ -225,6 +233,14 @@ class CaseStudy:
         self.dPower_RoR['InvestCostEUR'] = self.dPower_RoR['MaxProd'] * self.power_scaling_factor * (self.dPower_RoR['InvestCostPerMW'] + self.dPower_RoR['InvestCostPerMWh'] * self.dPower_RoR['Ene2PowRatio']) * (self.cost_scaling_factor/self.power_scaling_factor)
         self.dPower_RoR['MaxProd'] *= self.power_scaling_factor
 
+    def scale_dPower_VRES(self):
+        if "MinProd" not in self.dPower_VRES.columns:
+            self.dPower_VRES['MinProd'] = 0
+
+        self.dPower_VRES['InvestCostEUR'] = self.dPower_VRES['InvestCost'] * (self.cost_scaling_factor/self.power_scaling_factor) * self.dPower_VRES['MaxProd'] * self.power_scaling_factor
+        self.dPower_VRES['MaxProd'] *= self.power_scaling_factor
+        self.dPower_VRES['OMVarCost'] *= (self.cost_scaling_factor/self.power_scaling_factor)
+
     def scale_dPower_Storage(self):
         self.dPower_Storage['IniReserve'] = self.dPower_Storage['IniReserve'].fillna(0)
         self.dPower_Storage['MinReserve'] = self.dPower_Storage['MinReserve'].fillna(0)
@@ -237,6 +253,9 @@ class CaseStudy:
     def scale_dPower_ImpExpHubs(self):
         self.dPower_ImpExpHubs["Pmax Import"] *= self.power_scaling_factor
         self.dPower_ImpExpHubs["Pmax Export"] *= self.power_scaling_factor
+
+    def scale_dPower_ImpExpProfiles(self):
+        self.dPower_ImpExpProfiles["ImpExp"] *= self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
@@ -335,9 +354,6 @@ class CaseStudy:
         dPower_ImpExpProfiles = dPower_ImpExpProfiles.pivot(columns="Type", values="Value")
         dPower_ImpExpProfiles.columns.name = None  # Fix name of columns/indices (which are altered through pivot)
 
-        # Adjust values
-        dPower_ImpExpProfiles["ImpExp"] *= 1e-3
-
         # Check that Pmax of ImpExpConnections can handle the maximum import and export (for those connections that are ImpFix or ExpFix)
         max_import = dPower_ImpExpProfiles[dPower_ImpExpProfiles["ImpExp"] >= 0]["ImpExp"].groupby("hub").max()
         max_export = -dPower_ImpExpProfiles[dPower_ImpExpProfiles["ImpExp"] <= 0]["ImpExp"].groupby("hub").min()
@@ -350,14 +366,12 @@ class CaseStudy:
             error_information = pd.concat([import_violations, pmax_sum_by_hub['Pmax Import']], axis=1)  # Concat Pmax information and maximum import
             error_information = error_information[error_information["ImpExp"].notna()]  # Only show rows where there is a violation
             error_information = error_information.rename(columns={"ImpExp": "Max Import from Profiles", "Pmax Import": "Sum of Pmax Import from Hub Definition"})  # Rename columns for readability
-            error_information *= 1e3  # Convert back to input format
             raise ValueError(f"At least one hub has ImpFix imports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
 
         if not export_violations.empty:
             error_information = pd.concat([export_violations, pmax_sum_by_hub['Pmax Export']], axis=1)  # Concat Pmax information and maximum export
             error_information = error_information[error_information["ImpExp"].notna()]  # Only show rows where there is a violation
             error_information = error_information.rename(columns={"ImpExp": "Max Export from Profiles", "Pmax Export": "Sum of Pmax Export from Hub Definition"})  # Rename columns for readability
-            error_information *= 1e3  # Convert back to input format
             raise ValueError(f"At least one hub has ExpFix exports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
 
         return dPower_ImpExpProfiles
