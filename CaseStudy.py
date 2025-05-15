@@ -145,6 +145,7 @@ class CaseStudy:
 
         self.power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"]
         self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
+        self.angle_to_rad_scaling_factor = np.pi / 180
 
         if not do_not_scale_units:
             self.scale_CaseStudy()
@@ -174,6 +175,8 @@ class CaseStudy:
         self.dPower_Parameters["pENSCost"] *= self.cost_scaling_factor/self.power_scaling_factor
         self.dPower_Parameters["pLOLCost"] *= self.cost_scaling_factor/self.power_scaling_factor
 
+        self.dPower_Parameters["pMaxAngleDCOPF"] = self.dPower_Parameters["pMaxAngleDCOPF"] * self.angle_to_rad_scaling_factor  # Convert angle from degrees to radians
+
         # not implemented yet!?
         # if self.dPower_Parameters["pEnableCO2"]:
         #     self.dPower_Parameters["pCO2Cost"] *= self.cost_scaling_factor
@@ -188,8 +191,7 @@ class CaseStudy:
         self.dPower_Demand["value"] *= self.power_scaling_factor
 
     def scale_dPower_ThermalGen(self):
-        # Is this definition of pSlopeVarCostEUR correct? OMVarCost and FuelCost are in EUR/MWh, why do they get scaled differently??
-        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] * 1e-3 + self.dPower_ThermalGen['FuelCost']) / self.dPower_ThermalGen['Efficiency'] * 1e-3
+        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost']) * (self.cost_scaling_factor/self.power_scaling_factor) / self.dPower_ThermalGen['Efficiency']
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
@@ -213,9 +215,6 @@ class CaseStudy:
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
         dPower_Parameters = dict({(parameter_name, parameter_value["Value"]) for parameter_name, parameter_value in dPower_Parameters.iterrows()})  # Transform into dictionary
-
-        # Value adjustments
-        dPower_Parameters["pMaxAngleDCOPF"] = dPower_Parameters["pMaxAngleDCOPF"] * np.pi / 180  # Convert angle from degrees to radians
 
         return dPower_Parameters
 
