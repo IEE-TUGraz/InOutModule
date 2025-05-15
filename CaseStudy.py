@@ -149,6 +149,8 @@ class CaseStudy:
         if not do_not_scale_units:
             self.scale_CaseStudy()
 
+        self.remove_scaling()
+
 
     def copy(self):
         return copy.deepcopy(self)
@@ -156,9 +158,18 @@ class CaseStudy:
     def scale_CaseStudy(self):
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
+        self.scale_dPower_Demand()
+
+    def remove_scaling(self):
+        self.power_scaling_factor = 1/self.power_scaling_factor
+        self.cost_scaling_factor = 1/self.cost_scaling_factor
+
+        self.scale_CaseStudy()
+
+        self.power_scaling_factor = 1/self.power_scaling_factor
+        self.cost_scaling_factor = 1/self.cost_scaling_factor
 
     def scale_dPower_Parameters(self):
-
         self.dPower_Parameters["pSBase"] *= self.power_scaling_factor
         self.dPower_Parameters["pENSCost"] *= self.cost_scaling_factor/self.power_scaling_factor
         self.dPower_Parameters["pLOLCost"] *= self.cost_scaling_factor/self.power_scaling_factor
@@ -169,8 +180,10 @@ class CaseStudy:
         #     self.dPower_Parameters["pCO2Penalty"] *= self.cost_scaling_factor
 
     def scale_dPower_Network(self):
-
         self.dPower_Network["pPmax"] *= self.power_scaling_factor
+
+    def scale_dPower_Demand(self):
+        self.dPower_Demand["value"] = self.dPower_Demand["value"] * self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])

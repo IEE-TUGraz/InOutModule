@@ -158,8 +158,8 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
 
-    if not do_not_convert_values:
-        dPower_Demand["value"] = dPower_Demand["value"] * 1e-3
+    # if not do_not_convert_values:
+    #     dPower_Demand["value"] = dPower_Demand["value"] * 1e-3
 
     return dPower_Demand
 
