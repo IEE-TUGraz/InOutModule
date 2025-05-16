@@ -160,14 +160,20 @@ class CaseStudy:
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
         self.scale_dPower_Demand()
+
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.scale_dPower_ThermalGen()
+
         if self.dPower_Parameters["pEnableRoR"]:
             self.scale_dPower_RoR()
+            self.scale_dPower_Inflows()
+
         if self.dPower_Parameters["pEnableVRES"]:
             self.scale_dPower_VRES()
+
         if self.dPower_Parameters["pEnableStorage"]:
             self.scale_dPower_Storage()
+
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             self.scale_dPower_ImpExpHubs()
             self.scale_dPower_ImpExpProfiles()
@@ -175,11 +181,13 @@ class CaseStudy:
     def remove_scaling(self):
         self.power_scaling_factor = 1/self.power_scaling_factor
         self.cost_scaling_factor = 1/self.cost_scaling_factor
+        self.angle_to_rad_scaling_factor = 1/self.angle_to_rad_scaling_factor
 
         self.scale_CaseStudy()
 
         self.power_scaling_factor = 1/self.power_scaling_factor
         self.cost_scaling_factor = 1/self.cost_scaling_factor
+        self.angle_to_rad_scaling_factor = 1/self.angle_to_rad_scaling_factor
 
     def scale_dPower_Parameters(self):
         self.dPower_Parameters["pSBase"] *= self.power_scaling_factor
@@ -205,8 +213,8 @@ class CaseStudy:
         self.dPower_ThermalGen = self.dPower_ThermalGen[(self.dPower_ThermalGen["ExisUnits"] > 0) | (self.dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
 
         self.dPower_ThermalGen['EFOR'] = self.dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
-        # self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost']) * (self.cost_scaling_factor / self.power_scaling_factor) / self.dPower_ThermalGen['Efficiency']
-        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] * 1e-3 + self.dPower_ThermalGen['FuelCost']) * 1e-3 / self.dPower_ThermalGen['Efficiency']
+        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost']) * (self.cost_scaling_factor / self.power_scaling_factor) / self.dPower_ThermalGen['Efficiency']
+        # self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] * 1e-3 + self.dPower_ThermalGen['FuelCost']) * 1e-3 / self.dPower_ThermalGen['Efficiency']
 
         self.dPower_ThermalGen['pInterVarCostEUR'] = self.dPower_ThermalGen['CommitConsumption'] * self.power_scaling_factor * self.dPower_ThermalGen['FuelCost'] * (self.cost_scaling_factor/self.power_scaling_factor)
         self.dPower_ThermalGen['pStartupCostEUR'] = self.dPower_ThermalGen['StartupConsumption'] * self.power_scaling_factor * self.dPower_ThermalGen['FuelCost'] * (self.cost_scaling_factor/self.power_scaling_factor)
@@ -215,7 +223,7 @@ class CaseStudy:
         self.dPower_ThermalGen['RampDw'] *= self.power_scaling_factor
         self.dPower_ThermalGen['MaxProd'] *= self.power_scaling_factor * (1 - self.dPower_ThermalGen['EFOR'])
         self.dPower_ThermalGen['MinProd'] *= self.power_scaling_factor * (1 - self.dPower_ThermalGen['EFOR'])
-        self.dPower_ThermalGen['InvestCostEUR'] = self.dPower_ThermalGen['InvestCost'] * (self.cost_scaling_factor/self.power_scaling_factor) * self.dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
+        self.dPower_ThermalGen['InvestCostEUR'] = self.dPower_ThermalGen['InvestCost'] * (self.cost_scaling_factor/self.power_scaling_factor) * self.dPower_ThermalGen['MaxProd']  # InvestCost is scaled here, scaling of MaxProd happens above
 
         # Fill NaN values with 0 for MinUpTime and MinDownTime
         self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].fillna(0)
@@ -232,6 +240,9 @@ class CaseStudy:
     def scale_dPower_RoR(self):
         self.dPower_RoR['InvestCostEUR'] = self.dPower_RoR['MaxProd'] * self.power_scaling_factor * (self.dPower_RoR['InvestCostPerMW'] + self.dPower_RoR['InvestCostPerMWh'] * self.dPower_RoR['Ene2PowRatio']) * (self.cost_scaling_factor/self.power_scaling_factor)
         self.dPower_RoR['MaxProd'] *= self.power_scaling_factor
+
+    def scale_dPower_Inflows(self):
+        self.dPower_Inflows["Inflow"] *= self.power_scaling_factor
 
     def scale_dPower_VRES(self):
         if "MinProd" not in self.dPower_VRES.columns:
