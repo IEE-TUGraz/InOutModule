@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
-    <ExcelDefinitions>
-        <ExcelDefinition id="Power_Hindex">
+    <TableDefinitions>
+        <TableDefinition id="Power_Hindex">
             <Version>v0.1.2</Version>
-            <SheetHeader>Power - Relation among periods and representative periods</SheetHeader>
+            <TableHeader>Power - Relation among periods and representative periods</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -14,10 +14,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_WeightsRP">
+        </TableDefinition>
+        <TableDefinition id="Power_WeightsRP">
             <Version>v0.1.3</Version>
-            <SheetHeader>Power - Weights of representative periods</SheetHeader>
+            <TableHeader>Power - Weights of representative periods</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -27,10 +27,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_WeightsK">
+        </TableDefinition>
+        <TableDefinition id="Power_WeightsK">
             <Version>v0.1.3</Version>
-            <SheetHeader>Power - Weights of representative hours</SheetHeader>
+            <TableHeader>Power - Weights of representative hours</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -40,10 +40,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_BusInfo">
+        </TableDefinition>
+        <TableDefinition id="Power_BusInfo">
             <Version>v0.1.2</Version>
-            <SheetHeader>Power - Bus information</SheetHeader>
+            <TableHeader>Power - Bus information</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
                 <Column id="excl" scenarioDependent="True"/>
@@ -64,10 +64,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_Network">
+        </TableDefinition>
+        <TableDefinition id="Power_Network">
             <Version>v0.1.1</Version>
-            <SheetHeader>Power - Network</SheetHeader>
+            <TableHeader>Power - Network</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
                 <Column id="excl" scenarioDependent="True"/>
@@ -90,10 +90,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_Demand">
+        </TableDefinition>
+        <TableDefinition id="Power_Demand">
             <Version>v0.1.2</Version>
-            <SheetHeader>Power - Demand</SheetHeader>
+            <TableHeader>Power - Demand</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -104,10 +104,10 @@
                 <Column id="dataSource" scenarioDependent="True"/>
                 <PivotColumn id="demand_by_k" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_ThermalGen">
+        </TableDefinition>
+        <TableDefinition id="Power_ThermalGen">
             <Version>v0.1.1</Version>
-            <SheetHeader>Power - Thermal Generators</SheetHeader>
+            <TableHeader>Power - Thermal Generators</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
                 <Column id="excl" scenarioDependent="True"/>
@@ -142,10 +142,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_VRES">
+        </TableDefinition>
+        <TableDefinition id="Power_VRES">
             <Version>v0.1.0</Version>
-            <SheetHeader>Power - Variable Renewable Energy Sources</SheetHeader>
+            <TableHeader>Power - Variable Renewable Energy Sources</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
                 <Column id="excl" scenarioDependent="True"/>
@@ -170,10 +170,10 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Power_VRESProfiles">
+        </TableDefinition>
+        <TableDefinition id="Power_VRESProfiles">
             <Version>v0.1.0</Version>
-            <SheetHeader>Power - Variable Renewable Energy Sources Profiles</SheetHeader>
+            <TableHeader>Power - Variable Renewable Energy Sources Profiles</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -184,10 +184,10 @@
                 <Column id="dataSource" scenarioDependent="True"/>
                 <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Data_Sources">
+        </TableDefinition>
+        <TableDefinition id="Data_Sources">
             <Version>v0.1.0</Version>
-            <SheetHeader>Data Sources</SheetHeader>
+            <TableHeader>Data Sources</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -198,10 +198,10 @@
                 <Column id="lastEdited" scenarioDependent="False"/>
                 <Column id="comments" scenarioDependent="False"/>
             </Columns>
-        </ExcelDefinition>
-        <ExcelDefinition id="Data_Packages">
+        </TableDefinition>
+        <TableDefinition id="Data_Packages">
             <Version>v0.1.0</Version>
-            <SheetHeader>Data Packages</SheetHeader>
+            <TableHeader>Data Packages</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
@@ -209,8 +209,8 @@
                 <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
                 <Column id="comments" scenarioDependent="False"/>
             </Columns>
-        </ExcelDefinition>
-    </ExcelDefinitions>
+        </TableDefinition>
+    </TableDefinitions>
 
     <Columns> <!-- NOTE: Columns are sorted alphabetically (by id) -->
         <Column id="c">
