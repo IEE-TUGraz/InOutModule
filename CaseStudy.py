@@ -1,6 +1,6 @@
 import copy
 import warnings
-from typing import Optional
+from typing import Optional, Self
 
 import numpy as np
 import pandas as pd
@@ -515,3 +515,36 @@ class CaseStudy:
             return caseStudy
         else:
             return None
+
+    def filter_scenario(self, scenario_name) -> Self:
+        """
+        Filters each (relevant) dataframe in the case study to only include the scenario with the given name.
+        :param scenario_name: The name of the scenario to filter for.
+        :return: Copy of the case study with the filtered dataframes.
+        """
+        caseStudy = self.copy()
+
+        # dGlobal_Parameters is not filtered, as it is the same for all scenarios
+        # dPower_Parameters is not filtered, as it is the same for all scenarios
+        caseStudy.dPower_BusInfo = caseStudy.dPower_BusInfo.loc[scenario_name]
+        caseStudy.dPower_Network = caseStudy.dPower_Network.loc[scenario_name]
+        caseStudy.dPower_Demand = caseStudy.dPower_Demand.loc[scenario_name]
+        caseStudy.dPower_WeightsRP = caseStudy.dPower_WeightsRP.loc[scenario_name]
+        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.loc[scenario_name]
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.loc[scenario_name]
+        if hasattr(caseStudy, "dPower_ThermalGen"):
+            caseStudy.dPower_ThermalGen = caseStudy.dPower_ThermalGen.loc[scenario_name]
+        if hasattr(caseStudy, "dPower_RoR"):
+            caseStudy.dPower_RoR = caseStudy.dPower_RoR.loc[scenario_name]
+        if hasattr(caseStudy, "dPower_VRES"):
+            caseStudy.dPower_VRES = caseStudy.dPower_VRES.loc[scenario_name]
+            caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.loc[scenario_name]
+        if hasattr(caseStudy, "dPower_Storage"):
+            caseStudy.dPower_Storage = caseStudy.dPower_Storage.loc[scenario_name]
+        if hasattr(caseStudy, "dPower_ImpExpHubs"):
+            caseStudy.dPower_ImpExpHubs = caseStudy.dPower_ImpExpHubs.loc[scenario_name]
+            caseStudy.dPower_ImpExpProfiles = caseStudy.dPower_ImpExpProfiles.loc[scenario_name]
+        if hasattr(caseStudy, "dPower_Inflows"):
+            caseStudy.dPower_Inflows = caseStudy.dPower_Inflows.loc[scenario_name]
+
+        return caseStudy
