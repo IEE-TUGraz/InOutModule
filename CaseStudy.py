@@ -154,6 +154,8 @@ class CaseStudy:
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Sectors')
 
+        self.yesNo_to_bool(dGlobal_Parameters, ['pEnablePower', 'pEnableGas', 'pEnableHeat', 'pEnableH2', 'pEnableRMIP'])
+
         # Transform to make it easier to access values
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
         dGlobal_Parameters = dict({(parameter_name, parameter_value["Value"]) for parameter_name, parameter_value in dGlobal_Parameters.iterrows()})  # Transform into dictionary
