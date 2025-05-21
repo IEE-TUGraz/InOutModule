@@ -198,7 +198,9 @@ class CaseStudy:
         dPower_RoR['InvestCostEUR'] = dPower_RoR['MaxProd'] * 1e-3 * (dPower_RoR['InvestCostPerMW'] * 1e-3 + dPower_RoR['InvestCostPerMWh'] * 1e-3 * dPower_RoR['Ene2PowRatio'])
         dPower_RoR['MaxProd'] *= 1e-3
 
-        dPower_RoR['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_RoR.columns:
+            dPower_RoR['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_RoR
 
     def get_dPower_Storage(self):
@@ -210,6 +212,10 @@ class CaseStudy:
         dPower_Storage['InvestCostEUR'] = dPower_Storage['MaxProd'] * 1e-3 * (dPower_Storage['InvestCostPerMW'] * 1e-3 + dPower_Storage['InvestCostPerMWh'] * 1e-3 * dPower_Storage['Ene2PowRatio'])
         dPower_Storage['MaxProd'] *= 1e-3
         dPower_Storage['MaxCons'] *= 1e-3
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_Storage.columns:
+            dPower_Storage['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_Storage
 
     def get_dPower_Inflows(self):
@@ -244,6 +250,10 @@ class CaseStudy:
         # Adjust values
         dPower_ImpExpHubs["Pmax Import"] *= 1e-3
         dPower_ImpExpHubs["Pmax Export"] *= 1e-3
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_ImpExpHubs.columns:
+            dPower_ImpExpHubs['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
 
         return dPower_ImpExpHubs
 
@@ -292,6 +302,10 @@ class CaseStudy:
             error_information = error_information.rename(columns={"ImpExp": "Max Export from Profiles", "Pmax Export": "Sum of Pmax Export from Hub Definition"})  # Rename columns for readability
             error_information *= 1e3  # Convert back to input format
             raise ValueError(f"At least one hub has ExpFix exports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_ImpExpProfiles.columns:
+            dPower_ImpExpProfiles['scenario'] = "ScenarioA"  # TODO: Fill this dynamically, once the Excel file is updated
 
         return dPower_ImpExpProfiles
 
