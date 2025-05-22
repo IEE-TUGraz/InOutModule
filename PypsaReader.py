@@ -79,7 +79,7 @@ class NetworkDataExtractor:
                 "RampDown": lambda df: df["ramp_down"],
                 "pStartupCostEUR": lambda df: df["start_up_cost"],
                 "EnableInvest": lambda df: df["enable_invest"],
-                "InvestCost": lambda df: df["capital_cost"],
+                "InvestCost": lambda df: "check_pypsa_data",
                 "OMVarCost": lambda df: df["marginal_cost"],
             },
             "dPower_VRESProfiles": {
@@ -97,7 +97,7 @@ class NetworkDataExtractor:
                 "MaxProd": lambda df: df["max_prod"],
                 "enableinvest": lambda df: df["enable_invest"],
                 "MaxInvest": lambda df: df["p_nom_max"],
-                "InvestCost": lambda df: df["capital_cost"],
+                "InvestCost": lambda df: "check_pypsa_data",
                 "OMVarCost": lambda df: df["marginal_cost"]
             },
             "dPower_RoR": {
@@ -112,7 +112,7 @@ class NetworkDataExtractor:
                 "OMVarCost": lambda df: df["marginal_cost"],
                 "EnableInvest": lambda df: df["enable_invest"],
                 "MaxInvest": lambda df: df["p_nom_max"],
-                "InvestCostPerMW": lambda df: df["capital_cost"]
+                "InvestCostPerMW": lambda df: "check_pypsa_data"
             },
             "dPower_Storage": {
                 "source": lambda net: h.prepare_storage_units(net),
@@ -128,7 +128,7 @@ class NetworkDataExtractor:
                 "OMVarCost": lambda df: df["marginal_cost"],
                 "EnableInvest": lambda df: df["enable_invest"],
                 "MaxInvest": lambda df: df["p_nom_max"],
-                "InvestCostPerMWh": lambda df: df["capital_cost"],
+                "InvestCostPerMWh": lambda df: "check_pypsa_data",
                 "Ene2PowRatio": lambda df: df["max_hours"],
                 "ShelfLife": lambda df: df["lifetime"]
             },
