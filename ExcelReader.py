@@ -36,6 +36,9 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
+        if scenario.startswith("~"):
+            printer.warning(f"Skipping sheet '{scenario}' from '{excel_file_path}' because it starts with '~'.")
+            continue
         df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         if has_excl_column:
             if not keep_excl_columns:
