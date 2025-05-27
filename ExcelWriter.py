@@ -104,6 +104,11 @@ class ExcelWriter:
 
             data.reset_index(inplace=True)
 
+        if len(data) == 0:
+            printer.warning(f"No data found for Excel definition '{excel_definition_id}' - writing an empty file.")
+            data = pd.DataFrame(columns=[col.db_name for col in excel_definition.columns] + ["scenario"])
+            scenarios = ["ScenarioA"]
+
         for scenario_index, scenario in enumerate(scenarios):
             scenario_data = data[data["scenario"] == scenario]
 
@@ -315,6 +320,8 @@ if __name__ == "__main__":
 
     printer.set_width(300)
 
+    if not args.caseStudyFolder.endswith("/"):
+        args.caseStudyFolder += "/"
     printer.information(f"Loading case study from '{args.caseStudyFolder}'")
 
     if args.excelDefinitionsPath is None:
@@ -345,10 +352,13 @@ if __name__ == "__main__":
         write(data, f"{args.caseStudyFolder}output")
 
         printer.information(f"Comparing '{args.caseStudyFolder}output/{excel_definition_id}.xlsx' against source file '{file_path}'")
-        filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting)
-        if filesEqual:
-            printer.success(f"Excel files are equal")
+        if not os.path.exists(file_path):
+            printer.warning(f"Input file '{file_path}' does not exist - skipping comparison")
         else:
-            printer.error(f"Excel files are NOT equal - see above for details")
+            filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting)
+            if filesEqual:
+                printer.success(f"Excel files are equal")
+            else:
+                printer.error(f"Excel files are NOT equal - see above for details")
 
         printer.separator()

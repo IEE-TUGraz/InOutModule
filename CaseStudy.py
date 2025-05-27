@@ -504,9 +504,9 @@ class CaseStudy:
         adjusted_demand = []
         for i, _ in caseStudy.dPower_BusInfo.iterrows():
             for h, row in caseStudy.dPower_Hindex.iterrows():
-                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "Demand"]])
+                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"]])
 
-        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "Demand"])
+        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value"])
         caseStudy.dPower_Demand = caseStudy.dPower_Demand.set_index(["rp", "k", "i"])
 
         # Adjust VRESProfiles
@@ -524,14 +524,14 @@ class CaseStudy:
         # Adjust Hindex
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
         for i, row in caseStudy.dPower_Hindex.iterrows():
-            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None
+            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None, "ScenarioA"
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
 
         # Adjust WeightsK
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.reset_index()
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.drop(caseStudy.dPower_WeightsK.index)
         for i in range(len(caseStudy.dPower_Hindex)):
-            caseStudy.dPower_WeightsK.loc[i] = f"k{i + 1:0>4}", None, 1, None, None
+            caseStudy.dPower_WeightsK.loc[i] = f"k{i + 1:0>4}", None, 1, None, None, "ScenarioA"
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.set_index("k")
 
         # Adjust WeightsRP
