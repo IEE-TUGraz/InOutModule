@@ -1,4 +1,3 @@
-import os
 import time
 
 import numpy as np
@@ -15,6 +14,8 @@ def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str):
     # Check if the file has the correct version specifier
     wb = openpyxl.load_workbook(excel_file_path)
     for sheet in wb.sheetnames:
+        if sheet.startswith("~"):  # Skip sheets that start with '~'
+            continue
         if wb[sheet].cell(row=2, column=3).value != version_specifier:
             printer.error(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
             printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
@@ -69,26 +70,17 @@ def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = Fa
     :param do_not_convert_values: Unused but kept for compatibility with other functions
     :return: dGlobal_Scenarios
     """
-    # Check if file exists
-    if not os.path.exists(excel_file_path):
-        printer.information("Executing without scenarios (since no 'Global_Scenarios.xlsx' file was found).")
+    dGlobal_Scenarios = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["scenarioID"], True, keep_excluded_entries)
 
-        # Create dataframe for only one Scenario
-        dGlobal_Scenarios = pd.DataFrame({"excl": np.nan, "id": np.nan, "scenarioID": ["ScenarioA"], "relativeWeight": [1], "comments": np.nan, "scenario": ["Scenarios"]})
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dGlobal_Scenarios', although no values are converted anyway - please check if this is intended.")
 
-        return dGlobal_Scenarios
-    else:
-        dGlobal_Scenarios = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["scenarioID"], True, keep_excluded_entries)
+    # Check that there is only one sheet with the name 'Scenario'
+    check = dGlobal_Scenarios["scenario"].to_numpy()
+    if not (check[0] == check).all():
+        raise ValueError(f"There are multiple or falsely named sheets for '{excel_file_path}'. There should only be one sheet with the name 'Scenario', please check the Excel file.")
 
-        if do_not_convert_values:
-            printer.warning("'do_not_convert_values' is set for 'get_dGlobal_Scenarios', although no values are converted anyway - please check if this is intended.")
-
-        # Check that there is only one sheet with the name 'Scenario'
-        check = dGlobal_Scenarios["scenario"].to_numpy()
-        if not (check[0] == check).all():
-            raise ValueError(f"There are multiple or falsely named sheets for '{excel_file_path}'. There should only be one sheet with the name 'Scenario', please check the Excel file.")
-
-        return dGlobal_Scenarios
+    return dGlobal_Scenarios
 
 
 def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:

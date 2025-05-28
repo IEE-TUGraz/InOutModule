@@ -1,4 +1,5 @@
 import copy
+import os
 import warnings
 from typing import Optional, Self
 
@@ -6,6 +7,9 @@ import numpy as np
 import pandas as pd
 
 from InOutModule import ExcelReader
+from InOutModule.printer import Printer
+
+printer = Printer.getInstance()
 
 
 class CaseStudy:
@@ -41,7 +45,15 @@ class CaseStudy:
             self.dGlobal_Scenarios = dGlobal_Scenarios
         else:
             self.global_scenarios_file = global_scenarios_file
-            self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.example_folder + self.global_scenarios_file)
+            if not os.path.exists(self.global_scenarios_file):
+                printer.warning(f"Executing without 'Global_Scenarios' (since no file was found at '{self.global_scenarios_file}').")
+
+                # Create dataframe for only one Scenario
+                dGlobal_Scenarios = pd.DataFrame({"excl": np.nan, "id": np.nan, "scenarioID": ["ScenarioA"], "relativeWeight": [1], "comments": np.nan, "scenario": ["Scenarios"]})
+
+                self.dGlobal_Scenarios = dGlobal_Scenarios
+            else:
+                self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.example_folder + self.global_scenarios_file)
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
@@ -67,23 +79,45 @@ class CaseStudy:
             self.power_demand_file = power_demand_file
             self.dPower_Demand = ExcelReader.get_dPower_Demand(self.example_folder + self.power_demand_file)
 
+        if dPower_Hindex is not None:
+            self.dPower_Hindex = dPower_Hindex
+        else:
+            self.power_hindex_file = power_hindex_file
+            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.example_folder + self.power_hindex_file)
+
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
             self.power_weightsrp_file = power_weightsrp_file
-            self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.example_folder + self.power_weightsrp_file)
+
+            if not os.path.exists(self.power_weightsrp_file):
+                printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.power_weightsrp_file}').")
+
+                dPower_WeightsRPs = []
+                for scenario in self.dPower_Hindex['scenario'].unique().tolist():
+                    # Count occurences of each value in column 'rp' of dPower_Hindex
+                    dPower_WeightsRP_scenario = pd.DataFrame(self.dPower_Hindex[self.dPower_Hindex['scenario'] == scenario].reset_index()['rp'].value_counts().sort_index())
+                    dPower_WeightsRP_scenario = dPower_WeightsRP_scenario.rename(columns={'count': 'pWeight_rp'})
+                    dPower_WeightsRP_scenario['scenario'] = scenario  # Add scenario ID
+
+                    # Add other columns with default values
+                    dPower_WeightsRP_scenario['id'] = np.nan
+                    dPower_WeightsRP_scenario['dataPackage'] = np.nan
+                    dPower_WeightsRP_scenario['dataSource'] = np.nan
+
+                    dPower_WeightsRPs.append(dPower_WeightsRP_scenario)
+
+                dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
+
+                self.dPower_WeightsRP = dPower_WeightsRP
+            else:
+                self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.example_folder + self.power_weightsrp_file)
 
         if dPower_WeightsK is not None:
             self.dPower_WeightsK = dPower_WeightsK
         else:
             self.power_weightsk_file = power_weightsk_file
             self.dPower_WeightsK = ExcelReader.get_dPower_WeightsK(self.example_folder + self.power_weightsk_file)
-
-        if dPower_Hindex is not None:
-            self.dPower_Hindex = dPower_Hindex
-        else:
-            self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.example_folder + self.power_hindex_file)
 
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices()
 
