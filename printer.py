@@ -117,7 +117,10 @@ class Printer:
         """
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
-        self.console.print(f"[red]{prefix}{text}[/red]")
+        if len(prefix) > 0:
+            self.console.print(f"[red]{prefix}[/red]{text}")  # Only have prefix in color if it is set
+        else:
+            self.console.print(f"[red]{text}[/red]")
         self._log(f"{prefix}{text}")
         return None
 
@@ -135,7 +138,10 @@ class Printer:
         """
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
-        self.console.print(f"[yellow]{prefix}{text}[/yellow]")
+        if len(prefix) > 0:
+            self.console.print(f"[yellow]{prefix}[/yellow]{text}")  # Only have prefix in color if it is set
+        else:
+            self.console.print(f"[yellow]{text}[/yellow]")
         self._log(f"{prefix}{text}")
         return None
 
@@ -153,7 +159,10 @@ class Printer:
         """
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
-        self.console.print(f"[green]{prefix}{text}[/green]")
+        if len(prefix) > 0:
+            self.console.print(f"[green]{prefix}[/green]{text}")  # Only have prefix in color if it is set
+        else:
+            self.console.print(f"[green]{text}[/green]")
         self._log(f"{prefix}{text}")
         return None
 
