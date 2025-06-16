@@ -556,7 +556,7 @@ class CaseStudy:
 
         filtered_df = df.loc[df['scenario'] == scenario_name]
 
-        if len(df) >= 0 and len(filtered_df) == 0:
+        if len(df) > 0 and len(filtered_df) == 0:
             raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
 
         setattr(self, df_name, filtered_df)
