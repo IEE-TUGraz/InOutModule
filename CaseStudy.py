@@ -41,7 +41,7 @@ class CaseStudy:
             self.dGlobal_Scenarios = dGlobal_Scenarios
         else:
             self.global_scenarios_file = global_scenarios_file
-            self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.example_folder + self.global_scenarios_file)
+            self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.data_folder + self.global_scenarios_file)
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
