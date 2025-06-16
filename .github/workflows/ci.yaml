@@ -6,13 +6,15 @@ on:
 
 jobs:
   run_tests:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
-
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
@@ -20,8 +22,9 @@ jobs:
       - name: Set up Conda environment
         uses: conda-incubator/setup-miniconda@v3.2.0
         with:
-          environment-file: InOutModule/environment.yml
           activate-environment: InOutModule_env
+          environment-file: environment.yml
+          auto-activate-base: false
 
       - name: Run tests
-        run: pytest
+        run: python -m pytest

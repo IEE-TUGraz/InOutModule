@@ -6,8 +6,8 @@ from printer import Printer
 
 printer = Printer.getInstance()
 
-case_study_folder = "../examples/"
-ew = ExcelWriter("../TableDefinitions.xml")
+case_study_folder = "examples/"
+ew = ExcelWriter()
 combinations = [
     ("Power_Hindex", f"{case_study_folder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
     ("Power_WeightsRP", f"{case_study_folder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
