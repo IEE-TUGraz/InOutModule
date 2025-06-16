@@ -1,6 +1,5 @@
 import time
 
-import numpy as np
 import openpyxl
 import pandas as pd
 from openpyxl import load_workbook
