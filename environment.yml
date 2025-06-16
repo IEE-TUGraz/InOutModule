@@ -1,0 +1,14 @@
+name: InOutModule_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - openpyxl=3.1.5
+  - pandas=2.2.3
+  - pip=24.0
+  - pytest=8.4.0
+  - python=3.12.2
+  - rich=13.7.1
+  - rich-argparse=1.6.0
+  - pip:
+      - pulp==2.9.0

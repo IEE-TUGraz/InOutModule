@@ -8,10 +8,10 @@ import openpyxl
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-import InOutModule.TableDefinition
-from InOutModule import ExcelReader, TableDefinition
-from InOutModule.TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
-from InOutModule.printer import Printer
+import ExcelReader
+import TableDefinition
+from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
+from printer import Printer
 
 package_directory_ExcelWriter = os.path.dirname(os.path.abspath(__file__))
 
@@ -40,7 +40,7 @@ class ExcelWriter:
         pass
 
     @staticmethod
-    def __setCellStyle(cell_style: InOutModule.TableDefinition.CellStyle, target_cell: openpyxl.cell.cell):
+    def __setCellStyle(cell_style: CellStyle, target_cell: openpyxl.cell.cell):
         """
         Set the cell style of a target cell based on the given cell style.
 
