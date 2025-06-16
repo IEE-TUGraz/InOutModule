@@ -193,6 +193,15 @@ class ExcelWriter:
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
 
+    def write_dGlobal_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
+        :param dGlobal_Scenarios: DataFrame containing the dGlobal_Scenarios data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
+
     def write_dPower_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Hindex DataFrame to an Excel file in LEGO format.
@@ -316,6 +325,7 @@ if __name__ == "__main__":
     printer.separator()
 
     combinations = [
+        ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_dGlobal_Scenarios, ew.write_dGlobal_Scenarios),
         ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),

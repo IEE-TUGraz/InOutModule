@@ -1,6 +1,6 @@
 import copy
 import warnings
-from typing import Optional
+from typing import Optional, Self
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ class CaseStudy:
 
     def __init__(self, data_folder: str, do_not_merge_single_node_buses: bool = False,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
+                 global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
@@ -35,6 +36,12 @@ class CaseStudy:
         else:
             self.global_parameters_file = global_parameters_file
             self.dGlobal_Parameters = self.get_dGlobal_Parameters()
+
+        if dGlobal_Scenarios is not None:
+            self.dGlobal_Scenarios = dGlobal_Scenarios
+        else:
+            self.global_scenarios_file = global_scenarios_file
+            self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.data_folder + self.global_scenarios_file)
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
@@ -147,6 +154,8 @@ class CaseStudy:
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Sectors')
 
+        self.yesNo_to_bool(dGlobal_Parameters, ['pEnablePower', 'pEnableGas', 'pEnableHeat', 'pEnableH2', 'pEnableRMIP'])
+
         # Transform to make it easier to access values
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
         dGlobal_Parameters = dict({(parameter_name, parameter_value["Value"]) for parameter_name, parameter_value in dGlobal_Parameters.iterrows()})  # Transform into dictionary
@@ -190,6 +199,10 @@ class CaseStudy:
 
         dPower_RoR['InvestCostEUR'] = dPower_RoR['MaxProd'] * 1e-3 * (dPower_RoR['InvestCostPerMW'] * 1e-3 + dPower_RoR['InvestCostPerMWh'] * 1e-3 * dPower_RoR['Ene2PowRatio'])
         dPower_RoR['MaxProd'] *= 1e-3
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_RoR.columns:
+            dPower_RoR['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_RoR
 
     def get_dPower_Storage(self):
@@ -201,6 +214,10 @@ class CaseStudy:
         dPower_Storage['InvestCostEUR'] = dPower_Storage['MaxProd'] * 1e-3 * (dPower_Storage['InvestCostPerMW'] * 1e-3 + dPower_Storage['InvestCostPerMWh'] * 1e-3 * dPower_Storage['Ene2PowRatio'])
         dPower_Storage['MaxProd'] *= 1e-3
         dPower_Storage['MaxCons'] *= 1e-3
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_Storage.columns:
+            dPower_Storage['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_Storage
 
     def get_dPower_Inflows(self):
@@ -209,6 +226,8 @@ class CaseStudy:
         dPower_Inflows = dPower_Inflows.rename(columns={dPower_Inflows.columns[0]: "rp", dPower_Inflows.columns[1]: "g"})
         dPower_Inflows = dPower_Inflows.melt(id_vars=['rp', 'g'], var_name='k', value_name='Inflow')
         dPower_Inflows = dPower_Inflows.set_index(['rp', 'g', 'k'])
+
+        dPower_Inflows['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_Inflows
 
     def get_dPower_ImpExpHubs(self):
@@ -233,6 +252,10 @@ class CaseStudy:
         # Adjust values
         dPower_ImpExpHubs["Pmax Import"] *= 1e-3
         dPower_ImpExpHubs["Pmax Export"] *= 1e-3
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_ImpExpHubs.columns:
+            dPower_ImpExpHubs['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
 
         return dPower_ImpExpHubs
 
@@ -281,6 +304,10 @@ class CaseStudy:
             error_information = error_information.rename(columns={"ImpExp": "Max Export from Profiles", "Pmax Export": "Sum of Pmax Export from Hub Definition"})  # Rename columns for readability
             error_information *= 1e3  # Convert back to input format
             raise ValueError(f"At least one hub has ExpFix exports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
+
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_ImpExpProfiles.columns:
+            dPower_ImpExpProfiles['scenario'] = "ScenarioA"  # TODO: Fill this dynamically, once the Excel file is updated
 
         return dPower_ImpExpProfiles
 
@@ -515,3 +542,54 @@ class CaseStudy:
             return caseStudy
         else:
             return None
+
+    def _filter_dataframe(self, df_name: str, scenario_name: str) -> None:
+        """
+        Filters the dataframe with the given name to only include the scenario with the given name.
+        :param df_name: The name of the dataframe to filter.
+        :param scenario_name: The name of the scenario to filter for.
+        :return: None
+        """
+        if not hasattr(self, df_name):
+            raise ValueError(f"Dataframe '{df_name}' not found in the case study. Please check the input data.")
+        df = getattr(self, df_name)
+
+        filtered_df = df.loc[df['scenario'] == scenario_name]
+
+        if len(df) > 0 and len(filtered_df) == 0:
+            raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
+
+        setattr(self, df_name, filtered_df)
+
+    def filter_scenario(self, scenario_name) -> Self:
+        """
+        Filters each (relevant) dataframe in the case study to only include the scenario with the given name.
+        :param scenario_name: The name of the scenario to filter for.
+        :return: Copy of the case study with the filtered dataframes.
+        """
+        caseStudy = self.copy()
+
+        # dGlobal_Parameters is not filtered, as it is the same for all scenarios
+        # dPower_Parameters is not filtered, as it is the same for all scenarios
+        caseStudy._filter_dataframe("dPower_BusInfo", scenario_name)
+        caseStudy._filter_dataframe("dPower_Network", scenario_name)
+        caseStudy._filter_dataframe("dPower_Demand", scenario_name)
+        caseStudy._filter_dataframe("dPower_WeightsRP", scenario_name)
+        caseStudy._filter_dataframe("dPower_WeightsK", scenario_name)
+        caseStudy._filter_dataframe("dPower_Hindex", scenario_name)
+
+        if hasattr(caseStudy, "dPower_ThermalGen"):
+            caseStudy._filter_dataframe("dPower_ThermalGen", scenario_name)
+        if hasattr(caseStudy, "dPower_RoR") and len(caseStudy.dPower_RoR) > 0:
+            caseStudy._filter_dataframe("dPower_RoR", scenario_name)
+            caseStudy._filter_dataframe("dPower_Inflows", scenario_name)
+        if hasattr(caseStudy, "dPower_VRES"):
+            caseStudy._filter_dataframe("dPower_VRES", scenario_name)
+            caseStudy._filter_dataframe("dPower_VRESProfiles", scenario_name)
+        if hasattr(caseStudy, "dPower_Storage"):
+            caseStudy._filter_dataframe("dPower_Storage", scenario_name)
+        if hasattr(caseStudy, "dPower_ImpExpHubs") and caseStudy.dPower_ImpExpHubs is not None:
+            caseStudy._filter_dataframe("dPower_ImpExpHubs", scenario_name)
+            caseStudy._filter_dataframe("dPower_ImpExpProfiles", scenario_name)
+
+        return caseStudy
