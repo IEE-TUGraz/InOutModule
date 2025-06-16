@@ -6,3 +6,6 @@ examples/output
 
 # Temporary files
 ~$*.xlsx
+
+# Development environment files
+.idea/

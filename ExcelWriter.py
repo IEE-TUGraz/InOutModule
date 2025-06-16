@@ -8,10 +8,10 @@ import openpyxl
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-import InOutModule.ExcelDefinition
-from InOutModule import ExcelReader, ExcelDefinition
-from InOutModule.ExcelDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, ExcelDefinition
-from InOutModule.printer import Printer
+import ExcelReader
+import TableDefinition
+from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
+from printer import Printer
 
 package_directory_ExcelWriter = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,11 +19,11 @@ printer = Printer.getInstance()
 
 
 class ExcelWriter:
-    def __init__(self, excel_definitions_path: str = "ExcelDefinitions.xml"):
+    def __init__(self, excel_definitions_path: str = "TableDefinitions.xml"):
         """
         Initialize the ExcelWriter with the XML root element.
 
-        :param excel_definitions_path: Path to the ExcelDefinitions.xml file.
+        :param excel_definitions_path: Path to the TableDefinitions.xml file.
         """
 
         self.excel_definitions_path = excel_definitions_path
@@ -36,11 +36,11 @@ class ExcelWriter:
         self.texts = Text.dict_from_xml(self.xml_root.find("Texts"))
         self.cell_styles = CellStyle.dict_from_xml(self.xml_root.find("CellStyles"), self.fonts, self.colors, self.number_formats, self.alignments)
         self.columns = Column.dict_from_xml(self.xml_root.find("Columns"), self.cell_styles) | Column.dict_from_xml(self.xml_root.find("PivotColumns"), self.cell_styles)
-        self.excel_definitions = ExcelDefinition.dict_from_xml(self.xml_root.find("ExcelDefinitions"), self.columns, self.colors, self.cell_styles)
+        self.excel_definitions = TableDefinition.dict_from_xml(self.xml_root.find("TableDefinitions"), self.columns, self.colors, self.cell_styles)
         pass
 
     @staticmethod
-    def __setCellStyle(cell_style: InOutModule.ExcelDefinition.CellStyle, target_cell: openpyxl.cell.cell):
+    def __setCellStyle(cell_style: CellStyle, target_cell: openpyxl.cell.cell):
         """
         Set the cell style of a target cell based on the given cell style.
 
