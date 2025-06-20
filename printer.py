@@ -1,6 +1,5 @@
 import datetime
 
-from pyomo import environ as pyo
 from rich.console import Console
 
 
@@ -226,6 +225,7 @@ def pprint_zoi_var(var, zoi, index_positions: list = None, decimals: int = 2):
     :param decimals: The number of decimal places to display for the variable's value.
     :return: None
     """
+    from pyomo import environ as pyo  # Import Pyomo environment for variable handling
 
     if index_positions is None:
         index_positions = [0]

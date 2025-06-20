@@ -2,7 +2,7 @@
 
 ## v0.1.0
 
-Very fist version.
+Very first version.
 
 # Power_Hindex
 

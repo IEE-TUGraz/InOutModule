@@ -6,15 +6,15 @@ from typing import Optional, Self
 import numpy as np
 import pandas as pd
 
-from InOutModule import ExcelReader
-from InOutModule.printer import Printer
+import ExcelReader
+from printer import Printer
 
 printer = Printer.getInstance()
 
 
 class CaseStudy:
 
-    def __init__(self, example_folder: str, do_not_merge_single_node_buses: bool = False,
+    def __init__(self, data_folder: str, do_not_merge_single_node_buses: bool = False,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
@@ -32,7 +32,7 @@ class CaseStudy:
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
                  power_impexphubs_file: str = "Power_ImpExpHubs.xlsx", dPower_ImpExpHubs: pd.DataFrame = None,
                  power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None):
-        self.example_folder = example_folder if example_folder.endswith("/") else example_folder + "/"
+        self.data_folder = data_folder if data_folder.endswith("/") else data_folder + "/"
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
 
         if dGlobal_Parameters is not None:
@@ -65,19 +65,19 @@ class CaseStudy:
             self.dPower_BusInfo = dPower_BusInfo
         else:
             self.power_businfo_file = power_businfo_file
-            self.dPower_BusInfo = ExcelReader.get_dPower_BusInfo(self.example_folder + self.power_businfo_file)
+            self.dPower_BusInfo = ExcelReader.get_dPower_BusInfo(self.data_folder + self.power_businfo_file)
 
         if dPower_Network is not None:
             self.dPower_Network = dPower_Network
         else:
             self.power_network_file = power_network_file
-            self.dPower_Network = ExcelReader.get_dPower_Network(self.example_folder + self.power_network_file)
+            self.dPower_Network = ExcelReader.get_dPower_Network(self.data_folder + self.power_network_file)
 
         if dPower_Demand is not None:
             self.dPower_Demand = dPower_Demand
         else:
             self.power_demand_file = power_demand_file
-            self.dPower_Demand = ExcelReader.get_dPower_Demand(self.example_folder + self.power_demand_file)
+            self.dPower_Demand = ExcelReader.get_dPower_Demand(self.data_folder + self.power_demand_file)
 
         if dPower_Hindex is not None:
             self.dPower_Hindex = dPower_Hindex
@@ -120,7 +120,13 @@ class CaseStudy:
             self.dPower_WeightsK = dPower_WeightsK
         else:
             self.power_weightsk_file = power_weightsk_file
-            self.dPower_WeightsK = ExcelReader.get_dPower_WeightsK(self.example_folder + self.power_weightsk_file)
+            self.dPower_WeightsK = ExcelReader.get_dPower_WeightsK(self.data_folder + self.power_weightsk_file)
+
+        if dPower_Hindex is not None:
+            self.dPower_Hindex = dPower_Hindex
+        else:
+            self.power_hindex_file = power_hindex_file
+            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.data_folder + self.power_hindex_file)
 
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices()
 
@@ -129,7 +135,7 @@ class CaseStudy:
                 self.dPower_ThermalGen = dPower_ThermalGen
             else:
                 self.power_thermalgen_file = power_thermalgen_file
-                self.dPower_ThermalGen = ExcelReader.get_dPower_ThermalGen(self.example_folder + self.power_thermalgen_file)
+                self.dPower_ThermalGen = ExcelReader.get_dPower_ThermalGen(self.data_folder + self.power_thermalgen_file)
 
         if self.dPower_Parameters["pEnableRoR"]:
             if dPower_RoR is not None:
@@ -149,13 +155,13 @@ class CaseStudy:
                 self.dPower_VRES = dPower_VRES
             else:
                 self.power_vres_file = power_vres_file
-                self.dPower_VRES = ExcelReader.get_dPower_VRES(self.example_folder + self.power_vres_file)
+                self.dPower_VRES = ExcelReader.get_dPower_VRES(self.data_folder + self.power_vres_file)
 
             if dPower_VRESProfiles is not None:
                 self.dPower_VRESProfiles = dPower_VRESProfiles
             else:
                 self.power_vresprofiles_file = power_vresprofiles_file
-                self.dPower_VRESProfiles = ExcelReader.get_dPower_VRESProfiles(self.example_folder + self.power_vresprofiles_file)
+                self.dPower_VRESProfiles = ExcelReader.get_dPower_VRESProfiles(self.data_folder + self.power_vresprofiles_file)
 
         if self.dPower_Parameters["pEnableStorage"]:
             if dPower_Storage is not None:
@@ -187,7 +193,7 @@ class CaseStudy:
         return copy.deepcopy(self)
 
     def get_dGlobal_Parameters(self):
-        dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
+        dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Sectors')
 
@@ -200,7 +206,7 @@ class CaseStudy:
         return dGlobal_Parameters
 
     def get_dPower_Parameters(self):
-        dPower_Parameters = pd.read_excel(self.example_folder + self.power_parameters_file, skiprows=[0, 1])
+        dPower_Parameters = pd.read_excel(self.data_folder + self.power_parameters_file, skiprows=[0, 1])
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[0], axis=1)
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
@@ -232,7 +238,7 @@ class CaseStudy:
         return df
 
     def get_dPower_RoR(self):
-        dPower_RoR = self.read_generator_data(self.example_folder + self.power_ror_file)
+        dPower_RoR = self.read_generator_data(self.data_folder + self.power_ror_file)
 
         dPower_RoR['InvestCostEUR'] = dPower_RoR['MaxProd'] * 1e-3 * (dPower_RoR['InvestCostPerMW'] * 1e-3 + dPower_RoR['InvestCostPerMWh'] * 1e-3 * dPower_RoR['Ene2PowRatio'])
         dPower_RoR['MaxProd'] *= 1e-3
@@ -243,7 +249,7 @@ class CaseStudy:
         return dPower_RoR
 
     def get_dPower_Storage(self):
-        dPower_Storage = self.read_generator_data(self.example_folder + self.power_storage_file)
+        dPower_Storage = self.read_generator_data(self.data_folder + self.power_storage_file)
         dPower_Storage['pOMVarCostEUR'] = dPower_Storage['OMVarCost'] * 1e-3
         dPower_Storage['IniReserve'] = dPower_Storage['IniReserve'].fillna(0)
         dPower_Storage['MinReserve'] = dPower_Storage['MinReserve'].fillna(0)
@@ -258,7 +264,7 @@ class CaseStudy:
         return dPower_Storage
 
     def get_dPower_Inflows(self):
-        dPower_Inflows = pd.read_excel(self.example_folder + self.power_inflows_file, skiprows=[0, 1, 3, 4, 5])
+        dPower_Inflows = pd.read_excel(self.data_folder + self.power_inflows_file, skiprows=[0, 1, 3, 4, 5])
         dPower_Inflows = dPower_Inflows.drop(dPower_Inflows.columns[0], axis=1)
         dPower_Inflows = dPower_Inflows.rename(columns={dPower_Inflows.columns[0]: "rp", dPower_Inflows.columns[1]: "g"})
         dPower_Inflows = dPower_Inflows.melt(id_vars=['rp', 'g'], var_name='k', value_name='Inflow')
@@ -268,7 +274,7 @@ class CaseStudy:
         return dPower_Inflows
 
     def get_dPower_ImpExpHubs(self):
-        dPower_ImpExpHubs = pd.read_excel(self.example_folder + self.power_impexphubs_file, skiprows=[0, 1, 3, 4, 5])
+        dPower_ImpExpHubs = pd.read_excel(self.data_folder + self.power_impexphubs_file, skiprows=[0, 1, 3, 4, 5])
         dPower_ImpExpHubs = dPower_ImpExpHubs.drop(dPower_ImpExpHubs.columns[0], axis=1)
         dPower_ImpExpHubs = dPower_ImpExpHubs.set_index(['hub', 'i'])
 
@@ -298,7 +304,7 @@ class CaseStudy:
 
     def get_dPower_ImpExpProfiles(self):
         with warnings.catch_warnings(action="ignore", category=UserWarning):  # Otherwise there is a warning regarding data validation in the Excel-File (see https://stackoverflow.com/questions/53965596/python-3-openpyxl-userwarning-data-validation-extension-not-supported)
-            dPower_ImpExpProfiles = pd.read_excel(self.example_folder + self.power_impexpprofiles_file, skiprows=[0, 1, 3, 4, 5], sheet_name='Power ImpExpProfiles')
+            dPower_ImpExpProfiles = pd.read_excel(self.data_folder + self.power_impexpprofiles_file, skiprows=[0, 1, 3, 4, 5], sheet_name='Power ImpExpProfiles')
         dPower_ImpExpProfiles = dPower_ImpExpProfiles.drop(dPower_ImpExpProfiles.columns[0], axis=1)
         dPower_ImpExpProfiles = dPower_ImpExpProfiles.melt(id_vars=['hub', 'rp', 'Type'], var_name='k', value_name='Value')
 
@@ -593,7 +599,7 @@ class CaseStudy:
 
         filtered_df = df.loc[df['scenario'] == scenario_name]
 
-        if len(df) >= 0 and len(filtered_df) == 0:
+        if len(df) > 0 and len(filtered_df) == 0:
             raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
 
         setattr(self, df_name, filtered_df)
