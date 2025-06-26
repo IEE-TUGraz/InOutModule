@@ -146,7 +146,7 @@ class CaseStudy:
         dGlobal_Parameters = pd.read_excel(self.example_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Sectors')
-
+        self.yesNo_to_bool(dGlobal_Parameters,['pEnableRMIP'])
         # Transform to make it easier to access values
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
         dGlobal_Parameters = dict({(parameter_name, parameter_value["Value"]) for parameter_name, parameter_value in dGlobal_Parameters.iterrows()})  # Transform into dictionary
@@ -159,7 +159,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport','pEnableSOCP'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)

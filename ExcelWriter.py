@@ -1,11 +1,14 @@
 import os
 from copy import copy
 
+import pyomo.core
 import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
-
+import openpyxl
+from tools.printer import Printer
+printer = Printer.getInstance()
 from InOutModule import ExcelReader
 
 package_directory_ExcelWriter = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +30,35 @@ def __copyCellStyle(origin, target):
     target.protection = copy(origin.protection)
     target.alignment = copy(origin.alignment)
 
+
+def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
+    """
+    Write all variables of the given Pyomo model to an Excel file.
+
+    :param model: The Pyomo model to be written to Excel.
+    :param target_path: Path to the target Excel file.
+    :return: None
+    """
+    printer.information(f"Writing model to '{target_path}'")
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    for i, var in enumerate(model.component_objects(pyomo.core.Var, active=True)):
+        if i == 0:  # Use the automatically existing sheet for the first variable
+            ws.title = str(var)
+        else:  # Create a sheet for each (other) variable
+            ws = wb.create_sheet(title=str(var))
+
+        # Prepare the data from the model and prepare the header
+        data = [(j, v.value if not v.stale else None) for j, v in var.items()]
+        col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
+        ws.append([f"index_{j}" for j in range(col_number)] + [str(var)])
+
+        # Write data to the sheet
+        for j, v in data:
+            ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
+
+    wb.save(target_path)
 
 def write_VRESProfiles(data: pd.DataFrame, file_path: str):
     templateName = "Power_VRESProfiles"
