@@ -12,3 +12,6 @@ examples/output
 
 # Files from editable installs of pip
 /InOutModule.egg-info/
+
+# Operating system files
+.DS_Store
