@@ -277,9 +277,9 @@ class CaseStudy:
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
-        dGlobal_Parameters = dGlobal_Parameters.set_index('Sectors')
+        dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
 
-        self.yesNo_to_bool(dGlobal_Parameters, ['pEnablePower', 'pEnableGas', 'pEnableHeat', 'pEnableH2', 'pEnableRMIP'])
+        self.yesNo_to_bool(dGlobal_Parameters, ['pEnableRMIP'])
 
         # Transform to make it easier to access values
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
