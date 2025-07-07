@@ -5,7 +5,7 @@ import openpyxl
 import pandas as pd
 from openpyxl import load_workbook
 
-from InOutModule.printer import Printer
+from printer import Printer
 
 printer = Printer.getInstance()
 
@@ -55,6 +55,27 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
     df = df.melt(id_vars=melt_indices + ["scenario"], var_name=pivoted_variable_name, value_name="value")
     df = df.set_index(indices)
     return df
+
+
+def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dGlobal_Scenarios data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dGlobal_Scenarios
+    """
+    dGlobal_Scenarios = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["scenarioID"], True, keep_excluded_entries)
+
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dGlobal_Scenarios', although no values are converted anyway - please check if this is intended.")
+
+    # Check that there is only one sheet with the name 'Scenario'
+    check = dGlobal_Scenarios["scenario"].to_numpy()
+    if not (check[0] == check).all():
+        raise ValueError(f"There are multiple or falsely named sheets for '{excel_file_path}'. There should only be one sheet with the name 'Scenario', please check the Excel file.")
+
+    return dGlobal_Scenarios
 
 
 def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:

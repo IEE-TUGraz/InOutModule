@@ -166,7 +166,7 @@ class Column:
 
     def get_copy_with_scenario_dependent(self, scenario_dependent: bool, color_dict: dict[str, Color]) -> Self:
         """
-        Sets the scenario_dependent attribute of the column and returns a copy of the object. Important since the column is used in multiple ExcelDefinition objects.
+        Sets the scenario_dependent attribute of the column and returns a copy of the object. Important since the column might be used in multiple TableDefinition objects.
         :param scenario_dependent: Boolean indicating if the column is scenario dependent.
         :param color_dict: Dictionary mapping color IDs to Color objects.
         :return: Copy of the updated Column object.
@@ -230,7 +230,7 @@ class Column:
         return return_dict
 
 
-class ExcelDefinition:
+class TableDefinition:
     def __init__(self, file_name: str, version: str, sheet_header: str, description_row_height: float, columns: list[Column]):
         """
         Represents a configuration for a spreadsheet.
@@ -251,19 +251,19 @@ class ExcelDefinition:
     @classmethod
     def dict_from_xml(cls, excel_definitions: xml.etree.ElementTree.Element, column_dict: dict[str, Column], color_dict: dict[str, Color], cell_style_dict: dict[str, CellStyle]) -> dict[str, Self]:
         """
-        Converts a list of XML excel definition elements into a dictionary of ExcelDefinition objects.
+        Converts a list of XML excel definition elements into a dictionary of TableDefinition objects.
         :param excel_definitions: XML element containing excel definition definitions.
         :param column_dict: Dictionary mapping column IDs to Column objects.
         :param color_dict: Dictionary mapping color IDs to Color objects.
         :param cell_style_dict: Dictionary mapping cell style IDs to CellStyle objects.
-        :return: A dictionary mapping excel definition IDs to ExcelDefinition objects.
+        :return: A dictionary mapping excel definition IDs to TableDefinition objects.
         """
         return_dict = {}
 
         for excel_definition in excel_definitions:
             file_name = excel_definition.get("id")
             version = excel_definition.find("Version").text
-            sheet_header = excel_definition.find("SheetHeader").text
+            sheet_header = excel_definition.find("TableHeader").text
             description_row_height = float(excel_definition.find("DescriptionRowHeight").text)
             columns = []
 
@@ -291,7 +291,7 @@ class ExcelDefinition:
 
                 raise ValueError(f"Column definition(s) {missing_columns} not found for excel definition '{file_name}' in the xml-file. Please define it/them.")
 
-            return_dict[file_name] = ExcelDefinition(file_name=file_name,
+            return_dict[file_name] = TableDefinition(file_name=file_name,
                                                      version=version,
                                                      sheet_header=sheet_header,
                                                      description_row_height=description_row_height,

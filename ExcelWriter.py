@@ -9,10 +9,10 @@ import pandas as pd
 import pyomo.core
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-import InOutModule.ExcelDefinition
-from InOutModule import ExcelReader, ExcelDefinition
-from InOutModule.ExcelDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, ExcelDefinition
-from InOutModule.printer import Printer
+import ExcelReader
+import TableDefinition
+from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
+from printer import Printer
 
 package_directory_ExcelWriter = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,11 +20,11 @@ printer = Printer.getInstance()
 
 
 class ExcelWriter:
-    def __init__(self, excel_definitions_path: str = "ExcelDefinitions.xml"):
+    def __init__(self, excel_definitions_path: str = "TableDefinitions.xml"):
         """
         Initialize the ExcelWriter with the XML root element.
 
-        :param excel_definitions_path: Path to the ExcelDefinitions.xml file.
+        :param excel_definitions_path: Path to the TableDefinitions.xml file.
         """
 
         self.excel_definitions_path = excel_definitions_path
@@ -37,11 +37,11 @@ class ExcelWriter:
         self.texts = Text.dict_from_xml(self.xml_root.find("Texts"))
         self.cell_styles = CellStyle.dict_from_xml(self.xml_root.find("CellStyles"), self.fonts, self.colors, self.number_formats, self.alignments)
         self.columns = Column.dict_from_xml(self.xml_root.find("Columns"), self.cell_styles) | Column.dict_from_xml(self.xml_root.find("PivotColumns"), self.cell_styles)
-        self.excel_definitions = ExcelDefinition.dict_from_xml(self.xml_root.find("ExcelDefinitions"), self.columns, self.colors, self.cell_styles)
+        self.excel_definitions = TableDefinition.dict_from_xml(self.xml_root.find("TableDefinitions"), self.columns, self.colors, self.cell_styles)
         pass
 
     @staticmethod
-    def __setCellStyle(cell_style: InOutModule.ExcelDefinition.CellStyle, target_cell: openpyxl.cell.cell):
+    def __setCellStyle(cell_style: CellStyle, target_cell: openpyxl.cell.cell):
         """
         Set the cell style of a target cell based on the given cell style.
 
@@ -193,6 +193,15 @@ class ExcelWriter:
             os.makedirs(os.path.dirname(path))  # Create folder if it does not exist
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
+
+    def write_dGlobal_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
+        :param dGlobal_Scenarios: DataFrame containing the dGlobal_Scenarios data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
 
     def write_dPower_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
         """
@@ -347,6 +356,7 @@ if __name__ == "__main__":
     printer.separator()
 
     combinations = [
+        ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_dGlobal_Scenarios, ew.write_dGlobal_Scenarios),
         ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
