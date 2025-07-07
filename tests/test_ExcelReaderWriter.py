@@ -6,7 +6,7 @@ from printer import Printer
 
 printer = Printer.getInstance()
 
-case_study_folder = "examples/"
+case_study_folder = "data/example/"
 ew = ExcelWriter()
 combinations = [
     ("Power_Hindex", f"{case_study_folder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),

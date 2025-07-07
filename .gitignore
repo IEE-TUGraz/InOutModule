@@ -9,3 +9,6 @@ data/example/output
 
 # Development environment files
 .idea/
+
+# Files from editable installs of pip
+/InOutModule.egg-info/
