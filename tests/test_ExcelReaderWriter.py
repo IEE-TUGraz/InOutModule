@@ -9,6 +9,7 @@ printer = Printer.getInstance()
 case_study_folder = "data/example/"
 ew = ExcelWriter()
 combinations = [
+    ("Global_Scenarios", f"{case_study_folder}Global_Scenarios.xlsx", ExcelReader.get_dGlobal_Scenarios, ew.write_dGlobal_Scenarios),
     ("Power_Hindex", f"{case_study_folder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
     ("Power_WeightsRP", f"{case_study_folder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
     ("Power_WeightsK", f"{case_study_folder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),

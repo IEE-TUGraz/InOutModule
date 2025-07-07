@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
     <TableDefinitions>
+        <TableDefinition id="Global_Scenarios">
+            <Version>v0.1.0</Version>
+            <TableHeader>Global - Scenarios and Probabilities</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="scenarioID" scenarioDependent="False"/>
+                <Column id="relativeWeight" scenarioDependent="False"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_Hindex">
             <Version>v0.1.2</Version>
             <TableHeader>Power - Relation among periods and representative periods</TableHeader>
@@ -598,11 +610,25 @@
             <ColumnWidth>16.86</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
+        <Column id="relativeWeight">
+            <ReadableName>Relative Weight</ReadableName>
+            <Description>Relative weight of scenario (gets calculated relatively to all other scenarios)</Description>
+            <Unit>[float]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="rp">
             <ReadableName>rp</ReadableName>
             <Description>Representative period</Description>
             <Unit>[rp]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="scenarioID">
+            <ReadableName>Scenario ID</ReadableName>
+            <Description>Scenario name</Description>
+            <Unit>[scenario]</Unit>
+            <ColumnWidth>41.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="sources">

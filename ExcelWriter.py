@@ -6,6 +6,7 @@ from copy import copy, deepcopy
 import numpy as np
 import openpyxl
 import pandas as pd
+import pyomo.core
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 import ExcelReader
@@ -193,6 +194,15 @@ class ExcelWriter:
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
 
+    def write_dGlobal_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
+        :param dGlobal_Scenarios: DataFrame containing the dGlobal_Scenarios data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
+
     def write_dPower_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Hindex DataFrame to an Excel file in LEGO format.
@@ -294,6 +304,36 @@ class ExcelWriter:
         self._write_Excel_from_definition(dData_Packages, folder_path, "Data_Packages")
 
 
+def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
+    """
+    Write all variables of the given Pyomo model to an Excel file.
+
+    :param model: The Pyomo model to be written to Excel.
+    :param target_path: Path to the target Excel file.
+    :return: None
+    """
+    printer.information(f"Writing model to '{target_path}'")
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    for i, var in enumerate(model.component_objects(pyomo.core.Var, active=True)):
+        if i == 0:  # Use the automatically existing sheet for the first variable
+            ws.title = str(var)
+        else:  # Create a sheet for each (other) variable
+            ws = wb.create_sheet(title=str(var))
+
+        # Prepare the data from the model and prepare the header
+        data = [(j, v.value if not v.stale else None) for j, v in var.items()]
+        col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
+        ws.append([f"index_{j}" for j in range(col_number)] + [str(var)])
+
+        # Write data to the sheet
+        for j, v in data:
+            ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
+
+    wb.save(target_path)
+
+
 if __name__ == "__main__":
     import argparse
     from rich_argparse import RichHelpFormatter
@@ -316,6 +356,7 @@ if __name__ == "__main__":
     printer.separator()
 
     combinations = [
+        ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_dGlobal_Scenarios, ew.write_dGlobal_Scenarios),
         ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
