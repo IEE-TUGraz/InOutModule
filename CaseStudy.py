@@ -157,8 +157,6 @@ class CaseStudy:
         if not do_not_scale_units:
             self.scale_CaseStudy()
 
-        # self.remove_scaling()
-
     def copy(self):
         return copy.deepcopy(self)
 
@@ -201,11 +199,6 @@ class CaseStudy:
         self.dPower_Parameters["pLOLCost"] *= self.cost_scaling_factor / self.power_scaling_factor
 
         self.dPower_Parameters["pMaxAngleDCOPF"] *= self.angle_to_rad_scaling_factor  # Convert angle from degrees to radians
-
-        # not implemented yet!?
-        # if self.dPower_Parameters["pEnableCO2"]:
-        #     self.dPower_Parameters["pCO2Cost"] *= self.cost_scaling_factor
-        #     self.dPower_Parameters["pCO2Penalty"] *= self.cost_scaling_factor
 
     def scale_dPower_Network(self):
         self.dPower_Network["pInvestCost"] = self.dPower_Network["pInvestCost"].fillna(0)
