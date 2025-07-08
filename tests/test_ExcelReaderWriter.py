@@ -6,7 +6,7 @@ from printer import Printer
 
 printer = Printer.getInstance()
 
-case_study_folder = "examples/"
+case_study_folder = "data/example/"
 ew = ExcelWriter()
 combinations = [
     ("Global_Scenarios", f"{case_study_folder}Global_Scenarios.xlsx", ExcelReader.get_dGlobal_Scenarios, ew.write_dGlobal_Scenarios),
