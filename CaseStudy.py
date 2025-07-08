@@ -19,6 +19,7 @@ class CaseStudy:
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
+                 power_links_file: str = "Power_Links.xlsx", dPower_Links: pd.DataFrame = None,
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_ror_file: str = "Power_RoR.xlsx", dPower_RoR: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
@@ -64,6 +65,12 @@ class CaseStudy:
         else:
             self.power_network_file = power_network_file
             self.dPower_Network = ExcelReader.get_dPower_Network(self.data_folder + self.power_network_file)
+
+        if dPower_Links is not None:
+            self.dPower_Links = dPower_Links
+        else:
+            self.power_links_file = power_links_file
+            self.dPower_Links = ExcelReader.get_dPower_Links(self.data_folder + self.power_links_file)
 
         if dPower_Demand is not None:
             self.dPower_Demand = dPower_Demand
@@ -163,6 +170,7 @@ class CaseStudy:
     def scale_CaseStudy(self):
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
+        self.scale_dPower_Links()
         self.scale_dPower_Demand()
 
         if self.dPower_Parameters["pEnableThermalGen"]:
@@ -204,6 +212,10 @@ class CaseStudy:
         self.dPower_Network["pInvestCost"] = self.dPower_Network["pInvestCost"].fillna(0)
         self.dPower_Network["pPmax"] *= self.power_scaling_factor
 
+    def scale_dPower_Links(self):
+        self.dPower_Links["pPmax"] *= self.power_scaling_factor
+        self.dPower_Links["pExpCost"] *= self.cost_scaling_factor / self.power_scaling_factor
+        
     def scale_dPower_Demand(self):
         self.dPower_Demand["value"] *= self.power_scaling_factor
 
@@ -669,6 +681,7 @@ class CaseStudy:
         # dPower_Parameters is not filtered, as it is the same for all scenarios
         caseStudy._filter_dataframe("dPower_BusInfo", scenario_name)
         caseStudy._filter_dataframe("dPower_Network", scenario_name)
+        caseStudy._filter_dataframe("dPower_Links", scenario_name)
         caseStudy._filter_dataframe("dPower_Demand", scenario_name)
         caseStudy._filter_dataframe("dPower_WeightsRP", scenario_name)
         caseStudy._filter_dataframe("dPower_WeightsK", scenario_name)
