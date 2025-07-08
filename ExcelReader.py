@@ -200,13 +200,6 @@ def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, d
     """
     dPower_VRES = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
 
-    if not do_not_convert_values:
-        if "MinProd" not in dPower_VRES.columns:
-            dPower_VRES['MinProd'] = 0
-
-        dPower_VRES['InvestCostEUR'] = dPower_VRES['InvestCost'] * 1e-3 * dPower_VRES['MaxProd'] * 1e-3
-        dPower_VRES['MaxProd'] *= 1e-3
-        dPower_VRES['OMVarCost'] *= 1e-3
     return dPower_VRES
 
 

@@ -212,11 +212,14 @@ class CaseStudy:
         self.dPower_ThermalGen = self.dPower_ThermalGen[(self.dPower_ThermalGen["ExisUnits"] > 0) | (self.dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
 
         self.dPower_ThermalGen['EFOR'] = self.dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
-        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost']) * (self.cost_scaling_factor / self.power_scaling_factor) / self.dPower_ThermalGen['Efficiency']
-        # self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] * 1e-3 + self.dPower_ThermalGen['FuelCost']) * 1e-3 / self.dPower_ThermalGen['Efficiency']
 
-        self.dPower_ThermalGen['pInterVarCostEUR'] = self.dPower_ThermalGen['CommitConsumption'] * self.power_scaling_factor * self.dPower_ThermalGen['FuelCost'] * (self.cost_scaling_factor / self.power_scaling_factor)
-        self.dPower_ThermalGen['pStartupCostEUR'] = self.dPower_ThermalGen['StartupConsumption'] * self.power_scaling_factor * self.dPower_ThermalGen['FuelCost'] * (self.cost_scaling_factor / self.power_scaling_factor)
+        # Only FuelCost is adjusted by efficiency (OMVarCost is not), then both are scaled by the cost_scaling_factor / power_scaling_factor
+        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost'] / self.dPower_ThermalGen['Efficiency']) * (self.cost_scaling_factor / self.power_scaling_factor)
+
+        # Calculate interVar- and startup-costs in EUR, and then scale by cost_scaling_factor
+        self.dPower_ThermalGen['pInterVarCostEUR'] = self.dPower_ThermalGen['CommitConsumption'] * self.dPower_ThermalGen['FuelCost'] * self.cost_scaling_factor
+        self.dPower_ThermalGen['pStartupCostEUR'] = self.dPower_ThermalGen['StartupConsumption'] * self.dPower_ThermalGen['FuelCost'] * self.cost_scaling_factor
+
         self.dPower_ThermalGen['MaxInvest'] = self.dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
         self.dPower_ThermalGen['RampUp'] *= self.power_scaling_factor
         self.dPower_ThermalGen['RampDw'] *= self.power_scaling_factor
