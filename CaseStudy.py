@@ -14,7 +14,10 @@ printer = Printer.getInstance()
 
 class CaseStudy:
 
-    def __init__(self, data_folder: str, do_not_merge_single_node_buses: bool = False,
+    def __init__(self,
+                 data_folder: str,
+                 do_not_scale_units: bool = False,
+                 do_not_merge_single_node_buses: bool = False,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
@@ -33,6 +36,7 @@ class CaseStudy:
                  power_impexphubs_file: str = "Power_ImpExpHubs.xlsx", dPower_ImpExpHubs: pd.DataFrame = None,
                  power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None):
         self.data_folder = data_folder if data_folder.endswith("/") else data_folder + "/"
+        self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
 
         if dGlobal_Parameters is not None:
@@ -189,15 +193,132 @@ class CaseStudy:
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
 
+        self.power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"]
+        self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
+        self.angle_to_rad_scaling_factor = np.pi / 180
+
+        if not do_not_scale_units:
+            self.scale_CaseStudy()
+
     def copy(self):
         return copy.deepcopy(self)
+
+    def scale_CaseStudy(self):
+        self.scale_dPower_Parameters()
+        self.scale_dPower_Network()
+        self.scale_dPower_Demand()
+
+        if self.dPower_Parameters["pEnableThermalGen"]:
+            self.scale_dPower_ThermalGen()
+
+        if self.dPower_Parameters["pEnableRoR"]:
+            self.scale_dPower_RoR()
+            self.scale_dPower_Inflows()
+
+        if self.dPower_Parameters["pEnableVRES"]:
+            self.scale_dPower_VRES()
+
+        if self.dPower_Parameters["pEnableStorage"]:
+            self.scale_dPower_Storage()
+
+        if self.dPower_Parameters["pEnablePowerImportExport"]:
+            self.scale_dPower_ImpExpHubs()
+            self.scale_dPower_ImpExpProfiles()
+
+    def remove_scaling(self):
+        self.power_scaling_factor = 1 / self.power_scaling_factor
+        self.cost_scaling_factor = 1 / self.cost_scaling_factor
+        self.angle_to_rad_scaling_factor = 1 / self.angle_to_rad_scaling_factor
+
+        self.scale_CaseStudy()
+
+        self.power_scaling_factor = 1 / self.power_scaling_factor
+        self.cost_scaling_factor = 1 / self.cost_scaling_factor
+        self.angle_to_rad_scaling_factor = 1 / self.angle_to_rad_scaling_factor
+
+    def scale_dPower_Parameters(self):
+        self.dPower_Parameters["pSBase"] *= self.power_scaling_factor
+        self.dPower_Parameters["pENSCost"] *= self.cost_scaling_factor / self.power_scaling_factor
+        self.dPower_Parameters["pLOLCost"] *= self.cost_scaling_factor / self.power_scaling_factor
+
+        self.dPower_Parameters["pMaxAngleDCOPF"] *= self.angle_to_rad_scaling_factor  # Convert angle from degrees to radians
+
+    def scale_dPower_Network(self):
+        self.dPower_Network["pInvestCost"] = self.dPower_Network["pInvestCost"].fillna(0)
+        self.dPower_Network["pPmax"] *= self.power_scaling_factor
+
+    def scale_dPower_Demand(self):
+        self.dPower_Demand["value"] *= self.power_scaling_factor
+
+    def scale_dPower_ThermalGen(self):
+        self.dPower_ThermalGen = self.dPower_ThermalGen[self.dPower_ThermalGen["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
+        self.dPower_ThermalGen = self.dPower_ThermalGen[(self.dPower_ThermalGen["ExisUnits"] > 0) | (self.dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
+
+        self.dPower_ThermalGen['EFOR'] = self.dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
+
+        # Only FuelCost is adjusted by efficiency (OMVarCost is not), then both are scaled by the cost_scaling_factor / power_scaling_factor
+        self.dPower_ThermalGen['pSlopeVarCostEUR'] = (self.dPower_ThermalGen['OMVarCost'] + self.dPower_ThermalGen['FuelCost'] / self.dPower_ThermalGen['Efficiency']) * (self.cost_scaling_factor / self.power_scaling_factor)
+
+        # Calculate interVar- and startup-costs in EUR, and then scale by cost_scaling_factor
+        self.dPower_ThermalGen['pInterVarCostEUR'] = self.dPower_ThermalGen['CommitConsumption'] * self.dPower_ThermalGen['FuelCost'] * self.cost_scaling_factor
+        self.dPower_ThermalGen['pStartupCostEUR'] = self.dPower_ThermalGen['StartupConsumption'] * self.dPower_ThermalGen['FuelCost'] * self.cost_scaling_factor
+
+        self.dPower_ThermalGen['MaxInvest'] = self.dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
+        self.dPower_ThermalGen['RampUp'] *= self.power_scaling_factor
+        self.dPower_ThermalGen['RampDw'] *= self.power_scaling_factor
+        self.dPower_ThermalGen['MaxProd'] *= self.power_scaling_factor * (1 - self.dPower_ThermalGen['EFOR'])
+        self.dPower_ThermalGen['MinProd'] *= self.power_scaling_factor * (1 - self.dPower_ThermalGen['EFOR'])
+        self.dPower_ThermalGen['InvestCostEUR'] = self.dPower_ThermalGen['InvestCost'] * (self.cost_scaling_factor / self.power_scaling_factor) * self.dPower_ThermalGen['MaxProd']  # InvestCost is scaled here, scaling of MaxProd happens above
+
+        # Fill NaN values with 0 for MinUpTime and MinDownTime
+        self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].fillna(0)
+        self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].fillna(0)
+
+        # Check that both MinUpTime and MinDownTime are integers and raise error if not
+        if not self.dPower_ThermalGen.MinUpTime.dtype == np.int64:
+            raise ValueError("MinUpTime must be an integer for all entries.")
+        if not self.dPower_ThermalGen.MinDownTime.dtype == np.int64:
+            raise ValueError("MinDownTime must be an integer for all entries.")
+        self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].astype('int64')
+        self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].astype('int64')
+
+    def scale_dPower_RoR(self):
+        self.dPower_RoR['InvestCostEUR'] = self.dPower_RoR['MaxProd'] * self.power_scaling_factor * (self.dPower_RoR['InvestCostPerMW'] + self.dPower_RoR['InvestCostPerMWh'] * self.dPower_RoR['Ene2PowRatio']) * (self.cost_scaling_factor / self.power_scaling_factor)
+        self.dPower_RoR['MaxProd'] *= self.power_scaling_factor
+
+    def scale_dPower_Inflows(self):
+        self.dPower_Inflows["Inflow"] *= self.power_scaling_factor
+
+    def scale_dPower_VRES(self):
+        if "MinProd" not in self.dPower_VRES.columns:
+            self.dPower_VRES['MinProd'] = 0
+
+        self.dPower_VRES['InvestCostEUR'] = self.dPower_VRES['InvestCost'] * (self.cost_scaling_factor / self.power_scaling_factor) * self.dPower_VRES['MaxProd'] * self.power_scaling_factor
+        self.dPower_VRES['MaxProd'] *= self.power_scaling_factor
+        self.dPower_VRES['OMVarCost'] *= (self.cost_scaling_factor / self.power_scaling_factor)
+
+    def scale_dPower_Storage(self):
+        self.dPower_Storage['IniReserve'] = self.dPower_Storage['IniReserve'].fillna(0)
+        self.dPower_Storage['MinReserve'] = self.dPower_Storage['MinReserve'].fillna(0)
+        self.dPower_Storage['MinProd'] = self.dPower_Storage["MinProd"].fillna(0)
+        self.dPower_Storage['pOMVarCostEUR'] = self.dPower_Storage['OMVarCost'] * (self.cost_scaling_factor / self.power_scaling_factor)
+        self.dPower_Storage['InvestCostEUR'] = self.dPower_Storage['MaxProd'] * self.power_scaling_factor * (self.dPower_Storage['InvestCostPerMW'] + self.dPower_Storage['InvestCostPerMWh'] * self.dPower_Storage['Ene2PowRatio']) * (self.cost_scaling_factor / self.power_scaling_factor)
+        self.dPower_Storage['MaxProd'] *= self.power_scaling_factor
+        self.dPower_Storage['MaxCons'] *= self.power_scaling_factor
+
+    def scale_dPower_ImpExpHubs(self):
+        self.dPower_ImpExpHubs["Pmax Import"] *= self.power_scaling_factor
+        self.dPower_ImpExpHubs["Pmax Export"] *= self.power_scaling_factor
+
+    def scale_dPower_ImpExpProfiles(self):
+        self.dPower_ImpExpProfiles["ImpExp"] *= self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
-        dGlobal_Parameters = dGlobal_Parameters.set_index('Sectors')
+        dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
 
-        self.yesNo_to_bool(dGlobal_Parameters, ['pEnablePower', 'pEnableGas', 'pEnableHeat', 'pEnableH2', 'pEnableRMIP'])
+        self.yesNo_to_bool(dGlobal_Parameters, ['pEnableRMIP'])
 
         # Transform to make it easier to access values
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
@@ -217,12 +338,6 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
         dPower_Parameters = dict({(parameter_name, parameter_value["Value"]) for parameter_name, parameter_value in dPower_Parameters.iterrows()})  # Transform into dictionary
 
-        # Value adjustments
-        dPower_Parameters["pMaxAngleDCOPF"] = dPower_Parameters["pMaxAngleDCOPF"] * np.pi / 180  # Convert angle from degrees to radians
-        dPower_Parameters["pSBase"] *= 1e-3
-        dPower_Parameters["pENSCost"] *= 1e-3
-        dPower_Parameters["pLOLCost"] *= 1e-3
-
         return dPower_Parameters
 
     @staticmethod
@@ -240,9 +355,6 @@ class CaseStudy:
     def get_dPower_RoR(self):
         dPower_RoR = self.read_generator_data(self.data_folder + self.power_ror_file)
 
-        dPower_RoR['InvestCostEUR'] = dPower_RoR['MaxProd'] * 1e-3 * (dPower_RoR['InvestCostPerMW'] * 1e-3 + dPower_RoR['InvestCostPerMWh'] * 1e-3 * dPower_RoR['Ene2PowRatio'])
-        dPower_RoR['MaxProd'] *= 1e-3
-
         # If column 'scenario' is not present, add it
         if 'scenario' not in dPower_RoR.columns:
             dPower_RoR['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
@@ -250,13 +362,6 @@ class CaseStudy:
 
     def get_dPower_Storage(self):
         dPower_Storage = self.read_generator_data(self.data_folder + self.power_storage_file)
-        dPower_Storage['pOMVarCostEUR'] = dPower_Storage['OMVarCost'] * 1e-3
-        dPower_Storage['IniReserve'] = dPower_Storage['IniReserve'].fillna(0)
-        dPower_Storage['MinReserve'] = dPower_Storage['MinReserve'].fillna(0)
-        dPower_Storage['MinProd'] = dPower_Storage["MinProd"].fillna(0)
-        dPower_Storage['InvestCostEUR'] = dPower_Storage['MaxProd'] * 1e-3 * (dPower_Storage['InvestCostPerMW'] * 1e-3 + dPower_Storage['InvestCostPerMWh'] * 1e-3 * dPower_Storage['Ene2PowRatio'])
-        dPower_Storage['MaxProd'] *= 1e-3
-        dPower_Storage['MaxCons'] *= 1e-3
 
         # If column 'scenario' is not present, add it
         if 'scenario' not in dPower_Storage.columns:
@@ -270,7 +375,9 @@ class CaseStudy:
         dPower_Inflows = dPower_Inflows.melt(id_vars=['rp', 'g'], var_name='k', value_name='Inflow')
         dPower_Inflows = dPower_Inflows.set_index(['rp', 'g', 'k'])
 
-        dPower_Inflows['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
+        # If column 'scenario' is not present, add it
+        if 'scenario' not in dPower_Inflows.columns:
+            dPower_Inflows['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_Inflows
 
     def get_dPower_ImpExpHubs(self):
@@ -292,14 +399,9 @@ class CaseStudy:
         if len(errors) > 0:
             raise ValueError(f"Each hub must have the same Import Type (Fix or Max) and the same Export Type (Fix or Max) for each connection. Please check: \n{errors.index}\n")
 
-        # Adjust values
-        dPower_ImpExpHubs["Pmax Import"] *= 1e-3
-        dPower_ImpExpHubs["Pmax Export"] *= 1e-3
-
         # If column 'scenario' is not present, add it
         if 'scenario' not in dPower_ImpExpHubs.columns:
             dPower_ImpExpHubs['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
-
         return dPower_ImpExpHubs
 
     def get_dPower_ImpExpProfiles(self):
@@ -323,9 +425,6 @@ class CaseStudy:
         dPower_ImpExpProfiles = dPower_ImpExpProfiles.pivot(columns="Type", values="Value")
         dPower_ImpExpProfiles.columns.name = None  # Fix name of columns/indices (which are altered through pivot)
 
-        # Adjust values
-        dPower_ImpExpProfiles["ImpExp"] *= 1e-3
-
         # Check that Pmax of ImpExpConnections can handle the maximum import and export (for those connections that are ImpFix or ExpFix)
         max_import = dPower_ImpExpProfiles[dPower_ImpExpProfiles["ImpExp"] >= 0]["ImpExp"].groupby("hub").max()
         max_export = -dPower_ImpExpProfiles[dPower_ImpExpProfiles["ImpExp"] <= 0]["ImpExp"].groupby("hub").min()
@@ -338,20 +437,17 @@ class CaseStudy:
             error_information = pd.concat([import_violations, pmax_sum_by_hub['Pmax Import']], axis=1)  # Concat Pmax information and maximum import
             error_information = error_information[error_information["ImpExp"].notna()]  # Only show rows where there is a violation
             error_information = error_information.rename(columns={"ImpExp": "Max Import from Profiles", "Pmax Import": "Sum of Pmax Import from Hub Definition"})  # Rename columns for readability
-            error_information *= 1e3  # Convert back to input format
             raise ValueError(f"At least one hub has ImpFix imports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
 
         if not export_violations.empty:
             error_information = pd.concat([export_violations, pmax_sum_by_hub['Pmax Export']], axis=1)  # Concat Pmax information and maximum export
             error_information = error_information[error_information["ImpExp"].notna()]  # Only show rows where there is a violation
             error_information = error_information.rename(columns={"ImpExp": "Max Export from Profiles", "Pmax Export": "Sum of Pmax Export from Hub Definition"})  # Rename columns for readability
-            error_information *= 1e3  # Convert back to input format
             raise ValueError(f"At least one hub has ExpFix exports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
 
         # If column 'scenario' is not present, add it
         if 'scenario' not in dPower_ImpExpProfiles.columns:
             dPower_ImpExpProfiles['scenario'] = "ScenarioA"  # TODO: Fill this dynamically, once the Excel file is updated
-
         return dPower_ImpExpProfiles
 
     @staticmethod

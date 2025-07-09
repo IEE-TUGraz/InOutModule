@@ -41,7 +41,7 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
             case pyomo.core.base.constraint.ConstraintList | pyomo.core.base.constraint.IndexedConstraint | pyomo.core.base.expression.IndexedExpression:  # Those will not be saved on purpose
                 continue
             case _:
-                printer.error(f"Pyomo-Type {type(o)} not implemented, {o.name} will not be saved to SQLite")
+                printer.warning(f"Pyomo-Type {type(o)} not implemented, {o.name} will not be saved to SQLite")
                 continue
         df.to_sql(o.name, cnx, if_exists='replace')
         cnx.commit()

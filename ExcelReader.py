@@ -1,6 +1,5 @@
 import time
 
-import numpy as np
 import openpyxl
 import pandas as pd
 from openpyxl import load_workbook
@@ -163,10 +162,6 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
     """
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i", "j", "c"], True, keep_excluded_entries)
 
-    if not do_not_convert_values:
-        dPower_Network["pInvestCost"] = dPower_Network["pInvestCost"].fillna(0)
-        dPower_Network["pPmax"] *= 1e-3
-
     return dPower_Network
 
 
@@ -184,9 +179,6 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
 
-    if not do_not_convert_values:
-        dPower_Demand["value"] = dPower_Demand["value"] * 1e-3
-
     return dPower_Demand
 
 
@@ -199,35 +191,6 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     :return: dPower_thermalGen
     """
     dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["g"], True, keep_excluded_entries)
-
-    if not do_not_convert_values:
-        dPower_ThermalGen = dPower_ThermalGen[(dPower_ThermalGen["ExisUnits"] > 0) | (dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
-
-        dPower_ThermalGen['EFOR'] = dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
-
-        dPower_ThermalGen['pSlopeVarCostEUR'] = (dPower_ThermalGen['OMVarCost'] * 1e-3 +
-                                                 dPower_ThermalGen['FuelCost']) / dPower_ThermalGen['Efficiency'] * 1e-3
-
-        dPower_ThermalGen['pInterVarCostEUR'] = dPower_ThermalGen['CommitConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
-        dPower_ThermalGen['pStartupCostEUR'] = dPower_ThermalGen['StartupConsumption'] * 1e-6 * dPower_ThermalGen['FuelCost']
-        dPower_ThermalGen['MaxInvest'] = dPower_ThermalGen.apply(lambda x: 1 if x['EnableInvest'] == 1 and x['ExisUnits'] == 0 else 0, axis=1)
-        dPower_ThermalGen['RampUp'] *= 1e-3
-        dPower_ThermalGen['RampDw'] *= 1e-3
-        dPower_ThermalGen['MaxProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
-        dPower_ThermalGen['MinProd'] *= 1e-3 * (1 - dPower_ThermalGen['EFOR'])
-        dPower_ThermalGen['InvestCostEUR'] = dPower_ThermalGen['InvestCost'] * 1e-3 * dPower_ThermalGen['MaxProd']  # InvestCost is scaled here (1e-3), scaling of MaxProd happens above
-
-        # Fill NaN values with 0 for MinUpTime and MinDownTime
-        dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].fillna(0)
-        dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].fillna(0)
-
-    # Check that both MinUpTime and MinDownTime are integers and raise error if not
-    if not dPower_ThermalGen.MinUpTime.dtype == np.int64:
-        raise ValueError("MinUpTime must be an integer for all entries.")
-    if not dPower_ThermalGen.MinDownTime.dtype == np.int64:
-        raise ValueError("MinDownTime must be an integer for all entries.")
-    dPower_ThermalGen['MinUpTime'] = dPower_ThermalGen['MinUpTime'].astype(int)
-    dPower_ThermalGen['MinDownTime'] = dPower_ThermalGen['MinDownTime'].astype(int)
 
     return dPower_ThermalGen
 
@@ -242,13 +205,6 @@ def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, d
     """
     dPower_VRES = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
 
-    if not do_not_convert_values:
-        if "MinProd" not in dPower_VRES.columns:
-            dPower_VRES['MinProd'] = 0
-
-        dPower_VRES['InvestCostEUR'] = dPower_VRES['InvestCost'] * 1e-3 * dPower_VRES['MaxProd'] * 1e-3
-        dPower_VRES['MaxProd'] *= 1e-3
-        dPower_VRES['OMVarCost'] *= 1e-3
     return dPower_VRES
 
 
