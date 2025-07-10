@@ -1,0 +1,911 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+    <TableDefinitions>
+        <TableDefinition id="Global_Scenarios">
+            <Version>v0.1.0</Version>
+            <TableHeader>Global - Scenarios and Probabilities</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="scenarioID" scenarioDependent="False"/>
+                <Column id="relativeWeight" scenarioDependent="False"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Hindex">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Relation among periods and representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="p" scenarioDependent="False"/>
+                <Column id="rp" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_WeightsRP">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="pWeight_rp" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_WeightsK">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative hours</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="pWeight_k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_BusInfo">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Bus information</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="z" scenarioDependent="False"/>
+                <Column id="pBusBaseV" scenarioDependent="False"/>
+                <Column id="pBusMaxV" scenarioDependent="False"/>
+                <Column id="pBusMinV" scenarioDependent="False"/>
+                <Column id="pBusB" scenarioDependent="False"/>
+                <Column id="pBusG" scenarioDependent="False"/>
+                <Column id="pBus_pf" scenarioDependent="False"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="zoi" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Network">
+            <Version>v0.1.1</Version>
+            <TableHeader>Power - Network</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="i" scenarioDependent="False" ReadableName="From Node" Description="From which node"/>
+                <Column id="j" scenarioDependent="False"/>
+                <Column id="c" scenarioDependent="False"/>
+                <Column id="pRline" scenarioDependent="False"/>
+                <Column id="pXline" scenarioDependent="False"/>
+                <Column id="pBcline" scenarioDependent="False"/>
+                <Column id="pAngle" scenarioDependent="False"/>
+                <Column id="pRatio" scenarioDependent="False"/>
+                <Column id="pPmax" scenarioDependent="False"/>
+                <Column id="pEnableInvest" scenarioDependent="True"/>
+                <Column id="pFOMCost" scenarioDependent="True"/>
+                <Column id="pInvestCost" scenarioDependent="True"/>
+                <Column id="pTecRepr" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Demand">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Demand</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="demand_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_ThermalGen">
+            <Version>v0.1.1</Version>
+            <TableHeader>Power - Thermal Generators</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="tec" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True" Description="Whether unit exists (1) or not (0)" Unit="[0, 1]"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="MinProd" scenarioDependent="True"/>
+                <Column id="RampUp" scenarioDependent="True"/>
+                <Column id="RampDw" scenarioDependent="True"/>
+                <Column id="MinUpTime" scenarioDependent="True"/>
+                <Column id="MinDownTime" scenarioDependent="True"/>
+                <Column id="Qmax" scenarioDependent="True"/>
+                <Column id="Qmin" scenarioDependent="True"/>
+                <Column id="InertiaConst" scenarioDependent="True"/>
+                <Column id="FuelCost" scenarioDependent="True"/>
+                <Column id="Efficiency" scenarioDependent="True"/>
+                <Column id="CommitConsumption" scenarioDependent="True"/>
+                <Column id="OMVarCost" scenarioDependent="True"/>
+                <Column id="StartupConsumption" scenarioDependent="True"/>
+                <Column id="EFOR" scenarioDependent="True"/>
+                <Column id="EnableInvest" scenarioDependent="True"/>
+                <Column id="InvestCost" scenarioDependent="True"/>
+                <Column id="FirmCapCoef" scenarioDependent="True"/>
+                <Column id="CO2Emis" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_VRES">
+            <Version>v0.1.0</Version>
+            <TableHeader>Power - Variable Renewable Energy Sources</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="tec" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="EnableInvest" scenarioDependent="True"/>
+                <Column id="MaxInvest" scenarioDependent="True"/>
+                <Column id="InvestCost" scenarioDependent="True"/>
+                <Column id="OMVarCost" scenarioDependent="True"/>
+                <Column id="FirmCapCoef" scenarioDependent="True"/>
+                <Column id="Qmax" scenarioDependent="True"/>
+                <Column id="Qmin" scenarioDependent="True"/>
+                <Column id="InertiaConst" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_VRESProfiles">
+            <Version>v0.1.0</Version>
+            <TableHeader>Power - Variable Renewable Energy Sources Profiles</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Data_Sources">
+            <Version>v0.1.0</Version>
+            <TableHeader>Data Sources</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
+                <Column id="sources" scenarioDependent="False"/>
+                <Column id="licenseInfo" scenarioDependent="False"/>
+                <Column id="lastEdited" scenarioDependent="False"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Data_Packages">
+            <Version>v0.1.0</Version>
+            <TableHeader>Data Packages</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
+    </TableDefinitions>
+
+    <Columns> <!-- NOTE: Columns are sorted alphabetically (by id) -->
+        <Column id="c">
+            <ReadableName>Circuit / Name</ReadableName>
+            <Description>Name of line (or circuit)</Description>
+            <Unit>[c]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="CO2Emis">
+            <ReadableName>CO2Emis</ReadableName>
+            <Description>Specific CO2 emissions of the unit</Description>
+            <Unit>[tCO2/MWh]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="comments">
+            <ReadableName>Comments</ReadableName>
+            <Description>Additional comments, manual adjustments, etc.</Description>
+            <Unit>[text]</Unit>
+            <ColumnWidth>100.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="CommitConsumption">
+            <ReadableName>CommitConsumption</ReadableName>
+            <Description>Consumption while unit is turned on (regardless of output)</Description>
+            <Unit>[MWh/h]</Unit>
+            <ColumnWidth>23.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="dataPackage">
+            <ReadableName>Data Package</ReadableName>
+            <Description>Which package this belongs to</Description>
+            <Unit>[dataPackage]</Unit>
+            <ColumnWidth>23.86</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="dataSource">
+            <ReadableName>Data Source</ReadableName>
+            <Description>Where the data for the entry comes from</Description>
+            <Unit>[dataSource]</Unit>
+            <ColumnWidth>23.86</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="Efficiency">
+            <ReadableName>Efficiency</ReadableName>
+            <Description>Efficiency calculated as 1/input for 1 MWh, i.e. 0.5 (or 50%) if 2 MWh fuel are required for 1 MWh electricity</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>28.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="EFOR">
+            <ReadableName>EFOR</ReadableName>
+            <Description>Equivalent forced outage rate of the unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="EnableInvest">
+            <ReadableName>EnableInvest</ReadableName>
+            <Description>Whether the model can invest in the unit (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="excl">
+            <ReadableName>Excl.</ReadableName>
+            <Description/>
+            <Unit/>
+            <ColumnWidth>4.86</ColumnWidth>
+            <CellStyle>bold</CellStyle>
+        </Column>
+        <Column id="ExisUnits">
+            <ReadableName>ExisUnits</ReadableName>
+            <Description>Number of existing units</Description>
+            <Unit>[0-N]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="FirmCapCoef">
+            <ReadableName>FirmCapCoef</ReadableName>
+            <Description>Firm capacity coefficient of the unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat3</CellStyle>
+        </Column>
+        <Column id="FuelCost">
+            <ReadableName>FuelCost</ReadableName>
+            <Description>Fuel cost of the unit</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="g">
+            <ReadableName>Generator</ReadableName>
+            <Description>Generator/Unit name</Description>
+            <Unit>[g]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="i">
+            <ReadableName>Node</ReadableName>
+            <Description>Name of node</Description>
+            <Unit>[i]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="id">
+            <ReadableName>Database ID</ReadableName>
+            <Description>ID within database</Description>
+            <Unit>[db-key]</Unit>
+            <ColumnWidth>19.00</ColumnWidth>
+            <CellStyle>dbKey</CellStyle>
+        </Column>
+        <Column id="InertiaConst">
+            <ReadableName>InertiaConst</ReadableName>
+            <Description>Inertia constant H of the unit</Description>
+            <Unit>[s]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="InvestCost">
+            <ReadableName>InvestCost</ReadableName>
+            <Description>Annualized investment cost per MW</Description>
+            <Unit>[€/MW/year]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="j">
+            <ReadableName>To Node</ReadableName>
+            <Description>To which node</Description>
+            <Unit>[i]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="k">
+            <ReadableName>k</ReadableName>
+            <Description>Representative hour within rp</Description>
+            <Unit>[k]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="lastEdited">
+            <ReadableName>Date Last Edited</ReadableName>
+            <Description>Date of last edit (most likely when it was created)</Description>
+            <Unit>[date]</Unit>
+            <ColumnWidth>25.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="lat">
+            <ReadableName>Latitude</ReadableName>
+            <Description>Latitude</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="licenseInfo">
+            <ReadableName>License Info</ReadableName>
+            <Description>Information about re-usability</Description>
+            <Unit>[Public, Non-Public]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="lon">
+            <ReadableName>Longitude</ReadableName>
+            <Description>Longitude</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="MaxInvest">
+            <ReadableName>MaxInvest</ReadableName>
+            <Description>Maximum number of units that can be invested in</Description>
+            <Unit>[0-N]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="MaxProd">
+            <ReadableName>MaxProd</ReadableName>
+            <Description>Maximum active power output of the unit</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinDownTime">
+            <ReadableName>MinDownTime</ReadableName>
+            <Description>Minimum time the unit has to be off after a shutdown</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="MinProd">
+            <ReadableName>MinProd</ReadableName>
+            <Description>Minimum active power output of the unit</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinUpTime">
+            <ReadableName>MinUpTime</ReadableName>
+            <Description>Minimum time the unit has to be on after a startup</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="NOEXCL">
+            <ReadableName/>
+            <Description/>
+            <Unit/>
+            <ColumnWidth>4.86</ColumnWidth>
+            <CellStyle/>
+        </Column>
+        <Column id="OMVarCost">
+            <ReadableName>OMVarCost</ReadableName>
+            <Description>Operation and maintenance cost of the unit</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="p">
+            <ReadableName>p</ReadableName>
+            <Description>Hour of the year</Description>
+            <Unit>[p]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pAngle">
+            <ReadableName>Tap Angle</ReadableName>
+            <Description>Transformer angle shift</Description>
+            <Unit>[°]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pBcline">
+            <ReadableName>Bc</ReadableName>
+            <Description>Branch charging susceptance</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pBus_pf">
+            <ReadableName>Power Factor</ReadableName>
+            <Description>Power factor at node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="pBusB">
+            <ReadableName>Bs</ReadableName>
+            <Description>Susceptance B connected to node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusBaseV">
+            <ReadableName>Base Voltage</ReadableName>
+            <Description>Base voltage at node</Description>
+            <Unit>[kV]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pBusG">
+            <ReadableName>Gs</ReadableName>
+            <Description>Conductance G connected to node</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusMaxV">
+            <ReadableName>Maximum Voltage</ReadableName>
+            <Description>Maximum voltage (in % of base voltage)</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pBusMinV">
+            <ReadableName>Minimum Voltage</ReadableName>
+            <Description>Minimum voltage (in % of base voltage)</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pEnableInvest">
+            <ReadableName>Enable Investment</ReadableName>
+            <Description>Whether object exists (0) or can be invested in (1)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>19.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="personResponsible">
+            <ReadableName>Person Responsible</ReadableName>
+            <Description>Person responsible that added this source and the corresponding entries</Description>
+            <Unit>[text]</Unit>
+            <ColumnWidth>25.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pFOMCost">
+            <ReadableName>Fixed OM Cost</ReadableName>
+            <Description>Per anno fixed O&amp;M cost</Description>
+            <Unit>[M€]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pInvestCost">
+            <ReadableName>Investment Cost</ReadableName>
+            <Description>Equivalent per anno investment cost</Description>
+            <Unit>[M€]</Unit>
+            <ColumnWidth>17.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pPmax">
+            <ReadableName>Pmax</ReadableName>
+            <Description>Maximum active power transfer</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pRatio">
+            <ReadableName>Tap Ratio</ReadableName>
+            <Description>Transformer ratio</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pRline">
+            <ReadableName>R</ReadableName>
+            <Description>Resistance R of line</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pTecRepr">
+            <ReadableName>Technical Representation</ReadableName>
+            <Description>Technical representation of line in model</Description>
+            <Unit>[DC-OPF,TP,SN]</Unit>
+            <ColumnWidth>26.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pWeight_k">
+            <ReadableName>Representative hour's weight</ReadableName>
+            <Description>Weight of representative hour within representative period</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pWeight_rp">
+            <ReadableName>Representative period's weight</ReadableName>
+            <Description>Weight of representative period within full timespan</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>31.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="pXline">
+            <ReadableName>X</ReadableName>
+            <Description>Reactance X of line</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="Qmax">
+            <ReadableName>Qmax</ReadableName>
+            <Description>Maximum reactive power output of the unit</Description>
+            <Unit>[MVAr]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="Qmin">
+            <ReadableName>Qmin</ReadableName>
+            <Description>Minimum reactive power output of the unit</Description>
+            <Unit>[MVAr]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="RampDw">
+            <ReadableName>RampDw</ReadableName>
+            <Description>Rate at which the unit can decrease its output per time step</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>16.86</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="RampUp">
+            <ReadableName>RampUp</ReadableName>
+            <Description>Rate at which the unit can increase its output per time step</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>16.86</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="relativeWeight">
+            <ReadableName>Relative Weight</ReadableName>
+            <Description>Relative weight of scenario (gets calculated relatively to all other scenarios)</Description>
+            <Unit>[float]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="rp">
+            <ReadableName>rp</ReadableName>
+            <Description>Representative period</Description>
+            <Unit>[rp]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="scenarioID">
+            <ReadableName>Scenario ID</ReadableName>
+            <Description>Scenario name</Description>
+            <Unit>[scenario]</Unit>
+            <ColumnWidth>41.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="sources">
+            <ReadableName>Source(s)</ReadableName>
+            <Description>List of used sources (detailing which values are from where)</Description>
+            <Unit>[text]</Unit>
+            <ColumnWidth>28.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="StartupConsumption">
+            <ReadableName>StartupConsumption</ReadableName>
+            <Description>Consumption for each startup</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>22.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="tec">
+            <ReadableName>Technology</ReadableName>
+            <Description>Corresponding technology</Description>
+            <Unit>[tec]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="YearCom">
+            <ReadableName>Commission Year</ReadableName>
+            <Description>Year where it is commissioned (1.1.xxxx)</Description>
+            <Unit>[Year]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="YearDecom">
+            <ReadableName>Decommission Year</ReadableName>
+            <Description>Year where it is decommissioned (31.12.xxxx)</Description>
+            <Unit>[Year]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="z">
+            <ReadableName>Zone</ReadableName>
+            <Description>Zone in which node lies</Description>
+            <Unit>[z]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="zoi">
+            <ReadableName>Zone of Interest</ReadableName>
+            <Description>Whether node is relevant for end result (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>18.0</ColumnWidth>
+            <CellStyle>right</CellStyle>
+        </Column>
+    </Columns>
+
+    <PivotColumns> <!-- NOTE: PivotColumns are sorted alphabetically (by id) -->
+        <PivotColumn id="capacity_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Capacity factor for each VRES unit at this k</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="demand_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Demand at node for representative hour k</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+    </PivotColumns>
+
+    <CellStyles>
+        <CellStyle id="title">
+            <Font>title</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>IEEGreen</Color>
+        </CellStyle>
+        <CellStyle id="header">
+            <Font/>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>IEEGreen</Color>
+        </CellStyle>
+        <CellStyle id="formatDescription">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="formatValue">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="readableName">
+            <Font>bold</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>lightBlue</Color>
+        </CellStyle>
+        <CellStyle id="dbName">
+            <Font>bold</Font>
+            <NumberFormat/>
+            <Alignment/>
+            <Color>darkGray</Color>
+        </CellStyle>
+        <CellStyle id="description">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment>topWrap</Alignment>
+            <Color>lightGray</Color>
+        </CellStyle>
+        <CellStyle id="dbBehavior">
+            <Font>italic</Font>
+            <NumberFormat/>
+            <Alignment>topWrap</Alignment>
+            <Color>darkGray</Color>
+        </CellStyle>
+        <CellStyle id="unit">
+            <Font>blue</Font>
+            <NumberFormat/>
+            <Alignment>center</Alignment>
+            <Color>lightGray</Color>
+        </CellStyle>
+        <CellStyle id="dbKey">
+            <Font>standard</Font>
+            <NumberFormat/>
+            <Alignment>indent</Alignment>
+            <Color>lightGray</Color>
+        </CellStyle>
+        <CellStyle id="general">
+            <Font>standard</Font>
+            <NumberFormat/>
+            <Alignment>indent</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="bold">
+            <Font>bold</Font>
+            <NumberFormat/>
+            <Alignment>indent</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="right">
+            <Font>standard</Font>
+            <NumberFormat/>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightInt">
+            <Font>standard</Font>
+            <NumberFormat>int</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat1">
+            <Font>standard</Font>
+            <NumberFormat>float1</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat2">
+            <Font>standard</Font>
+            <NumberFormat>float2</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat3">
+            <Font>standard</Font>
+            <NumberFormat>float3</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+        <CellStyle id="rightFloat4">
+            <Font>standard</Font>
+            <NumberFormat>float4</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
+    </CellStyles>
+
+    <Texts>
+        <Text id="databaseBehaviorFilledByDatabase">Filled automatically by database</Text>
+        <Text id="databaseBehaviorScenarioDependent">Scenario-dependent</Text>
+        <Text id="databaseBehaviorNoBehavior">-</Text>
+        <Text id="colHeaderExclDescription">If a line has a value in this column, it is not read in (i.e., does not exist).</Text>
+        <Text id="colHeaderReadableName">Readable name</Text>
+        <Text id="colHeaderValueSpecifierDB">Value specifier in database</Text>
+        <Text id="colHeaderDescription">Description</Text>
+        <Text id="colHeaderDBBehavior">Details on database behavior</Text>
+        <Text id="colHeaderUnit">Unit or valid values</Text>
+    </Texts>
+
+    <Fonts>
+        <Font id="title">
+            <name>Aptos</name>
+            <size>18</size>
+            <bold>True</bold>
+            <italic/>
+            <Color>white</Color>
+        </Font>
+        <Font id="standard">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold/>
+            <italic/>
+            <Color/>
+        </Font>
+        <Font id="italic">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold/>
+            <italic>True</italic>
+            <Color/>
+        </Font>
+        <Font id="bold">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold>True</bold>
+            <italic/>
+            <Color/>
+        </Font>
+        <Font id="blue">
+            <name>Aptos</name>
+            <size>11</size>
+            <bold/>
+            <italic/>
+            <Color>blue</Color>
+        </Font>
+    </Fonts>
+
+    <Colors>
+        <Color id="IEEGreen">008080</Color>
+        <Color id="lightGreen">CCFFCC</Color>
+        <Color id="darkBlue">B8CCE4</Color>
+        <Color id="lightBlue">DAEEF3</Color>
+        <Color id="darkGray">D9D9D9</Color>
+        <Color id="lightGray">F2F2F2</Color>
+        <Color id="blue">0000FF</Color>
+        <Color id="white">FFFFFF</Color>
+    </Colors>
+
+    <NumberFormats>
+        <NumberFormat id="General">General</NumberFormat>
+        <NumberFormat id="int">0</NumberFormat>
+        <NumberFormat id="float1">0.0</NumberFormat>
+        <NumberFormat id="float2">0.00</NumberFormat>
+        <NumberFormat id="float3">0.000</NumberFormat>
+        <NumberFormat id="float4">0.0000</NumberFormat>
+    </NumberFormats>
+
+    <Alignments>
+        <Alignment id="right">
+            <horizontal>right</horizontal>
+            <vertical>center</vertical>
+            <wrapText/>
+            <indent/>
+        </Alignment>
+        <Alignment id="topWrap">
+            <horizontal/>
+            <vertical>top</vertical>
+            <wrapText>True</wrapText>
+            <indent/>
+        </Alignment>
+        <Alignment id="center">
+            <horizontal>center</horizontal>
+            <vertical>center</vertical>
+            <wrapText/>
+            <indent/>
+        </Alignment>
+        <Alignment id="indent">
+            <horizontal/>
+            <vertical/>
+            <wrapText/>
+            <indent>1</indent>
+        </Alignment>
+    </Alignments>
+</root>

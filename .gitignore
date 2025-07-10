@@ -2,7 +2,16 @@
 __pycache__/
 data/
 # Example output
-examples/output
+data/example/output
 
 # Temporary files
 ~$*.xlsx
+
+# Development environment files
+.idea/
+
+# Files from editable installs of pip
+/InOutModule.egg-info/
+
+# Operating system files
+.DS_Store

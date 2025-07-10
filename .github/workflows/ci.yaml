@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  run_tests:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        isMainBranch:
+          - ${{ contains(github.ref, 'main') }}  # Check if the branch is main
+        exclude:
+          - isMainBranch: false
+            os: windows-latest  # Exclude Windows for non-main branches
+          - isMainBranch: false
+            os: macos-latest  # Exclude macOS for non-main branches
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Conda environment
+        uses: conda-incubator/setup-miniconda@v3.2.0
+        with:
+          activate-environment: InOutModule_env
+          environment-file: environment.yml
+          auto-activate-base: false
+
+      - name: Run tests
+        run: python -m pytest
