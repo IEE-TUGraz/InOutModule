@@ -3,7 +3,6 @@ import time
 import xml.etree.ElementTree as ET
 from copy import copy, deepcopy
 
-import pyomo.core
 import numpy as np
 import openpyxl
 import pandas as pd
