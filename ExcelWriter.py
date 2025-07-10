@@ -339,7 +339,7 @@ if __name__ == "__main__":
     from rich_argparse import RichHelpFormatter
 
     parser = argparse.ArgumentParser(description="Re-write all files in given folder and compare against source", formatter_class=RichHelpFormatter)
-    parser.add_argument("caseStudyFolder", type=str, default="examples/", help="Path to folder containing data for LEGO model.", nargs="?")
+    parser.add_argument("caseStudyFolder", type=str, default="data/example/", help="Path to folder containing data for LEGO model.", nargs="?")
     parser.add_argument("excelDefinitionsPath", type=str, help="Path to the Excel definitions XML file. Uses default if none is supplied.", nargs="?")
     parser.add_argument("--dontCheckFormatting", action="store_true", help="Do not check formatting of the Excel files. Only check if they are equal.")
     args = parser.parse_args()
