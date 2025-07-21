@@ -152,6 +152,7 @@ class CaseStudy:
 
         self.power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"]
         self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
+        self.reactive_power_scaling_factor = 1e-3  # MVar to kVar conversion factor
         self.angle_to_rad_scaling_factor = np.pi / 180
 
         if not do_not_scale_units:
@@ -239,9 +240,15 @@ class CaseStudy:
         self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].astype('int64')
         self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].astype('int64')
 
+        self.dPower_ThermalGen['Qmin'] = self.dPower_ThermalGen['Qmin'].fillna(0) * self.reactive_power_scaling_factor
+        self.dPower_ThermalGen['Qmax'] = self.dPower_ThermalGen['Qmax'].fillna(0) * self.reactive_power_scaling_factor
+
     def scale_dPower_RoR(self):
         self.dPower_RoR['InvestCostEUR'] = self.dPower_RoR['MaxProd'] * self.power_scaling_factor * (self.dPower_RoR['InvestCostPerMW'] + self.dPower_RoR['InvestCostPerMWh'] * self.dPower_RoR['Ene2PowRatio']) * (self.cost_scaling_factor / self.power_scaling_factor)
         self.dPower_RoR['MaxProd'] *= self.power_scaling_factor
+
+        self.dPower_RoR['Qmin'] = self.dPower_RoR['Qmin'].fillna(0) * self.reactive_power_scaling_factor
+        self.dPower_RoR['Qmax'] = self.dPower_RoR['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_Inflows(self):
         self.dPower_Inflows["Inflow"] *= self.power_scaling_factor
@@ -254,6 +261,9 @@ class CaseStudy:
         self.dPower_VRES['MaxProd'] *= self.power_scaling_factor
         self.dPower_VRES['OMVarCost'] *= (self.cost_scaling_factor / self.power_scaling_factor)
 
+        self.dPower_VRES['Qmin'] = self.dPower_VRES['Qmin'].fillna(0) * self.reactive_power_scaling_factor
+        self.dPower_VRES['Qmax'] = self.dPower_VRES['Qmax'].fillna(0) * self.reactive_power_scaling_factor
+
     def scale_dPower_Storage(self):
         self.dPower_Storage['IniReserve'] = self.dPower_Storage['IniReserve'].fillna(0)
         self.dPower_Storage['MinReserve'] = self.dPower_Storage['MinReserve'].fillna(0)
@@ -262,6 +272,9 @@ class CaseStudy:
         self.dPower_Storage['InvestCostEUR'] = self.dPower_Storage['MaxProd'] * self.power_scaling_factor * (self.dPower_Storage['InvestCostPerMW'] + self.dPower_Storage['InvestCostPerMWh'] * self.dPower_Storage['Ene2PowRatio']) * (self.cost_scaling_factor / self.power_scaling_factor)
         self.dPower_Storage['MaxProd'] *= self.power_scaling_factor
         self.dPower_Storage['MaxCons'] *= self.power_scaling_factor
+
+        self.dPower_Storage['Qmin'] = self.dPower_Storage['Qmin'].fillna(0) * self.reactive_power_scaling_factor
+        self.dPower_Storage['Qmax'] = self.dPower_Storage['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_ImpExpHubs(self):
         self.dPower_ImpExpHubs["Pmax Import"] *= self.power_scaling_factor
