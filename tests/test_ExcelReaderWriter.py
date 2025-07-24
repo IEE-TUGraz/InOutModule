@@ -16,6 +16,7 @@ combinations = [
     ("Power_Demand", f"{case_study_folder}Power_Demand.xlsx", ExcelReader.get_dPower_Demand, ew.write_dPower_Demand),
     ("Power_Hindex", f"{case_study_folder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
     ("Power_Network", f"{case_study_folder}Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
+    ("Power_Storage", f"{case_study_folder}Power_Storage.xlsx", ExcelReader.get_dPower_Storage, ew.write_dPower_Storage),
     ("Power_ThermalGen", f"{case_study_folder}Power_ThermalGen.xlsx", ExcelReader.get_dPower_ThermalGen, ew.write_dPower_ThermalGen),
     ("Power_VRES", f"{case_study_folder}Power_VRES.xlsx", ExcelReader.get_dPower_VRES, ew.write_VRES),
     ("Power_VRESProfiles", f"{case_study_folder}Power_VRESProfiles.xlsx", ExcelReader.get_dPower_VRESProfiles, ew.write_VRESProfiles),

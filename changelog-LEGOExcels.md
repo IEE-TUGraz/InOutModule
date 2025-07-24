@@ -133,6 +133,10 @@ Fix description for columns 'rp' and 'k' to be more general.
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
 
+# Power_Storage
+
+Please see git history of `TabbleDefinitions.xml`.
+
 # Power_ThermalGen
 
 ## v0.1.0 → v0.1.1

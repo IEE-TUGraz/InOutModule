@@ -258,6 +258,15 @@ class ExcelWriter:
 
         self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
+    def write_dPower_Storage(self, dPower_Storage: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Storage DataFrame to an Excel file in LEGO format.
+        :param dPower_Storage: DataFrame containing the dPower_Storage data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_Storage, folder_path, "Power_Storage")
+
     def write_dPower_ThermalGen(self, dPower_ThermalGen: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_ThermalGen DataFrame to an Excel file in LEGO format.

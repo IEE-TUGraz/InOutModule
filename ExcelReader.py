@@ -177,6 +177,19 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Demand
 
 
+def get_dPower_Storage(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Storage data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param do_not_convert_values: Skip the conversion of values
+    :return: dPower_Storage
+    """
+    dPower_Storage = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["g"], True, keep_excluded_entries)
+
+    return dPower_Storage
+
+
 def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_ThermalGen data from the Excel file.

@@ -129,7 +129,7 @@ class CaseStudy:
                 self.dPower_Storage = dPower_Storage
             else:
                 self.power_storage_file = power_storage_file
-                self.dPower_Storage = self.get_dPower_Storage()
+                self.dPower_Storage = ExcelReader.get_dPower_Storage(self.data_folder + self.power_vresprofiles_file)
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             if dPower_ImpExpHubs is not None:
@@ -329,14 +329,6 @@ class CaseStudy:
         if 'scenario' not in dPower_RoR.columns:
             dPower_RoR['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
         return dPower_RoR
-
-    def get_dPower_Storage(self):
-        dPower_Storage = self.read_generator_data(self.data_folder + self.power_storage_file)
-
-        # If column 'scenario' is not present, add it
-        if 'scenario' not in dPower_Storage.columns:
-            dPower_Storage['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
-        return dPower_Storage
 
     def get_dPower_Inflows(self):
         dPower_Inflows = pd.read_excel(self.data_folder + self.power_inflows_file, skiprows=[0, 1, 3, 4, 5])
