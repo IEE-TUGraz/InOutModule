@@ -102,7 +102,7 @@ class CaseStudy:
                 self.dPower_Inflows = dPower_Inflows
             else:
                 self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = ExcelReader.get_dPower_Inflows(self.data_folder + self.power_thermalgen_file)
+                self.dPower_Inflows = ExcelReader.get_dPower_Inflows(self.data_folder + self.power_inflows_file)
 
         if self.dPower_Parameters["pEnableVRES"]:
             if dPower_VRES is not None:
@@ -122,7 +122,7 @@ class CaseStudy:
                 self.dPower_Storage = dPower_Storage
             else:
                 self.power_storage_file = power_storage_file
-                self.dPower_Storage = ExcelReader.get_dPower_Storage(self.data_folder + self.power_vresprofiles_file)
+                self.dPower_Storage = ExcelReader.get_dPower_Storage(self.data_folder + self.power_storage_file)
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             if dPower_ImpExpHubs is not None:
@@ -236,7 +236,7 @@ class CaseStudy:
         self.dPower_ThermalGen['Qmax'] = self.dPower_ThermalGen['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_Inflows(self):
-        self.dPower_Inflows["Inflow"] *= self.power_scaling_factor
+        self.dPower_Inflows["value"] *= self.power_scaling_factor
 
     def scale_dPower_VRES(self):
         if "MinProd" not in self.dPower_VRES.columns:
