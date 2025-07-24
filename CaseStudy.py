@@ -1,4 +1,5 @@
 import copy
+import os
 import warnings
 from typing import Optional, Self
 
@@ -97,13 +98,6 @@ class CaseStudy:
                 self.power_thermalgen_file = power_thermalgen_file
                 self.dPower_ThermalGen = ExcelReader.get_dPower_ThermalGen(self.data_folder + self.power_thermalgen_file)
 
-        if self.dPower_Parameters["pEnableRoR"]:
-            if dPower_Inflows is not None:
-                self.dPower_Inflows = dPower_Inflows
-            else:
-                self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = ExcelReader.get_dPower_Inflows(self.data_folder + self.power_inflows_file)
-
         if self.dPower_Parameters["pEnableVRES"]:
             if dPower_VRES is not None:
                 self.dPower_VRES = dPower_VRES
@@ -113,7 +107,7 @@ class CaseStudy:
 
             if dPower_VRESProfiles is not None:
                 self.dPower_VRESProfiles = dPower_VRESProfiles
-            else:
+            elif os.path.isfile(self.data_folder + power_vresprofiles_file):
                 self.power_vresprofiles_file = power_vresprofiles_file
                 self.dPower_VRESProfiles = ExcelReader.get_dPower_VRESProfiles(self.data_folder + self.power_vresprofiles_file)
 
@@ -123,6 +117,13 @@ class CaseStudy:
             else:
                 self.power_storage_file = power_storage_file
                 self.dPower_Storage = ExcelReader.get_dPower_Storage(self.data_folder + self.power_storage_file)
+
+        if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
+            if dPower_Inflows is not None:
+                self.dPower_Inflows = dPower_Inflows
+            elif os.path.isfile(self.data_folder + power_inflows_file):
+                self.power_inflows_file = power_inflows_file
+                self.dPower_Inflows = ExcelReader.get_dPower_Inflows(self.data_folder + self.power_inflows_file)
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             if dPower_ImpExpHubs is not None:
@@ -162,7 +163,7 @@ class CaseStudy:
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.scale_dPower_ThermalGen()
 
-        if self.dPower_Parameters["pEnableRoR"]:
+        if self.dPower_Inflows is not None:
             self.scale_dPower_Inflows()
 
         if self.dPower_Parameters["pEnableVRES"]:
@@ -287,7 +288,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pEnableSOCP'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pEnableSOCP'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
