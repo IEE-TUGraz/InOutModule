@@ -374,18 +374,20 @@ if __name__ == "__main__":
     printer.separator()
 
     combinations = [
+        ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_dData_Packages, ew.write_dData_Packages),
+        ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_dData_Sources, ew.write_dData_Sources),
         ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_dGlobal_Scenarios, ew.write_dGlobal_Scenarios),
-        ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
-        ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
-        ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
         ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_dPower_BusInfo, ew.write_dPower_BusInfo),
-        ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
         ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_dPower_Demand, ew.write_dPower_Demand),
+        ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_dPower_Hindex, ew.write_dPower_Hindex),
+        ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_dPower_Inflows, ew.write_dPower_Inflows),
+        ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_dPower_Network, ew.write_dPower_Network),
+        ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_dPower_Storage, ew.write_dPower_Storage),
         ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_dPower_ThermalGen, ew.write_dPower_ThermalGen),
         ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_dPower_VRES, ew.write_VRES),
         ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_dPower_VRESProfiles, ew.write_VRESProfiles),
-        ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_dData_Sources, ew.write_dData_Sources),
-        ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_dData_Packages, ew.write_dData_Packages),
+        ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
+        ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
     ]
 
     for excel_definition_id, file_path, read, write in combinations:
