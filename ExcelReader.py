@@ -95,6 +95,22 @@ def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Hindex
 
 
+def get_dPower_Inflows(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Inflows data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: To not convert values
+    :return: dPower_Inflows
+    """
+    dPower_Inflows = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Inflows', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_Inflows
+
+
 def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_WeightsRP data from the Excel file.

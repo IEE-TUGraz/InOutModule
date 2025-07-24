@@ -102,7 +102,7 @@ class CaseStudy:
                 self.dPower_Inflows = dPower_Inflows
             else:
                 self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = self.get_dPower_Inflows()
+                self.dPower_Inflows = ExcelReader.get_dPower_Inflows(self.data_folder + self.power_thermalgen_file)
 
         if self.dPower_Parameters["pEnableVRES"]:
             if dPower_VRES is not None:
@@ -306,18 +306,6 @@ class CaseStudy:
                 case _:
                     raise ValueError(f"Value for {column} must be either 'Yes' or 'No'.")
         return df
-
-    def get_dPower_Inflows(self):
-        dPower_Inflows = pd.read_excel(self.data_folder + self.power_inflows_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_Inflows = dPower_Inflows.drop(dPower_Inflows.columns[0], axis=1)
-        dPower_Inflows = dPower_Inflows.rename(columns={dPower_Inflows.columns[0]: "rp", dPower_Inflows.columns[1]: "g"})
-        dPower_Inflows = dPower_Inflows.melt(id_vars=['rp', 'g'], var_name='k', value_name='Inflow')
-        dPower_Inflows = dPower_Inflows.set_index(['rp', 'g', 'k'])
-
-        # If column 'scenario' is not present, add it
-        if 'scenario' not in dPower_Inflows.columns:
-            dPower_Inflows['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
-        return dPower_Inflows
 
     def get_dPower_ImpExpHubs(self):
         dPower_ImpExpHubs = pd.read_excel(self.data_folder + self.power_impexphubs_file, skiprows=[0, 1, 3, 4, 5])

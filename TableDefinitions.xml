@@ -90,6 +90,20 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Power_Inflows">
+            <Version>v0.0.1</Version>
+            <TableHeader>Power - Inflows</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="inflow_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_Network">
             <Version>v0.1.2</Version>
             <TableHeader>Power - Network</TableHeader>
@@ -137,7 +151,7 @@
                 <Column id="Qmin" scenarioDependent="True"/>
                 <Column id="MinReserve" scenarioDependent="True"/>
                 <Column id="IniReserve" scenarioDependent="True"/>
-                <Column id="IsLDS" scenarioDependent="True" />
+                <Column id="IsLDS" scenarioDependent="True"/>
                 <Column id="OMVarCost" scenarioDependent="True"/>
                 <Column id="EnableInvest" scenarioDependent="True"/>
                 <Column id="MaxInvest" scenarioDependent="True"/>
@@ -805,6 +819,14 @@
             <Unit>[MWh]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="inflow_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Inflow for each unit at this k</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
     </PivotColumns>
 
