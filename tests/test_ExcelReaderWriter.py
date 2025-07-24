@@ -30,7 +30,7 @@ combinations = [
 def test_read_and_write(excel_definition_id, file_path, read, write, tmp_path):
     printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
 
-    data = read(file_path, True, True)
+    data = read(file_path, True)
     write(data, str(tmp_path))
 
     printer.information(f"Comparing '{tmp_path}/{excel_definition_id}.xlsx' against source file '{file_path}'")
