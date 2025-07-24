@@ -133,6 +133,25 @@ Fix description for columns 'rp' and 'k' to be more general.
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
 
+# Power_Inflows
+
+Please see git history of `TabbleDefinitions.xml`.
+
+# Power_Network
+
+## \>v0.1.1
+
+Please see git history of `TabbleDefinitions.xml`.
+
+## v0.1.0 → v0.1.1
+
+Fix comment in 'excl' column, adjust columnd widths.
+
+## v0.0.4r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
 # Power_Storage
 
 Please see git history of `TabbleDefinitions.xml`.
@@ -316,21 +335,6 @@ Fix formatting of pWeight_rp column.
 Fix description for column 'rp' to be more general.
 
 ## v0.0.2 → v0.1.0
-
-Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts.
-
-# Power_Network
-
-## \>v0.1.1
-
-Please see git history of `TabbleDefinitions.xml`.
-
-## v0.1.0 → v0.1.1
-
-Fix comment in 'excl' column, adjust columnd widths.
-
-## v0.0.4r → v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
