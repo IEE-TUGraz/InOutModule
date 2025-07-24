@@ -56,6 +56,42 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
     return df
 
 
+def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dData_Packages data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dData_Packages
+    """
+    dData_Packages = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataPackage"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dData_Packages', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dData_Packages', although no values are converted anyway - please check if this is intended.")
+
+    return dData_Packages
+
+
+def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dData_Sources data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dData_Sources
+    """
+    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dData_Sources', although no values are converted anyway - please check if this is intended.")
+
+    return dData_Sources
+
+
 def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dGlobal_Scenarios data from the Excel file.
@@ -75,6 +111,39 @@ def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = Fa
         raise ValueError(f"There are multiple or falsely named sheets for '{excel_file_path}'. There should only be one sheet with the name 'Scenario', please check the Excel file.")
 
     return dGlobal_Scenarios
+
+
+def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_BusInfo data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :return: dPower_BusInfo
+    """
+    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i"], True, keep_excluded_entries)
+
+    if do_not_convert_values:
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_BusInfo', although no values are converted anyway - please check if this is intended.")
+
+    return dPower_BusInfo
+
+
+def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Demand data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param do_not_convert_values: Skip the conversion of values
+    :return: dPower_Demand
+    """
+
+    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_Demand
 
 
 def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
@@ -111,58 +180,6 @@ def get_dPower_Inflows(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_Inflows
 
 
-def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_WeightsRP data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_WeightsRP
-    """
-    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["rp"], False, False)
-
-    if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsRP', although no values are converted anyway - please check if this is intended.")
-
-    return dPower_WeightsRP
-
-
-def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_WeightsK data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_WeightsK
-    """
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["k"], False, False)
-
-    if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsK', although no values are converted anyway - please check if this is intended.")
-
-    return dPower_WeightsK
-
-
-def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_BusInfo data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_BusInfo
-    """
-    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i"], True, keep_excluded_entries)
-
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_BusInfo', although no values are converted anyway - please check if this is intended.")
-
-    return dPower_BusInfo
-
-
 def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Network data from the Excel file.
@@ -174,23 +191,6 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i", "j", "c"], True, keep_excluded_entries)
 
     return dPower_Network
-
-
-def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_Demand data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Skip the conversion of values
-    :return: dPower_Demand
-    """
-
-    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
-
-    if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
-
-    return dPower_Demand
 
 
 def get_dPower_Storage(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
@@ -250,40 +250,40 @@ def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = 
     return dPower_VRESProfiles
 
 
-def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
-    Read the dData_Sources data from the Excel file.
+    Read the dPower_WeightsK data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dData_Sources
+    :return: dPower_WeightsK
     """
-    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False)
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["k"], False, False)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
     if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dData_Sources', although no values are converted anyway - please check if this is intended.")
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsK', although no values are converted anyway - please check if this is intended.")
 
-    return dData_Sources
+    return dPower_WeightsK
 
 
-def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
     """
-    Read the dData_Packages data from the Excel file.
+    Read the dPower_WeightsRP data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
     :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dData_Packages
+    :return: dPower_WeightsRP
     """
-    dData_Packages = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataPackage"], False, False)
+    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["rp"], False, False)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dData_Packages', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
     if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dData_Packages', although no values are converted anyway - please check if this is intended.")
+        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsRP', although no values are converted anyway - please check if this is intended.")
 
-    return dData_Packages
+    return dPower_WeightsRP
 
 
 def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False) -> bool:

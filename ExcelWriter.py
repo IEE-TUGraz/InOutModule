@@ -194,6 +194,33 @@ class ExcelWriter:
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
 
+    def write_dData_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dData_Packages DataFrame to an Excel file in LEGO format.
+        :param dData_Packages: DataFrame containing the dData_Packages data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dData_Packages, folder_path, "Data_Packages")
+
+    def write_dData_Sources(self, dData_Sources: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dData_Sources DataFrame to an Excel file in LEGO format.
+        :param dData_Sources: DataFrame containing the dData_Sources data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
+
+    def write_dPower_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
+        :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
+
     def write_dGlobal_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
@@ -202,6 +229,16 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
+
+    def write_dPower_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Demand DataFrame to an Excel file in LEGO format.
+        :param dPower_Demand: DataFrame containing the dPower_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
     def write_dPower_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
         """
@@ -221,33 +258,6 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Inflows, folder_path, "Power_Inflows")
 
-    def write_dPower_WeightsRP(self, dPower_WeightsRP: pd.DataFrame, folder_path: str) -> None:
-        """
-        Write the dPower_WeightsRP DataFrame to an Excel file in LEGO format.
-        :param dPower_WeightsRP: DataFrame containing the dPower_WeightsRP data.
-        :param folder_path: Path to the folder where the Excel file will be saved.
-        :return: None
-        """
-        self._write_Excel_from_definition(dPower_WeightsRP, folder_path, "Power_WeightsRP")
-
-    def write_dPower_WeightsK(self, dPower_WeightsK: pd.DataFrame, folder_path: str) -> None:
-        """
-        Write the dPower_WeightsK DataFrame to an Excel file in LEGO format.
-        :param dPower_WeightsK: DataFrame containing the dPower_WeightsK data.
-        :param folder_path: Path to the folder where the Excel file will be saved.
-        :return: None
-        """
-        self._write_Excel_from_definition(dPower_WeightsK, folder_path, "Power_WeightsK")
-
-    def write_dPower_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
-        """
-        Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
-        :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
-        :param folder_path: Path to the folder where the Excel file will be saved.
-        :return: None
-        """
-        self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
-
     def write_dPower_Network(self, dPower_Network: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Network DataFrame to an Excel file in LEGO format.
@@ -256,16 +266,6 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dPower_Network, folder_path, "Power_Network")
-
-    def write_dPower_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
-        """
-        Write the dPower_Demand DataFrame to an Excel file in LEGO format.
-        :param dPower_Demand: DataFrame containing the dPower_Demand data.
-        :param folder_path: Path to the folder where the Excel file will be saved.
-        :return: None
-        """
-
-        self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
     def write_dPower_Storage(self, dPower_Storage: pd.DataFrame, folder_path: str) -> None:
         """
@@ -303,23 +303,23 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRESProfiles, folder_path, "Power_VRESProfiles")
 
-    def write_dData_Sources(self, dData_Sources: pd.DataFrame, folder_path: str) -> None:
+    def write_dPower_WeightsK(self, dPower_WeightsK: pd.DataFrame, folder_path: str) -> None:
         """
-        Write the dData_Sources DataFrame to an Excel file in LEGO format.
-        :param dData_Sources: DataFrame containing the dData_Sources data.
+        Write the dPower_WeightsK DataFrame to an Excel file in LEGO format.
+        :param dPower_WeightsK: DataFrame containing the dPower_WeightsK data.
         :param folder_path: Path to the folder where the Excel file will be saved.
         :return: None
         """
-        self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
+        self._write_Excel_from_definition(dPower_WeightsK, folder_path, "Power_WeightsK")
 
-    def write_dData_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
+    def write_dPower_WeightsRP(self, dPower_WeightsRP: pd.DataFrame, folder_path: str) -> None:
         """
-        Write the dData_Packages DataFrame to an Excel file in LEGO format.
-        :param dData_Packages: DataFrame containing the dData_Packages data.
+        Write the dPower_WeightsRP DataFrame to an Excel file in LEGO format.
+        :param dPower_WeightsRP: DataFrame containing the dPower_WeightsRP data.
         :param folder_path: Path to the folder where the Excel file will be saved.
         :return: None
         """
-        self._write_Excel_from_definition(dData_Packages, folder_path, "Data_Packages")
+        self._write_Excel_from_definition(dPower_WeightsRP, folder_path, "Power_WeightsRP")
 
 
 def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
