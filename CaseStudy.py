@@ -262,6 +262,10 @@ class CaseStudy:
         self.dPower_Storage['Qmin'] = self.dPower_Storage['Qmin'].fillna(0) * self.reactive_power_scaling_factor
         self.dPower_Storage['Qmax'] = self.dPower_Storage['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
+        # Check if any DisEffic or ChEffic is nan, if so, raise an error
+        if self.dPower_Storage['DisEffic'].isna().any() or self.dPower_Storage['ChEffic'].isna().any():
+            raise ValueError("DisEffic and ChEffic in 'Power_Storage.xlsx' must not contain NaN values. Please check the data.")
+
     def scale_dPower_ImpExpHubs(self):
         self.dPower_ImpExpHubs["Pmax Import"] *= self.power_scaling_factor
         self.dPower_ImpExpHubs["Pmax Export"] *= self.power_scaling_factor
