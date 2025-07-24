@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
-    <TableDefinitions>
+    <TableDefinitions> <!-- NOTE: TableDefinitions are sorted alphabetically (by id) -->
+        <TableDefinition id="Data_Packages">
+            <Version>v0.1.0</Version>
+            <TableHeader>Data Packages</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Data_Sources">
+            <Version>v0.1.0</Version>
+            <TableHeader>Data Sources</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
+                <Column id="sources" scenarioDependent="False"/>
+                <Column id="licenseInfo" scenarioDependent="False"/>
+                <Column id="lastEdited" scenarioDependent="False"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Global_Scenarios">
             <Version>v0.1.0</Version>
             <TableHeader>Global - Scenarios and Probabilities</TableHeader>
@@ -11,46 +36,6 @@
                 <Column id="scenarioID" scenarioDependent="False"/>
                 <Column id="relativeWeight" scenarioDependent="False"/>
                 <Column id="comments" scenarioDependent="False"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_Hindex">
-            <Version>v0.1.2</Version>
-            <TableHeader>Power - Relation among periods and representative periods</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="p" scenarioDependent="False"/>
-                <Column id="rp" scenarioDependent="True"/>
-                <Column id="k" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_WeightsRP">
-            <Version>v0.1.3</Version>
-            <TableHeader>Power - Weights of representative periods</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="rp" scenarioDependent="False"/>
-                <Column id="pWeight_rp" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_WeightsK">
-            <Version>v0.1.3</Version>
-            <TableHeader>Power - Weights of representative hours</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="k" scenarioDependent="False"/>
-                <Column id="pWeight_k" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_BusInfo">
@@ -77,8 +62,36 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Power_Demand">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Demand</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="demand_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Hindex">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Relation among periods and representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="p" scenarioDependent="False"/>
+                <Column id="rp" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_Network">
-            <Version>v0.1.1</Version>
+            <Version>v0.1.2</Version>
             <TableHeader>Power - Network</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
@@ -101,20 +114,6 @@
                 <Column id="YearDecom" scenarioDependent="True"/>
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_Demand">
-            <Version>v0.1.2</Version>
-            <TableHeader>Power - Demand</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="rp" scenarioDependent="False"/>
-                <Column id="i" scenarioDependent="False"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
-                <PivotColumn id="demand_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_ThermalGen">
@@ -197,29 +196,30 @@
                 <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="Data_Sources">
-            <Version>v0.1.0</Version>
-            <TableHeader>Data Sources</TableHeader>
-            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+        <TableDefinition id="Power_WeightsK">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative hours</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="False"/>
-                <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
-                <Column id="sources" scenarioDependent="False"/>
-                <Column id="licenseInfo" scenarioDependent="False"/>
-                <Column id="lastEdited" scenarioDependent="False"/>
-                <Column id="comments" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="pWeight_k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="Data_Packages">
-            <Version>v0.1.0</Version>
-            <TableHeader>Data Packages</TableHeader>
-            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+        <TableDefinition id="Power_WeightsRP">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="False"/>
-                <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
-                <Column id="comments" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="pWeight_rp" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
     </TableDefinitions>
@@ -557,7 +557,7 @@
         <Column id="pTecRepr">
             <ReadableName>Technical Representation</ReadableName>
             <Description>Technical representation of line in model</Description>
-            <Unit>[DC-OPF,TP,SN]</Unit>
+            <Unit>[SOCP,DC-OPF,TP,SN]</Unit>
             <ColumnWidth>26.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>

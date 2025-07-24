@@ -1,61 +1,22 @@
+# Data_Packages
+
+## v0.0.2 → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts. Change of identifier from 'packageName' to 'dataPackage'.
+
+# Data_Sources
+
+## v0.0.2 → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts. Change of identifier from 'sourceName' to 'dataSource'.
+
 # Global_Scenarios
 
 ## v0.1.0
 
 Very first version.
-
-# Power_Hindex
-
-## v0.1.1 → v0.1.2
-
-Adjust column widths.
-
-## v0.1.0 → v0.1.1
-
-Fix description for columns 'rp' and 'k' to be more general.
-
-## v0.0.2r → v0.1.0
-
-Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts.
-
-# Power_WeightsRP
-
-## v0.1.2 → v0.1.3
-
-Adjust column widths and number formatting of weights.
-
-## v0.1.1 → v0.1.2
-
-Fix formatting of pWeight_rp column.
-
-## v0.1.0 → v0.1.1
-
-Fix description for column 'rp' to be more general.
-
-## v0.0.2 → v0.1.0
-
-Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts.
-
-# Power_WeightsK
-
-## v0.1.2 → v0.1.3
-
-Adjust column widths.
-
-## v0.1.1 → v0.1.2
-
-Fix formatting of pWeight_k column.
-
-## v0.1.0 → v0.1.1
-
-Fix description for column 'k' to be more general.
-
-## v0.0.2r → v0.1.0
-
-Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts.
 
 # Power_BusInfo
 
@@ -109,17 +70,6 @@ formatting and description texts.
 | Power_BusInfo | O8 (and others) | 'Yes'                                                                                                                                                                                         | '1'                                                                                                                                                                                                               | Entered Value Changed.  |
 | Power_BusInfo | A4              | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed |
 
-# Power_Network
-
-## v0.1.0 → v0.1.1
-
-Fix comment in 'excl' column, adjust columnd widths.
-
-## v0.0.4r → v0.1.0
-
-Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts.
-
 # Power_Demand
 
 ## v0.1.1 → v0.1.2
@@ -167,6 +117,21 @@ formatting and description texts.
 | Power_Network | L7              | '[Yes, No]'                                                                                                                                                                                   | '[0, 1]'                                                                                                                                                                                                          | Entered Value Changed.  |
 | Power_Network | L8 (and others) | 'No'                                                                                                                                                                                          | '0'                                                                                                                                                                                                               | Entered Value Changed.  |
 | Power_Network | A4              | 'Background color: Color [Window],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | 'Background color: Color [A=255, R=216, G=216, B=216],   Foreground color: Color [WindowText],   Font: [Font: Name=Microsoft Sans Serif, Size=11, Units=3, GdiCharSet=1, GdiVerticalFont=False],   Format code: ' | Cell Formatting Changed |
+
+# Power_Hindex
+
+## v0.1.1 → v0.1.2
+
+Adjust column widths.
+
+## v0.1.0 → v0.1.1
+
+Fix description for columns 'rp' and 'k' to be more general.
+
+## v0.0.2r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
 
 # Power_ThermalGen
 
@@ -313,16 +278,55 @@ formatting and description texts.
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
 formatting and description texts.
 
-# Data_Sources
+# Power_WeightsK
+
+## v0.1.2 → v0.1.3
+
+Adjust column widths.
+
+## v0.1.1 → v0.1.2
+
+Fix formatting of pWeight_k column.
+
+## v0.1.0 → v0.1.1
+
+Fix description for column 'k' to be more general.
+
+## v0.0.2r → v0.1.0
+
+Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
+formatting and description texts.
+
+# Power_WeightsRP
+
+## v0.1.2 → v0.1.3
+
+Adjust column widths and number formatting of weights.
+
+## v0.1.1 → v0.1.2
+
+Fix formatting of pWeight_rp column.
+
+## v0.1.0 → v0.1.1
+
+Fix description for column 'rp' to be more general.
 
 ## v0.0.2 → v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts. Change of identifier from 'sourceName' to 'dataSource'.
+formatting and description texts.
 
-# Data_Packages
+# Power_Network
 
-## v0.0.2 → v0.1.0
+## \>v0.1.1
+
+Please see git history of `TabbleDefinitions.xml`.
+
+## v0.1.0 → v0.1.1
+
+Fix comment in 'excl' column, adjust columnd widths.
+
+## v0.0.4r → v0.1.0
 
 Switching to "scripted" method when writing Excel-File (instead of copying from template), thus slight changes in
-formatting and description texts. Change of identifier from 'packageName' to 'dataPackage'.
+formatting and description texts.
