@@ -9,27 +9,40 @@ from printer import Printer
 printer = Printer.getInstance()
 
 
-def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str):
+def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
+    """
+    Check if the Excel file has the correct version specifier.
+    :param excel_file_path: Path to the Excel file
+    :param version_specifier: Expected version specifier (e.g., "v0.1.0")
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: None
+    :raises ValueError: If the version specifier does not match and fail_on_wrong_version
+    """
     # Check if the file has the correct version specifier
     wb = openpyxl.load_workbook(excel_file_path)
     for sheet in wb.sheetnames:
         if wb[sheet].cell(row=2, column=3).value != version_specifier:
-            printer.error(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
-            printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
+            if fail_on_wrong_version:
+                raise ValueError(f"Excel file '{excel_file_path}' does not have the correct version specifier. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
+            else:
+                printer.error(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
+                printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
     pass
 
 
-# Function to read generator data
-def __read_generator_data(file_path):
-    d_generator = pd.read_excel(file_path, skiprows=[0, 1, 2, 4, 5, 6])
-    d_generator = d_generator[d_generator["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
-    d_generator = d_generator[(d_generator["ExisUnits"] > 0) | (d_generator["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not invest-able
-    d_generator = d_generator.set_index('g')
-    return d_generator
-
-
-def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], has_excl_column: bool, keep_excl_columns: bool = False) -> pd.DataFrame:
-    __check_LEGOExcel_version(excel_file_path, version_specifier)
+def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], has_excl_column: bool,
+                            keep_excl_columns: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read a non-pivoted Excel file and return the data as a DataFrame.
+    :param excel_file_path: Path to the Excel file
+    :param version_specifier: Version specifier to check against the Excel file
+    :param indices: List of columns to set as index in the DataFrame
+    :param has_excl_column: If True, the DataFrame has an "Excl." column that indicates whether a row should be excluded
+    :param keep_excl_columns: If True, keep the "Excl." column in the DataFrame
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: DataFrame containing the data from the Excel file
+    """
+    __check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
     xls = pd.ExcelFile(excel_file_path)
     data = pd.DataFrame()
 
@@ -48,26 +61,68 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     return data
 
 
-def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], pivoted_variable_name: str, melt_indices: list[str], has_excl_column: bool, keep_excluded_columns: bool = False) -> pd.DataFrame:
-    df = __read_non_pivoted_file(excel_file_path, version_specifier, [], has_excl_column, keep_excluded_columns)
+def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], pivoted_variable_name: str, melt_indices: list[str], has_excl_column: bool,
+                        keep_excluded_columns: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read a pivoted Excel file and return the data as a DataFrame.
+    :param excel_file_path: Path to the Excel file
+    :param version_specifier: Version specifier to check against the Excel file
+    :param indices: List of columns to set as index in the DataFrame
+    :param pivoted_variable_name: Name of the variable that was pivoted in the Excel
+    :param melt_indices: List of columns to keep as identifiers when melting the DataFrame
+    :param has_excl_column: If True, the DataFrame has an "Excl." column that indicates whether a row should be excluded
+    :param keep_excluded_columns: If True, keep the "Excl." column in the DataFrame
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: DataFrame containing the data from the Excel file
+    """
+    df = __read_non_pivoted_file(excel_file_path, version_specifier, [], has_excl_column, keep_excluded_columns, fail_on_wrong_version)
 
     df = df.melt(id_vars=melt_indices + ["scenario"], var_name=pivoted_variable_name, value_name="value")
     df = df.set_index(indices)
     return df
 
 
-def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dData_Packages data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dData_Packages
+    """
+    dData_Packages = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataPackage"], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dData_Packages', although nothing is excluded anyway - please check if this is intended.")
+
+    return dData_Packages
+
+
+def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dData_Sources data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dData_Sources
+    """
+    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
+
+    return dData_Sources
+
+
+def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dGlobal_Scenarios data from the Excel file.
     :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dGlobal_Scenarios
     """
-    dGlobal_Scenarios = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["scenarioID"], True, keep_excluded_entries)
-
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dGlobal_Scenarios', although no values are converted anyway - please check if this is intended.")
+    dGlobal_Scenarios = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["scenarioID"], True, keep_excluded_entries, fail_on_wrong_version)
 
     # Check that there is only one sheet with the name 'Scenario'
     check = dGlobal_Scenarios["scenario"].to_numpy()
@@ -77,99 +132,28 @@ def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = Fa
     return dGlobal_Scenarios
 
 
-def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_Hindex data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_Hindex
-    """
-    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["p", "rp", "k"], False, False)
-
-    if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Hindex', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_Hindex', although no values are converted anyway - please check if this is intended.")
-
-    return dPower_Hindex
-
-
-def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_WeightsRP data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_WeightsRP
-    """
-    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["rp"], False, False)
-
-    if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsRP', although no values are converted anyway - please check if this is intended.")
-
-    return dPower_WeightsRP
-
-
-def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_WeightsK data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_WeightsK
-    """
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["k"], False, False)
-
-    if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsK', although no values are converted anyway - please check if this is intended.")
-
-    return dPower_WeightsK
-
-
-def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_BusInfo data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_BusInfo
     """
-    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i"], True, keep_excluded_entries)
-
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_BusInfo', although no values are converted anyway - please check if this is intended.")
+    dPower_BusInfo = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i"], True, keep_excluded_entries, fail_on_wrong_version)
 
     return dPower_BusInfo
 
 
-def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
-    """
-    Read the dPower_Network data from the Excel file.
-    :param excel_file_path: Path to the Excel file
-    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dPower_Network
-    """
-    dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["i", "j", "c"], True, keep_excluded_entries)
-
-    return dPower_Network
-
-
-def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Demand data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Skip the conversion of values
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_Demand
     """
-
-    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False)
+    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
@@ -177,84 +161,136 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Demand
 
 
-def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Hindex data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Hindex
+    """
+    dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["p", "rp", "k"], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Hindex', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_Hindex
+
+
+def get_dPower_Inflows(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Inflows data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Inflows
+    """
+    dPower_Inflows = __read_pivoted_file(excel_file_path, "v0.0.1", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Inflows', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_Inflows
+
+
+def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Network data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Network
+    """
+    dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i", "j", "c"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dPower_Network
+
+
+def get_dPower_Storage(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Storage data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Storage
+    """
+    dPower_Storage = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dPower_Storage
+
+
+def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_ThermalGen data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
-    :param do_not_convert_values: Skip the conversion of values
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_thermalGen
     """
-    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["g"], True, keep_excluded_entries)
+    dPower_ThermalGen = __read_non_pivoted_file(excel_file_path, "v0.1.1", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
 
     return dPower_ThermalGen
 
 
-def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_VRES data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
-    :param do_not_convert_values: Skip the conversion of values
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_VRES
     """
-    dPower_VRES = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries)
+    dPower_VRES = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
 
     return dPower_VRES
 
 
-def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_VRESProfiles data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_VRES
     """
-    dPower_VRESProfiles = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False)
+    dPower_VRESProfiles = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dPower_WeightsK', although no values are converted anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_VRESProfiles', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_VRESProfiles
 
 
-def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
-    Read the dData_Sources data from the Excel file.
+    Read the dPower_WeightsK data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dData_Sources
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_WeightsK
     """
-    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False)
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["k"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dData_Sources', although no values are converted anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
 
-    return dData_Sources
+    return dPower_WeightsK
 
 
-def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False, do_not_convert_values: bool = False) -> pd.DataFrame:
+def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
-    Read the dData_Packages data from the Excel file.
+    Read the dPower_WeightsRP data from the Excel file.
     :param excel_file_path: Path to the Excel file
     :param keep_excluded_entries: Unused but kept for compatibility with other functions
-    :param do_not_convert_values: Unused but kept for compatibility with other functions
-    :return: dData_Packages
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_WeightsRP
     """
-    dData_Packages = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataPackage"], False, False)
+    dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["rp"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dData_Packages', although nothing is excluded anyway - please check if this is intended.")
-    if do_not_convert_values:
-        printer.warning("'do_not_convert_values' is set for 'get_dData_Packages', although no values are converted anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
 
-    return dData_Packages
+    return dPower_WeightsRP
 
 
 def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False) -> bool:
