@@ -340,10 +340,12 @@ def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
         else:  # Create a sheet for each (other) variable
             ws = wb.create_sheet(title=str(var))
 
-        # Prepare the data from the model and prepare the header
+       # Prepare the data from the model and prepare the header
         data = [(j, v.value if not v.stale else None) for j, v in var.items()]
-        col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
-        ws.append([f"index_{j}" for j in range(col_number)] + [str(var)])
+
+        if data: #make shure there is data to write
+            col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
+            ws.append([f"index_{j}" for j in range(col_number)] + [str(var)])
 
         # Write data to the sheet
         for j, v in data:
