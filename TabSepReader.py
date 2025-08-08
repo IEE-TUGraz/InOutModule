@@ -44,9 +44,20 @@ def get_VRES_profiles(file_path: str, settings: dict) -> pd.DataFrame:
     # adapt to correct LEGO format
     # include the temporal aggregation
 
-    df_PV = df_raw[settings["VRES_profiles"]["column"]].copy()
-    
-    return df_PV
+    df_PV = df_raw[[settings["VRES_profiles"]["column"]]].copy()
+
+    # rename the columns
+    df_PV.columns = ["vres"]
+
+
+    if settings["aggregation"]["enabled"]:
+        # aggregate each steps
+        df_PV["invervall_group"] = df_PV.index // settings["aggregation"]["intervall"]
+        df_PV_sum = df_PV.groupby("invervall_group", as_index=False)["vres"].sum()
+    else:
+        df_PV_sum = df_PV.copy()
+
+    return df_PV_sum
 
 # Example usage
 if __name__ == "__main__":
@@ -54,9 +65,9 @@ if __name__ == "__main__":
     data_folder = os.path.join("data", "rings")
 
     settings = read_data_settings(os.path.join(data_folder, "DataSettings.yaml"))
-    print(settings)
+    #print(settings)
 
     df_PV = get_VRES_profiles(data_folder, settings)
 
-    print(df_PV)
+    print(df_PV.head(150))
 
