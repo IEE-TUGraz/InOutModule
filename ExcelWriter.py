@@ -322,14 +322,44 @@ def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
         else:  # Create a sheet for each (other) variable
             ws = wb.create_sheet(title=str(var))
 
-        # Prepare the data from the model and prepare the header
+        # Prepare the data from the model
         data = [(j, v.value if not v.stale else None) for j, v in var.items()]
-        col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
-        ws.append([f"index_{j}" for j in range(col_number)] + [str(var)])
 
-        # Write data to the sheet
-        for j, v in data:
-            ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
+        # Extract parameter names from the variable's index structure
+        param_names = []
+
+        if var.is_indexed():
+            index_set = var.index_set()
+
+            try:
+                # Get names from the index set
+                if hasattr(index_set, 'subsets') and index_set.subsets():
+                    for idx, subset in enumerate(index_set.subsets()):
+                        if subset.domain.dimen is not None:
+                            for i, domain in enumerate(subset.domain.subsets()):
+                                param_names.append(f"{subset.name}[{i}]: {domain.name}")
+                        else:
+                            param_names.append(subset.name)
+                    param_names.append(str(var))
+            except (AttributeError, TypeError):
+                if len(data) > 0:
+                    # Determine from actual data structure
+                    col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
+                    param_names = [f"index_{j}" for j in range(col_number)] + [str(var)]
+                else:
+                    param_names = []
+
+        # Create header row with parameter names
+        ws.append(param_names)
+
+        # Handle data writing
+        if len(data) == 0:
+            # Create a row showing "No entries" for each parameter
+            ws.append(["No entries"] * len(param_names))
+        else:
+            # Write data to the sheet
+            for j, v in data:
+                ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
 
     wb.save(target_path)
 

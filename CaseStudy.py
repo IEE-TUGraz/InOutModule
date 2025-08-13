@@ -438,6 +438,7 @@ class CaseStudy:
 
     def merge_single_node_buses(self):
         # Create a connection matrix
+        # TODO check
         connectionMatrix = pd.DataFrame(index=self.dPower_BusInfo.index, columns=[self.dPower_BusInfo.index], data=False)
 
         for index, entry in self.dPower_Network.iterrows():
