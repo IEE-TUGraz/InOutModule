@@ -48,15 +48,15 @@ class CaseStudy:
             self.dGlobal_Scenarios = dGlobal_Scenarios
         else:
             self.global_scenarios_file = global_scenarios_file
-            if not os.path.exists(self.example_folder + self.global_scenarios_file):
-                printer.warning(f"Executing without 'Global_Scenarios' (since no file was found at '{self.example_folder + self.global_scenarios_file}').")
+            if not os.path.exists(self.data_folder + self.global_scenarios_file):
+                printer.warning(f"Executing without 'Global_Scenarios' (since no file was found at '{self.data_folder + self.global_scenarios_file}').")
 
                 # Create dataframe for only one Scenario
                 dGlobal_Scenarios = pd.DataFrame({"excl": np.nan, "id": np.nan, "scenarioID": ["ScenarioA"], "relativeWeight": [1], "comments": np.nan, "scenario": ["Scenarios"]})
 
                 self.dGlobal_Scenarios = dGlobal_Scenarios
             else:
-                self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.example_folder + self.global_scenarios_file)
+                self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.data_folder + self.global_scenarios_file)
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
@@ -86,7 +86,7 @@ class CaseStudy:
             self.dPower_Hindex = dPower_Hindex
         else:
             self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.example_folder + self.power_hindex_file)
+            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.data_folder + self.power_hindex_file)
 
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -110,13 +110,13 @@ class CaseStudy:
 
             dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
 
-            if os.path.exists(self.example_folder + self.power_weightsrp_file):  # Compare with given file if it exists
-                self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.example_folder + self.power_weightsrp_file)
+            if os.path.exists(self.data_folder + self.power_weightsrp_file):  # Compare with given file if it exists
+                self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.data_folder + self.power_weightsrp_file)
 
                 if not dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])['pWeight_rp'].equals(self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])['pWeight_rp']):
-                    printer.warning(f"Values for 'pWeight_rp' in '{self.example_folder + self.power_weightsrp_file}' do not match the calculated values based on '{self.power_hindex_file}'. Please check if this is intended.")
+                    printer.warning(f"Values for 'pWeight_rp' in '{self.data_folder + self.power_weightsrp_file}' do not match the calculated values based on '{self.power_hindex_file}'. Please check if this is intended.")
             else:  # Use calculated dPower_WeightsRP otherwise
-                printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.example_folder + self.power_weightsrp_file}').")
+                printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
 
         if dPower_WeightsK is not None:
@@ -205,7 +205,7 @@ class CaseStudy:
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.scale_dPower_ThermalGen()
 
-        if self.dPower_Inflows is not None:
+        if hasattr(self, "dPower_Inflows"):
             self.scale_dPower_Inflows()
 
         if self.dPower_Parameters["pEnableVRES"]:
