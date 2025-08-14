@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <root>
-    <TableDefinitions>
+    <TableDefinitions> <!-- NOTE: TableDefinitions are sorted alphabetically (by id) -->
+        <TableDefinition id="Data_Packages">
+            <Version>v0.1.0</Version>
+            <TableHeader>Data Packages</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Data_Sources">
+            <Version>v0.1.0</Version>
+            <TableHeader>Data Sources</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="False"/>
+                <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
+                <Column id="sources" scenarioDependent="False"/>
+                <Column id="licenseInfo" scenarioDependent="False"/>
+                <Column id="lastEdited" scenarioDependent="False"/>
+                <Column id="comments" scenarioDependent="False"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Global_Scenarios">
             <Version>v0.1.0</Version>
             <TableHeader>Global - Scenarios and Probabilities</TableHeader>
@@ -11,46 +36,6 @@
                 <Column id="scenarioID" scenarioDependent="False"/>
                 <Column id="relativeWeight" scenarioDependent="False"/>
                 <Column id="comments" scenarioDependent="False"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_Hindex">
-            <Version>v0.1.2</Version>
-            <TableHeader>Power - Relation among periods and representative periods</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="p" scenarioDependent="False"/>
-                <Column id="rp" scenarioDependent="True"/>
-                <Column id="k" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_WeightsRP">
-            <Version>v0.1.3</Version>
-            <TableHeader>Power - Weights of representative periods</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="rp" scenarioDependent="False"/>
-                <Column id="pWeight_rp" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_WeightsK">
-            <Version>v0.1.3</Version>
-            <TableHeader>Power - Weights of representative hours</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="k" scenarioDependent="False"/>
-                <Column id="pWeight_k" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_BusInfo">
@@ -77,8 +62,50 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Power_Demand">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Demand</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="demand_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Hindex">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Relation among periods and representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="p" scenarioDependent="False"/>
+                <Column id="rp" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Inflows">
+            <Version>v0.0.1</Version>
+            <TableHeader>Power - Inflows</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="inflow_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_Network">
-            <Version>v0.1.1</Version>
+            <Version>v0.1.2</Version>
             <TableHeader>Power - Network</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
@@ -103,18 +130,41 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="Power_Demand">
-            <Version>v0.1.2</Version>
-            <TableHeader>Power - Demand</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+        <TableDefinition id="Power_Storage">
+            <Version>v0.0.1</Version>
+            <TableHeader>Power - Storage</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="excl" scenarioDependent="True"/>
                 <Column id="id" scenarioDependent="True"/>
-                <Column id="rp" scenarioDependent="False"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="tec" scenarioDependent="False"/>
                 <Column id="i" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="MinProd" scenarioDependent="True"/>
+                <Column id="MaxCons" scenarioDependent="True"/>
+                <Column id="DisEffic" scenarioDependent="True"/>
+                <Column id="ChEffic" scenarioDependent="True"/>
+                <Column id="SelfDischarge" scenarioDependent="True"/>
+                <Column id="Qmax" scenarioDependent="True"/>
+                <Column id="Qmin" scenarioDependent="True"/>
+                <Column id="MinReserve" scenarioDependent="True"/>
+                <Column id="IniReserve" scenarioDependent="True"/>
+                <Column id="IsLDS" scenarioDependent="True"/>
+                <Column id="OMVarCost" scenarioDependent="True"/>
+                <Column id="EnableInvest" scenarioDependent="True"/>
+                <Column id="MaxInvest" scenarioDependent="True"/>
+                <Column id="InvestCostPerMW" scenarioDependent="True"/>
+                <Column id="InvestCostPerMWh" scenarioDependent="True"/>
+                <Column id="Ene2PowRatio" scenarioDependent="True"/>
+                <Column id="FirmCapCoef" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
-                <PivotColumn id="demand_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_ThermalGen">
@@ -197,29 +247,30 @@
                 <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="Data_Sources">
-            <Version>v0.1.0</Version>
-            <TableHeader>Data Sources</TableHeader>
-            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+        <TableDefinition id="Power_WeightsK">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative hours</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="False"/>
-                <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
-                <Column id="sources" scenarioDependent="False"/>
-                <Column id="licenseInfo" scenarioDependent="False"/>
-                <Column id="lastEdited" scenarioDependent="False"/>
-                <Column id="comments" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="pWeight_k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="Data_Packages">
-            <Version>v0.1.0</Version>
-            <TableHeader>Data Packages</TableHeader>
-            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+        <TableDefinition id="Power_WeightsRP">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
                 <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="False"/>
-                <Column id="dataPackage" scenarioDependent="False" Description="Name of data package"/>
-                <Column id="comments" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="pWeight_rp" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
     </TableDefinitions>
@@ -231,6 +282,13 @@
             <Unit>[c]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="ChEffic">
+            <ReadableName>Charge Efficiency</ReadableName>
+            <Description>Efficiency of charging the storage unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>21.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </Column>
         <Column id="CO2Emis">
             <ReadableName>CO2Emis</ReadableName>
@@ -267,6 +325,13 @@
             <ColumnWidth>23.86</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="DisEffic">
+            <ReadableName>Discharge Efficiency</ReadableName>
+            <Description>Efficiency of discharging the storage unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>21.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="Efficiency">
             <ReadableName>Efficiency</ReadableName>
             <Description>Efficiency calculated as 1/input for 1 MWh, i.e. 0.5 (or 50%) if 2 MWh fuel are required for 1 MWh electricity</Description>
@@ -287,6 +352,13 @@
             <Unit>[0, 1]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="Ene2PowRatio">
+            <ReadableName>Energy to Power Ratio</ReadableName>
+            <Description>Energy to power ratio of the storage unit</Description>
+            <Unit>[h]</Unit>
+            <ColumnWidth>22.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
         </Column>
         <Column id="excl">
             <ReadableName>Excl.</ReadableName>
@@ -344,12 +416,40 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
+        <Column id="IniReserve">
+            <ReadableName>Initial Reserve</ReadableName>
+            <Description>Initial reserve of the storage unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="InvestCost">
             <ReadableName>InvestCost</ReadableName>
             <Description>Annualized investment cost per MW</Description>
             <Unit>[€/MW/year]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="InvestCostPerMW">
+            <ReadableName>InvestCostPerMW</ReadableName>
+            <Description>Annualized investment cost per MW of MaxProd</Description>
+            <Unit>[€/MW]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="InvestCostPerMWh">
+            <ReadableName>InvestCostPerMWh</ReadableName>
+            <Description>Annualized investment cost per MWh of storage capacity</Description>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="IsLDS">
+            <ReadableName>IsLDS</ReadableName>
+            <Description>Whether the storage unit is a long-duration storage (1) or not (0)</Description>
+            <Unit>[0, 1]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
         </Column>
         <Column id="j">
             <ReadableName>To Node</ReadableName>
@@ -393,6 +493,13 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
         </Column>
+        <Column id="MaxCons">
+            <ReadableName>MaxCons</ReadableName>
+            <Description>Maximum consumption of the unit</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
         <Column id="MaxInvest">
             <ReadableName>MaxInvest</ReadableName>
             <Description>Maximum number of units that can be invested in</Description>
@@ -420,6 +527,13 @@
             <Unit>[MW]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="MinReserve">
+            <ReadableName>MinReserve</ReadableName>
+            <Description>Minimum reserve of the storage unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </Column>
         <Column id="MinUpTime">
             <ReadableName>MinUpTime</ReadableName>
@@ -557,7 +671,7 @@
         <Column id="pTecRepr">
             <ReadableName>Technical Representation</ReadableName>
             <Description>Technical representation of line in model</Description>
-            <Unit>[DC-OPF,TP,SN]</Unit>
+            <Unit>[SOCP,DC-OPF,TP,SN]</Unit>
             <ColumnWidth>26.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
@@ -631,6 +745,13 @@
             <ColumnWidth>41.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="SelfDischarge">
+            <ReadableName>Self Discharge</ReadableName>
+            <Description>Self discharge of the storage unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="sources">
             <ReadableName>Source(s)</ReadableName>
             <Description>List of used sources (detailing which values are from where)</Description>
@@ -698,6 +819,14 @@
             <Unit>[MWh]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="inflow_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Inflow for each unit at this k</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
     </PivotColumns>
 
