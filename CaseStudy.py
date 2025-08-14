@@ -602,9 +602,9 @@ class CaseStudy:
         adjusted_demand = []
         for i, _ in caseStudy.dPower_BusInfo.iterrows():
             for h, row in caseStudy.dPower_Hindex.iterrows():
-                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"]])
+                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"], "ScenarioA", None, None, None])
 
-        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value"])
+        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value", "scenario", "id", "dataPackage", "dataSource"])
         caseStudy.dPower_Demand = caseStudy.dPower_Demand.set_index(["rp", "k", "i"])
 
         # Adjust VRESProfiles
@@ -614,9 +614,9 @@ class CaseStudy:
             for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
                 if len(caseStudy.dPower_VRESProfiles.loc[:, :, g]) > 0:  # Check if VRESProfiles has entries for g
                     for h, row in caseStudy.dPower_Hindex.iterrows():
-                        adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"]])
+                        adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
 
-            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value"])
+            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
             caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
 
         # Adjust Hindex
@@ -634,7 +634,7 @@ class CaseStudy:
 
         # Adjust WeightsRP
         caseStudy.dPower_WeightsRP = caseStudy.dPower_WeightsRP.drop(caseStudy.dPower_WeightsRP.index)
-        caseStudy.dPower_WeightsRP.loc["rp01"] = 1
+        caseStudy.dPower_WeightsRP.loc["rp01"] = None, 1, None, None, "ScenarioA"
 
         if not inplace:
             return caseStudy

@@ -11,6 +11,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 import ExcelReader
 import TableDefinition
+from CaseStudy import CaseStudy
 from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
 from printer import Printer
 
@@ -198,6 +199,24 @@ class ExcelWriter:
             os.makedirs(os.path.dirname(path))  # Create folder if it does not exist
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
+
+    def write_caseStudy(self, cs: CaseStudy, folder_path: str) -> None:
+        """
+        Write the case study to a folder in LEGO-Excel format.
+        :param cs: CaseStudy object containing the data to be written.
+        :param folder_path: Path to the folder where the Excel files will be saved.
+        :return:
+        """
+        self.write_dGlobal_Scenarios(cs.dGlobal_Scenarios, folder_path)
+        self.write_dPower_BusInfo(cs.dPower_BusInfo, folder_path)
+        self.write_dPower_Demand(cs.dPower_Demand, folder_path)
+        self.write_dPower_Hindex(cs.dPower_Hindex, folder_path)
+        self.write_dPower_Network(cs.dPower_Network, folder_path)
+        self.write_dPower_ThermalGen(cs.dPower_ThermalGen, folder_path)
+        self.write_dPower_WeightsK(cs.dPower_WeightsK, folder_path)
+        self.write_dPower_WeightsRP(cs.dPower_WeightsRP, folder_path)
+        self.write_VRES(cs.dPower_VRES, folder_path)
+        self.write_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
 
     def write_dData_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
         """
