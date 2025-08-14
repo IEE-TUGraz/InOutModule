@@ -113,8 +113,10 @@ class CaseStudy:
             if os.path.exists(self.data_folder + self.power_weightsrp_file):  # Compare with given file if it exists
                 self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.data_folder + self.power_weightsrp_file)
 
-                if not dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])['pWeight_rp'].equals(self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])['pWeight_rp']):
-                    printer.warning(f"Values for 'pWeight_rp' in '{self.data_folder + self.power_weightsrp_file}' do not match the calculated values based on '{self.power_hindex_file}'. Please check if this is intended.")
+                calculated = dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
+                fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
+                if not (calculated['pWeight_rp'] / calculated['pWeight_rp'].sum()).equals(fromFile['pWeight_rp'] / fromFile['pWeight_rp'].sum()):
+                    printer.warning(f"Values for 'pWeight_rp' in '{self.data_folder + self.power_weightsrp_file}' do not match the calculated values based on '{self.power_hindex_file}'. Please check if this is intended, using the file '{self.data_folder + self.power_weightsrp_file}' instead of the calculated values.")
             else:  # Use calculated dPower_WeightsRP otherwise
                 printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
