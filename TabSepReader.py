@@ -139,12 +139,12 @@ def create_imp_exp_data(length: int) -> pd.DataFrame:
 
     # --- Initialize DataFrame ---
     df_imp_exp = pd.DataFrame({
-        "ImpExp": 150,
+        "ImpExp": 1000,
         "Price": 50,
         "scenario": scenario_default,
     }, index=multi_index)
 
-    df_imp_exp.loc[("External_Grid", "rp01", "k0001"), "ImpExp"] = -150
+    df_imp_exp.loc[("External_Grid", "rp01", "k0013"), "ImpExp"] = -500
     
     return df_imp_exp
 
