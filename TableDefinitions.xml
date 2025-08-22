@@ -993,14 +993,14 @@
     </Fonts>
 
     <Colors>
-        <Color id="IEEGreen">008080</Color>
-        <Color id="lightGreen">CCFFCC</Color>
-        <Color id="darkBlue">B8CCE4</Color>
-        <Color id="lightBlue">DAEEF3</Color>
-        <Color id="darkGray">D9D9D9</Color>
-        <Color id="lightGray">F2F2F2</Color>
-        <Color id="blue">0000FF</Color>
-        <Color id="white">FFFFFF</Color>
+        <Color id="IEEGreen">FF008080</Color>
+        <Color id="lightGreen">FFCCFFCC</Color>
+        <Color id="darkBlue">FFB8CCE4</Color>
+        <Color id="lightBlue">FFDAEEF3</Color>
+        <Color id="darkGray">FFD9D9D9</Color>
+        <Color id="lightGray">FFF2F2F2</Color>
+        <Color id="blue">FF0000FF</Color>
+        <Color id="white">FFFFFFFF</Color>
     </Colors>
 
     <NumberFormats>
