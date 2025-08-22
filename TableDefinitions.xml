@@ -13,7 +13,7 @@
             </Columns>
         </TableDefinition>
         <TableDefinition id="Data_Sources">
-            <Version>v0.1.0</Version>
+            <Version>v0.2.0</Version>
             <TableHeader>Data Sources</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
             <Columns>
@@ -22,6 +22,7 @@
                 <Column id="dataSource" scenarioDependent="False" Description="Name of data source"/>
                 <Column id="sources" scenarioDependent="False"/>
                 <Column id="licenseInfo" scenarioDependent="False"/>
+                <Column id="personResponsible" scenarioDependent="False"/>
                 <Column id="lastEdited" scenarioDependent="False"/>
                 <Column id="comments" scenarioDependent="False"/>
             </Columns>

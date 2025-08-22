@@ -111,7 +111,7 @@ def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False,
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dData_Sources
     """
-    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False, fail_on_wrong_version)
+    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.2.0", ["dataSource"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
