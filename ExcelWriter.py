@@ -411,9 +411,11 @@ if __name__ == "__main__":
     from rich_argparse import RichHelpFormatter
 
     parser = argparse.ArgumentParser(description="Re-write all files in given folder and compare against source", formatter_class=RichHelpFormatter)
-    parser.add_argument("caseStudyFolder", type=str, default="data/example/", help="Path to folder containing data for LEGO model.", nargs="?")
+    parser.add_argument("caseStudyFolder", type=str, help="Path to folder containing data for LEGO model.")
     parser.add_argument("excelDefinitionsPath", type=str, help="Path to the Excel definitions XML file. Uses default if none is supplied.", nargs="?")
     parser.add_argument("--dontCheckFormatting", action="store_true", help="Do not check formatting of the Excel files. Only check if they are equal.")
+    parser.add_argument("--dontFailOnWrongVersion", action="store_true", help="Do not fail if the version in the Excel file does not match the version in the XML definitions file.")
+    parser.add_argument("--precision", type=float, default=1e-6, help="Precision for comparing floating point values, default is 1e-6")
     args = parser.parse_args()
 
     printer.set_width(300)
@@ -448,14 +450,14 @@ if __name__ == "__main__":
 
     for excel_definition_id, file_path, read, write in combinations:
         printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
-        data = read(file_path, True, True)
+        data = read(file_path, True, not args.dontFailOnWrongVersion)
         write(data, f"{args.caseStudyFolder}output")
 
         printer.information(f"Comparing '{args.caseStudyFolder}output/{excel_definition_id}.xlsx' against source file '{file_path}'")
         if not os.path.exists(file_path):
             printer.warning(f"Input file '{file_path}' does not exist - skipping comparison")
         else:
-            filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting)
+            filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting, args.precision)
             if filesEqual:
                 printer.success(f"Excel files are equal")
             else:

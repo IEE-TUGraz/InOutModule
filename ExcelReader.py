@@ -298,12 +298,13 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
     return dPower_WeightsRP
 
 
-def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False) -> bool:
+def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False, precision: float = 1e-6) -> bool:
     """
     Compare two Excel files for differences in formatting and values.
     :param source_path: Path to the source Excel file
     :param target_path: Path to the target Excel file
     :param dont_check_formatting: If True, skip formatting checks
+    :param precision: Precision for floating point comparison
     :return: True if the files are equal, False otherwise
     """
     start_time = time.time()
@@ -332,10 +333,12 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
 
                 # Value
                 if source_cell.value != target_cell.value:
-                    source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
-                    target_value = str(target_cell.value).replace("[", r"\[")
-                    printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
-                    equal = False
+                    if isinstance(source_cell.value, float) and isinstance(target_cell.value, float):
+                        if abs(source_cell.value - target_cell.value) >= precision:
+                            source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
+                            target_value = str(target_cell.value).replace("[", r"\[")
+                            printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
+                            equal = False
 
                 if not dont_check_formatting:
                     # Font
