@@ -126,6 +126,7 @@ class ExcelWriter:
             ws.freeze_panes = "C8"  # Freeze panes at row 8 (below the header)
 
             # Prepare row heights
+            ws.row_dimensions[1].height = 24
             ws.row_dimensions[5].height = excel_definition.description_row_height
             ws.row_dimensions[6].height = 30  # Standard for database behavior row
 

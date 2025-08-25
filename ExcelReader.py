@@ -381,8 +381,25 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
 
                     # Column width
                     if row == 1:  # Only need to check column width for the first row
-                        if source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width != target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width:
-                            printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width} != {target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width}")
+                        source_columnwidth = source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width
+                        for group in source_sheet.column_groups:
+                            start, end = group.split(":")
+                            start = openpyxl.utils.column_index_from_string(start)
+                            end = openpyxl.utils.column_index_from_string(end)
+                            if start < col <= end:
+                                source_columnwidth = source_sheet.column_dimensions[openpyxl.utils.get_column_letter(start)].width
+                                break
+
+                        target_columnwidth = target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width
+                        for group in target_sheet.column_groups:
+                            start, end = group.split(":")
+                            start = openpyxl.utils.column_index_from_string(start)
+                            end = openpyxl.utils.column_index_from_string(end)
+                            if start < col <= end:
+                                target_columnwidth = target_sheet.column_dimensions[openpyxl.utils.get_column_letter(start)].width
+                                break
+                        if source_columnwidth != target_columnwidth:
+                            printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_columnwidth} != {target_columnwidth}")
                             equal = False
 
     printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")
