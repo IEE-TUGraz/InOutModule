@@ -293,6 +293,19 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
     return dPower_WeightsRP
 
 
+def get_dPower_Wind_TechnicalDetails(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Wind_TechnicalDetails data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Wind_TechnicalDetails
+    """
+    dPower_Wind_TechnicalDetails = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dPower_Wind_TechnicalDetails
+
+
 def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False) -> bool:
     """
     Compare two Excel files for differences in formatting and values.
