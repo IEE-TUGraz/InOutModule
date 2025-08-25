@@ -321,6 +321,15 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_WeightsRP, folder_path, "Power_WeightsRP")
 
+    def write_dPower_Wind_TechnicalDetails(self, dPower_Wind_TechnicalDetails: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Wind_TechnicalDetails DataFrame to an Excel file in LEGO format.
+        :param dPower_Wind_TechnicalDetails: DataFrame containing the dPower_Wind_TechnicalDetails data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_Wind_TechnicalDetails, folder_path, "Power_Wind_TechnicalDetails")
+
 
 def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
     """
@@ -388,6 +397,7 @@ if __name__ == "__main__":
         ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_dPower_VRESProfiles, ew.write_VRESProfiles),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_dPower_WeightsK, ew.write_dPower_WeightsK),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_dPower_WeightsRP, ew.write_dPower_WeightsRP),
+        ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_dPower_Wind_TechnicalDetails, ew.write_dPower_Wind_TechnicalDetails)
     ]
 
     for excel_definition_id, file_path, read, write in combinations:
