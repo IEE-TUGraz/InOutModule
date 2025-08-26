@@ -194,7 +194,7 @@ class ExcelWriter:
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
 
-    def write_dData_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
+    def write_Data_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dData_Packages DataFrame to an Excel file in LEGO format.
         :param dData_Packages: DataFrame containing the dData_Packages data.
@@ -203,7 +203,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dData_Packages, folder_path, "Data_Packages")
 
-    def write_dData_Sources(self, dData_Sources: pd.DataFrame, folder_path: str) -> None:
+    def write_Data_Sources(self, dData_Sources: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dData_Sources DataFrame to an Excel file in LEGO format.
         :param dData_Sources: DataFrame containing the dData_Sources data.
@@ -212,7 +212,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
 
-    def write_dPower_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
         :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
@@ -221,7 +221,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
 
-    def write_dGlobal_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
+    def write_Global_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
         :param dGlobal_Scenarios: DataFrame containing the dGlobal_Scenarios data.
@@ -230,7 +230,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
 
-    def write_dPower_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Demand DataFrame to an Excel file in LEGO format.
         :param dPower_Demand: DataFrame containing the dPower_Demand data.
@@ -240,7 +240,7 @@ class ExcelWriter:
 
         self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
-    def write_dPower_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Hindex DataFrame to an Excel file in LEGO format.
         :param dPower_Hindex: DataFrame containing the dPower_Hindex data.
@@ -249,7 +249,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Hindex, folder_path, "Power_Hindex")
 
-    def write_dPower_Inflows(self, dPower_Inflows: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_Inflows(self, dPower_Inflows: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Inflows DataFrame to an Excel file in LEGO format.
         :param dPower_Inflows: DataFrame containing the dPower_Inflows data.
@@ -258,7 +258,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Inflows, folder_path, "Power_Inflows")
 
-    def write_dPower_Network(self, dPower_Network: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_Network(self, dPower_Network: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Network DataFrame to an Excel file in LEGO format.
         :param dPower_Network: DataFrame containing the dPower_Network data.
@@ -267,7 +267,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Network, folder_path, "Power_Network")
 
-    def write_dPower_Storage(self, dPower_Storage: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_Storage(self, dPower_Storage: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Storage DataFrame to an Excel file in LEGO format.
         :param dPower_Storage: DataFrame containing the dPower_Storage data.
@@ -276,7 +276,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Storage, folder_path, "Power_Storage")
 
-    def write_dPower_ThermalGen(self, dPower_ThermalGen: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_ThermalGen(self, dPower_ThermalGen: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_ThermalGen DataFrame to an Excel file in LEGO format.
         :param dPower_ThermalGen: DataFrame containing the dPower_ThermalGen data.
@@ -303,7 +303,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRESProfiles, folder_path, "Power_VRESProfiles")
 
-    def write_dPower_WeightsK(self, dPower_WeightsK: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_WeightsK(self, dPower_WeightsK: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_WeightsK DataFrame to an Excel file in LEGO format.
         :param dPower_WeightsK: DataFrame containing the dPower_WeightsK data.
@@ -312,7 +312,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_WeightsK, folder_path, "Power_WeightsK")
 
-    def write_dPower_WeightsRP(self, dPower_WeightsRP: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_WeightsRP(self, dPower_WeightsRP: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_WeightsRP DataFrame to an Excel file in LEGO format.
         :param dPower_WeightsRP: DataFrame containing the dPower_WeightsRP data.
@@ -321,7 +321,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_WeightsRP, folder_path, "Power_WeightsRP")
 
-    def write_dPower_Wind_TechnicalDetails(self, dPower_Wind_TechnicalDetails: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_Wind_TechnicalDetails(self, dPower_Wind_TechnicalDetails: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Wind_TechnicalDetails DataFrame to an Excel file in LEGO format.
         :param dPower_Wind_TechnicalDetails: DataFrame containing the dPower_Wind_TechnicalDetails data.
@@ -383,21 +383,21 @@ if __name__ == "__main__":
     printer.separator()
 
     combinations = [
-        ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_Data_Packages, ew.write_dData_Packages),
-        ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_Data_Sources, ew.write_dData_Sources),
-        ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_dGlobal_Scenarios),
-        ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_dPower_BusInfo),
-        ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_dPower_Demand),
-        ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_dPower_Hindex),
-        ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_dPower_Inflows),
-        ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_dPower_Network),
-        ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_dPower_Storage),
-        ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_dPower_ThermalGen),
+        ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_Data_Packages, ew.write_Data_Packages),
+        ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_Data_Sources, ew.write_Data_Sources),
+        ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_Global_Scenarios),
+        ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
+        ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
+        ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
+        ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
+        ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
+        ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_Power_Storage),
+        ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
         ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_VRES),
         ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_VRESProfiles),
-        ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_dPower_WeightsK),
-        ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_dPower_WeightsRP),
-        ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_dPower_Wind_TechnicalDetails)
+        ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
+        ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
+        ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
     ]
 
     for excel_definition_id, file_path, read, write in combinations:
