@@ -29,12 +29,6 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
     # Drop helper column
     df = df.drop(columns=['MaxProd'])
 
-    # Ensure required metadata columns
-    meta_cols = ['dataPackage', 'dataSource', 'id', 'scenario']
-    for col in meta_cols:
-        if col not in df.columns:
-            df[col] = vresProfiles_df[col].iloc[0]
-
     # Restore index structure (rp, k, g)
     df = df.set_index(['rp', 'k', 'g'])
 
