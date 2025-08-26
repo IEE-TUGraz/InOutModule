@@ -10,7 +10,7 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
     - vres_df: contains generator technical data, including 'MaxProd'.
     - vresProfiles_df: existing VRES profiles (indexed by rp, k, g).
     """
-    df = inflows_df.reset_index()
+    df = inflows_df.copy()
 
     # Prepare vres_df with ['g','MaxProd']
     vres_tmp = vres_df.reset_index()[['g', 'MaxProd']]
