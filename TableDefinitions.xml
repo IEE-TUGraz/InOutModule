@@ -691,9 +691,9 @@
         </Column>
         <Column id="PowerFactor">
             <ReadableName>Power Factor</ReadableName>
-            <Description>Power Factor for the given Year</Description>
+            <Description>Power Factor for this unit, correcting for maintenance, terrain specifics, etc.</Description>
             <Unit>[0, n]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
+            <ColumnWidth>25.0</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </Column>
         <Column id="pPmax">
