@@ -82,7 +82,7 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
     return df
 
 
-def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Data_Packages(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dData_Packages data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -98,7 +98,7 @@ def get_dData_Packages(excel_file_path: str, keep_excluded_entries: bool = False
     return dData_Packages
 
 
-def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Data_Sources(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dData_Sources data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -114,7 +114,7 @@ def get_dData_Sources(excel_file_path: str, keep_excluded_entries: bool = False,
     return dData_Sources
 
 
-def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Global_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dGlobal_Scenarios data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -132,7 +132,7 @@ def get_dGlobal_Scenarios(excel_file_path: str, keep_excluded_entries: bool = Fa
     return dGlobal_Scenarios
 
 
-def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_BusInfo data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -145,7 +145,7 @@ def get_dPower_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_BusInfo
 
 
-def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_Demand(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Demand data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -161,7 +161,7 @@ def get_dPower_Demand(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Demand
 
 
-def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Hindex data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -177,7 +177,7 @@ def get_dPower_Hindex(excel_file_path: str, keep_excluded_entries: bool = False,
     return dPower_Hindex
 
 
-def get_dPower_Inflows(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_Inflows(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Inflows data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -193,7 +193,7 @@ def get_dPower_Inflows(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_Inflows
 
 
-def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_Network(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Network data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -206,7 +206,7 @@ def get_dPower_Network(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_Network
 
 
-def get_dPower_Storage(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_Storage(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_Storage data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -219,7 +219,7 @@ def get_dPower_Storage(excel_file_path: str, keep_excluded_entries: bool = False
     return dPower_Storage
 
 
-def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_ThermalGen data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -232,7 +232,7 @@ def get_dPower_ThermalGen(excel_file_path: str, keep_excluded_entries: bool = Fa
     return dPower_ThermalGen
 
 
-def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_VRES(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_VRES data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -245,7 +245,7 @@ def get_dPower_VRES(excel_file_path: str, keep_excluded_entries: bool = False, f
     return dPower_VRES
 
 
-def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_VRESProfiles data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -261,7 +261,7 @@ def get_dPower_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = 
     return dPower_VRESProfiles
 
 
-def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_WeightsK data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -277,7 +277,7 @@ def get_dPower_WeightsK(excel_file_path: str, keep_excluded_entries: bool = Fals
     return dPower_WeightsK
 
 
-def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+def get_Power_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_WeightsRP data from the Excel file.
     :param excel_file_path: Path to the Excel file
@@ -291,6 +291,19 @@ def get_dPower_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fal
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_WeightsRP
+
+
+def get_Power_Wind_TechnicalDetails(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Wind_TechnicalDetails data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Wind_TechnicalDetails
+    """
+    dPower_Wind_TechnicalDetails = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dPower_Wind_TechnicalDetails
 
 
 def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False) -> bool:
