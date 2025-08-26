@@ -14,14 +14,14 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
 
     # Prepare vres_df with ['g','MaxProd']
     vres_tmp = vres_df.reset_index()[['g', 'MaxProd']]
-    maxprod = (
-        vres_tmp.drop_duplicates('g')
-        .set_index('g')['MaxProd']
-        .astype(float)
-    )
+
+    if vres_tmp['g'].duplicated().any():
+        raise ValueError("Duplicated generator found in Power_VRES.")
+
+    maxProd = vres_tmp.set_index('g')['MaxProd'].astype(float)
 
     # Merge MaxProd into inflows
-    df = df.merge(maxprod, on='g', how='left')
+    df = df.merge(maxProd, on='g', how='left')
 
     # Divide inflow value by MaxProd
     df['value'] = df['value'] / df['MaxProd'].replace(0, np.nan)
@@ -50,17 +50,17 @@ def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFram
 
     # Prepare vres_df with ['g','MaxProd']
     vres_tmp = vres_df.reset_index()[['g', 'MaxProd']]
-    maxprod = (
-        vres_tmp.drop_duplicates('g')
-        .set_index('g')['MaxProd']
-        .astype(float)
-    )
+
+    if vres_tmp['g'].duplicated().any():
+        raise ValueError("Duplicated generator found in Power_VRES.")
+
+    maxProd = vres_tmp.set_index('g')['MaxProd'].astype(float)
 
     # Keep only inflow generators
     df = df[df['g'].isin(inflow_generators)]
 
     # Merge MaxProd
-    df = df.merge(maxprod, on='g', how='left')
+    df = df.merge(maxProd, on='g', how='left')
 
     # Multiply capacity factor by MaxProd
     df['value'] = df['value'] * df['MaxProd']
