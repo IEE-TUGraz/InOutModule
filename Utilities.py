@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 
@@ -20,17 +19,17 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
 
     maxProd = vres_tmp.set_index('g')['MaxProd'].astype(float)
 
-    # Merge MaxProd into inflows
-    df = df.merge(maxProd, on='g', how='left')
+    # Join MaxProd into inflows
+    df = df.join(maxProd, on='g', how='left')
+
+    if df['MaxProd'].isna().any() or (df['MaxProd'] == 0).any():
+        raise ValueError("MaxProd is missing or zero for some generators in inflows.")
 
     # Divide inflow value by MaxProd
-    df['value'] = df['value'] / df['MaxProd'].replace(0, np.nan)
+    df['value'] = df['value'] / df['MaxProd']
 
     # Drop helper column
     df = df.drop(columns=['MaxProd'])
-
-    # Restore index structure (rp, k, g)
-    df = df.set_index(['rp', 'k', 'g'])
 
     return pd.concat([vresProfiles_df, df], axis=0).sort_index(level="k")
 
@@ -59,8 +58,11 @@ def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFram
     # Keep only inflow generators
     df = df[df['g'].isin(inflow_generators)]
 
-    # Merge MaxProd
-    df = df.merge(maxProd, on='g', how='left')
+    # Join MaxProd
+    df = df.join(maxProd, on='g', how='left')
+
+    if df['MaxProd'].isna().any() or (df['MaxProd'] == 0).any():
+        raise ValueError("MaxProd is missing or zero for some generators in inflows.")
 
     # Multiply capacity factor by MaxProd
     df['value'] = df['value'] * df['MaxProd']
