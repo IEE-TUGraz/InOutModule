@@ -866,9 +866,9 @@
         </Column>
         <Column id="YearlyProd">
             <ReadableName>Yearly Production</ReadableName>
-            <Description>Yearly production for calibration</Description>
+            <Description>Yearly production for calibration (i.e., used to calculate Power Factor if it's not specified yet)</Description>
             <Unit>[MW/h]</Unit>
-            <ColumnWidth>18.0</ColumnWidth>
+            <ColumnWidth>28.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="z">
