@@ -82,8 +82,13 @@ def get_VRES_profiles(file_path: str, settings: dict) -> pd.DataFrame:
     nominal_power = settings["VRES_profiles"]["nominal_power"]
     df_PV["value"] = df_PV["value"] / nominal_power
 
+    # get the minimum value
+    #print(df_PV["value"].min())
 
-    df_PV_sum = aggregate_TS(settings, df_PV)
+    # set negative values to zero
+    df_PV["value"] = df_PV["value"].clip(lower=0)
+
+    df_PV_sum = aggregate_TS(settings, df_PV, "mean")
 
     # get the number of elements
     num_elements = df_PV_sum["value"].count()
@@ -95,11 +100,17 @@ def get_VRES_profiles(file_path: str, settings: dict) -> pd.DataFrame:
 
     return df_VRES_profiles
 
-def aggregate_TS(settings, df_PV):
+def aggregate_TS(settings, df_PV, type: str = "mean"):
     if settings["aggregation"]["enabled"]:
         # aggregate each steps
         df_PV["invervall_group"] = df_PV.index // settings["aggregation"]["intervall"]
-        df_PV_sum = df_PV.groupby("invervall_group", as_index=False)["value"].mean()
+
+        if type == "mean":
+            df_PV_sum = df_PV.groupby("invervall_group", as_index=False)["value"].mean()
+        elif type == "sum":
+            df_PV_sum = df_PV.groupby("invervall_group", as_index=False)["value"].sum()
+        else:
+            raise ValueError(f"Unknown aggregation type: {type}")
 
         # delete last element
         df_PV_sum = df_PV_sum.iloc[:-1]
@@ -113,13 +124,17 @@ def get_dPower_Demand(file_path: str, settings: dict) -> pd.DataFrame:
     df_demand = df_raw[[settings["power_demand"]["column"]]].copy()
     df_demand.columns = ["value"]
 
-    df_demand_sum = aggregate_TS(settings, df_demand)
+    # calc total demand 
+    total_demand = df_demand["value"].sum() / 60 / 1000  # in MWh
+    print(f"Total demand in the raw data: {total_demand} MWh")
+
+    df_demand_sum = aggregate_TS(settings, df_demand, "mean")
 
     num_elements = df_demand_sum["value"].count()
 
     df_power_demand = build_dummy_df(settings, num_elements, "i", "Node_1")
 
-    df_power_demand.loc[:, "value"] = df_demand_sum["value"].values
+    df_power_demand.loc[:, "value"] = df_demand_sum["value"].values * 1e-3      # calculate the demand in MW (raw data in kW)
 
     return df_power_demand
 
@@ -139,12 +154,12 @@ def create_imp_exp_data(length: int) -> pd.DataFrame:
 
     # --- Initialize DataFrame ---
     df_imp_exp = pd.DataFrame({
-        "ImpExp": 1000,
-        "Price": 50,
+        "ImpExp": 0.8,
+        "Price": 40,
         "scenario": scenario_default,
     }, index=multi_index)
 
-    df_imp_exp.loc[("External_Grid", "rp01", "k0013"), "ImpExp"] = -500
+    #df_imp_exp.loc[("External_Grid", "rp01", "k0013"), "ImpExp"] = -0.8
     
     return df_imp_exp
 
@@ -205,16 +220,16 @@ if __name__ == "__main__":
     settings = read_data_settings(os.path.join(data_folder, "DataSettings.yaml"))
     #print(settings)
 
-    #df_demand = get_dPower_Demand(data_folder, settings)
+    df_demand = get_dPower_Demand(data_folder, settings)
     #print(df_demand.head(35))
 
-    import ExcelReader
+    #import ExcelReader
 
-    path = os.path.join("data", "rings_base_example")
-    df_k = ExcelReader.get_dPower_WeightsK(os.path.join(path, "Power_WeightsK.xlsx"))
-    df_hindex = ExcelReader.get_dPower_Hindex(os.path.join(path, "Power_Hindex.xlsx"))
+    #path = os.path.join("data", "rings_base_example")
+    #df_k = ExcelReader.get_dPower_WeightsK(os.path.join(path, "Power_WeightsK.xlsx"))
+    #df_hindex = ExcelReader.get_dPower_Hindex(os.path.join(path, "Power_Hindex.xlsx"))
 
-    print(df_k.head(24))
+    #print(df_k.head(24))
 
-    df_test = create_kWeights(24)
-    print(df_test.head(24))
+    #df_test = create_kWeights(24)
+    #print(df_test.head(24))
