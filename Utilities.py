@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def inflowsToCapacityFactor(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vresProfiles_df: pd.DataFrame) -> pd.DataFrame:
+def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vresProfiles_df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert inflows to capacity factors and concat them to vresProfiles_df.
 
@@ -41,7 +41,7 @@ def inflowsToCapacityFactor(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vre
     return pd.concat([vresProfiles_df, df], axis=0).sort_index(level="k")
 
 
-def capacityFactorToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFrame, inflows_df: pd.DataFrame) -> pd.DataFrame:
+def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFrame, inflows_df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert capacity factors in vresProfiles_df back to inflows.
 
