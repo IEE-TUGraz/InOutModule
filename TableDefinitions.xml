@@ -843,6 +843,13 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="Year">
+            <ReadableName>Year</ReadableName>
+            <Description>Year of the Yearly Production that is given</Description>
+            <Unit>[0, n]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="YearCom">
             <ReadableName>Commission Year</ReadableName>
             <Description>Year where it is commissioned (1.1.xxxx)</Description>
@@ -856,13 +863,6 @@
             <Unit>[Year]</Unit>
             <ColumnWidth>19.5</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
-        </Column>
-        <Column id="Year">
-            <ReadableName>Year</ReadableName>
-            <Description>Year</Description>
-            <Unit>[0, n]</Unit>
-            <ColumnWidth>18.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
         </Column>
         <Column id="YearlyProd">
             <ReadableName>Yearly Production</ReadableName>
