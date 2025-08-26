@@ -20,12 +20,18 @@ printer = Printer.getInstance()
 
 
 class ExcelWriter:
-    def __init__(self, excel_definitions_path: str = "TableDefinitions.xml"):
+    def __init__(self, excel_definitions_path: str = None):
         """
         Initialize the ExcelWriter with the XML root element.
 
         :param excel_definitions_path: Path to the TableDefinitions.xml file.
         """
+        if excel_definitions_path is None:
+            from pathlib import Path
+            excel_definitions_path = str(Path(__file__).parent / "TableDefinitions.xml")
+
+            if not Path(excel_definitions_path).exists():
+                raise FileNotFoundError(f"TableDefinitions.xml not found at {excel_definitions_path}")
 
         self.excel_definitions_path = excel_definitions_path
         self.xml_tree = ET.parse(excel_definitions_path)
