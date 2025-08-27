@@ -76,6 +76,20 @@
                 <PivotColumn id="demand_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Power_Demand_KInRows">
+            <Version>v0.1.2</Version>
+            <TableHeader>Power - Demand</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="demand_by_node" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_Hindex">
             <Version>v0.1.2</Version>
             <TableHeader>Power - Relation among periods and representative periods</TableHeader>
@@ -245,6 +259,20 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
                 <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_VRESProfiles_KInRows">
+            <Version>v0.1.0</Version>
+            <TableHeader>Power - Variable Renewable Energy Sources Profiles</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="capacity_by_g" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_Wind_TechnicalDetails">
@@ -896,10 +924,26 @@
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
+        <PivotColumn id="capacity_by_g">
+            <ReadableName/>
+            <DatabaseName>g</DatabaseName>
+            <Description>Capacity factor for each VRES unit at this generator g</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </PivotColumn>
         <PivotColumn id="demand_by_k">
             <ReadableName/>
             <DatabaseName>k</DatabaseName>
             <Description>Demand at node for representative hour k</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="demand_by_node">
+            <ReadableName/>
+            <DatabaseName>i</DatabaseName>
+            <Description>Demand at node at node i</Description>
             <Unit>[MWh]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
