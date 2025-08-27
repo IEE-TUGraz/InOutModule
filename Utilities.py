@@ -34,13 +34,14 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
     return pd.concat([vresProfiles_df, df], axis=0)
 
 
-def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFrame, inflows_df: pd.DataFrame) -> pd.DataFrame:
+def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFrame, inflows_df: pd.DataFrame, remove_Inflows_from_VRESProfiles_inplace: bool = False) -> pd.DataFrame:
     """
     Convert capacity factors in vresProfiles_df back to inflows.
 
     - vresProfiles_df: DataFrame with capacity factors (indexed by rp, k, g).
     - vres_df: DataFrame containing generator technical data, including 'MaxProd'.
     - inflows_df: template inflows DataFrame (used to filter only those generators that are inflow-based).
+    - remove_Inflows_from_VRESProfiles_inplace: if True, remove inflow generators from the original vresProfiles_df.
     """
     df = vresProfiles_df.reset_index()
 
@@ -69,5 +70,10 @@ def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFram
 
     # Drop helper column
     df = df.drop(columns=['MaxProd'])
+
+    # Remove inflow generators from vresProfiles_df after calculation if requested
+    if remove_Inflows_from_VRESProfiles_inplace:
+        mask = ~vresProfiles_df.index.get_level_values('g').isin(inflow_generators)
+        vresProfiles_df.drop(vresProfiles_df.index[~mask], inplace=True)
 
     return df.set_index(['rp', 'k', 'g']).sort_index(level="k")
