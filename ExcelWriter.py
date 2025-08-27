@@ -421,7 +421,7 @@ if __name__ == "__main__":
         ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
         ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_VRES),
         ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_VRESProfiles),
-        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows(), ew.write_VRESProfiles_KInRows),
+        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_VRESProfiles_KInRows),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
         ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)

@@ -14,6 +14,7 @@ combinations = [
     ("Global_Scenarios", f"{case_study_folder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_Global_Scenarios),
     ("Power_BusInfo", f"{case_study_folder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
     ("Power_Demand", f"{case_study_folder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
+    ("Power_Demand_KInRows", f"{case_study_folder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
     ("Power_Hindex", f"{case_study_folder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
     ("Power_Inflows", f"{case_study_folder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
     ("Power_Network", f"{case_study_folder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
@@ -21,6 +22,7 @@ combinations = [
     ("Power_ThermalGen", f"{case_study_folder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
     ("Power_VRES", f"{case_study_folder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_VRES),
     ("Power_VRESProfiles", f"{case_study_folder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_VRESProfiles),
+    ("Power_VRESProfiles_KInRows", f"{case_study_folder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_VRESProfiles_KInRows),
     ("Power_WeightsK", f"{case_study_folder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
     ("Power_WeightsRP", f"{case_study_folder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
     ("Power_Wind_TechnicalDetails", f"{case_study_folder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
