@@ -602,8 +602,8 @@ class CaseStudy:
 
         # Adjust Demand
         adjusted_demand = []
-        for i, _ in caseStudy.dPower_BusInfo.iterrows():
-            for h, row in caseStudy.dPower_Hindex.iterrows():
+        for i in caseStudy.dPower_BusInfo.index:
+            for h in caseStudy.dPower_Hindex.index:
                 adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"], "ScenarioA", None, None, None])
 
         caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value", "scenario", "id", "dataPackage", "dataSource"])
@@ -615,7 +615,7 @@ class CaseStudy:
             caseStudy.dPower_VRESProfiles.sort_index(inplace=True)
             for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
                 if len(caseStudy.dPower_VRESProfiles.loc[:, :, g]) > 0:  # Check if VRESProfiles has entries for g
-                    for h, row in caseStudy.dPower_Hindex.iterrows():
+                    for h in caseStudy.dPower_Hindex.index:
                         adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
 
             caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
@@ -623,7 +623,7 @@ class CaseStudy:
 
         # Adjust Hindex
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
-        for i, row in caseStudy.dPower_Hindex.iterrows():
+        for i in caseStudy.dPower_Hindex.index:
             caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None, "ScenarioA"
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
 
