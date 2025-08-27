@@ -68,31 +68,30 @@ class CaseStudy:
             self.dPower_BusInfo = dPower_BusInfo
         else:
             self.power_businfo_file = power_businfo_file
-            self.dPower_BusInfo = ExcelReader.get_dPower_BusInfo(self.data_folder + self.power_businfo_file)
+            self.dPower_BusInfo = ExcelReader.get_Power_BusInfo(self.data_folder + self.power_businfo_file)
 
         if dPower_Network is not None:
             self.dPower_Network = dPower_Network
         else:
             self.power_network_file = power_network_file
-            self.dPower_Network = ExcelReader.get_dPower_Network(self.data_folder + self.power_network_file)
+            self.dPower_Network = ExcelReader.get_Power_Network(self.data_folder + self.power_network_file)
 
         if dPower_Demand is not None:
             self.dPower_Demand = dPower_Demand
         else:
             self.power_demand_file = power_demand_file
-            self.dPower_Demand = ExcelReader.get_dPower_Demand(self.data_folder + self.power_demand_file)
+            self.dPower_Demand = ExcelReader.get_Power_Demand(self.data_folder + self.power_demand_file)
 
         if dPower_Hindex is not None:
             self.dPower_Hindex = dPower_Hindex
         else:
             self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.data_folder + self.power_hindex_file)
+            self.dPower_Hindex = ExcelReader.get_Power_Hindex(self.data_folder + self.power_hindex_file)
 
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
             self.power_weightsrp_file = power_weightsrp_file
-
             # Calculate dPower_WeightsRP from Hindex
             dPower_WeightsRPs = []
             for scenario in self.dPower_Hindex['scenario'].unique().tolist():
@@ -111,7 +110,7 @@ class CaseStudy:
             dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
 
             if os.path.exists(self.data_folder + self.power_weightsrp_file):  # Compare with given file if it exists
-                self.dPower_WeightsRP = ExcelReader.get_dPower_WeightsRP(self.data_folder + self.power_weightsrp_file)
+                self.dPower_WeightsRP = ExcelReader.get_Power_WeightsRP(self.data_folder + self.power_weightsrp_file)
 
                 calculated = dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
                 fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
@@ -125,13 +124,13 @@ class CaseStudy:
             self.dPower_WeightsK = dPower_WeightsK
         else:
             self.power_weightsk_file = power_weightsk_file
-            self.dPower_WeightsK = ExcelReader.get_dPower_WeightsK(self.data_folder + self.power_weightsk_file)
+            self.dPower_WeightsK = ExcelReader.get_Power_WeightsK(self.data_folder + self.power_weightsk_file)
 
         if dPower_Hindex is not None:
             self.dPower_Hindex = dPower_Hindex
         else:
             self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_dPower_Hindex(self.data_folder + self.power_hindex_file)
+            self.dPower_Hindex = ExcelReader.get_Power_Hindex(self.data_folder + self.power_hindex_file)
 
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices()
 
@@ -140,34 +139,34 @@ class CaseStudy:
                 self.dPower_ThermalGen = dPower_ThermalGen
             else:
                 self.power_thermalgen_file = power_thermalgen_file
-                self.dPower_ThermalGen = ExcelReader.get_dPower_ThermalGen(self.data_folder + self.power_thermalgen_file)
+                self.dPower_ThermalGen = ExcelReader.get_Power_ThermalGen(self.data_folder + self.power_thermalgen_file)
 
         if self.dPower_Parameters["pEnableVRES"]:
             if dPower_VRES is not None:
                 self.dPower_VRES = dPower_VRES
             else:
                 self.power_vres_file = power_vres_file
-                self.dPower_VRES = ExcelReader.get_dPower_VRES(self.data_folder + self.power_vres_file)
+                self.dPower_VRES = ExcelReader.get_Power_VRES(self.data_folder + self.power_vres_file)
 
             if dPower_VRESProfiles is not None:
                 self.dPower_VRESProfiles = dPower_VRESProfiles
             elif os.path.isfile(self.data_folder + power_vresprofiles_file):
                 self.power_vresprofiles_file = power_vresprofiles_file
-                self.dPower_VRESProfiles = ExcelReader.get_dPower_VRESProfiles(self.data_folder + self.power_vresprofiles_file)
+                self.dPower_VRESProfiles = ExcelReader.get_Power_VRESProfiles(self.data_folder + self.power_vresprofiles_file)
 
         if self.dPower_Parameters["pEnableStorage"]:
             if dPower_Storage is not None:
                 self.dPower_Storage = dPower_Storage
             else:
                 self.power_storage_file = power_storage_file
-                self.dPower_Storage = ExcelReader.get_dPower_Storage(self.data_folder + self.power_storage_file)
+                self.dPower_Storage = ExcelReader.get_Power_Storage(self.data_folder + self.power_storage_file)
 
         if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
             if dPower_Inflows is not None:
                 self.dPower_Inflows = dPower_Inflows
             elif os.path.isfile(self.data_folder + power_inflows_file):
                 self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = ExcelReader.get_dPower_Inflows(self.data_folder + self.power_inflows_file)
+                self.dPower_Inflows = ExcelReader.get_Power_Inflows(self.data_folder + self.power_inflows_file)
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             if dPower_ImpExpHubs is not None:

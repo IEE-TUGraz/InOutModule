@@ -248,6 +248,41 @@
                 <PivotColumn id="capacity_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Power_Wind_TechnicalDetails">
+            <Version>v0.1.0</Version>
+            <TableHeader>Power - Wind Technical Details</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="g" scenarioDependent="False"/>
+                <Column id="tec" scenarioDependent="False"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="EnableInvest" scenarioDependent="True"/>
+                <Column id="MaxInvest" scenarioDependent="True"/>
+                <Column id="InvestCost" scenarioDependent="True"/>
+                <Column id="OMVarCost" scenarioDependent="True"/>
+                <Column id="FirmCapCoef" scenarioDependent="True"/>
+                <Column id="Qmax" scenarioDependent="True"/>
+                <Column id="Qmin" scenarioDependent="True"/>
+                <Column id="InertiaConst" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <Column id="HubHeight" scenarioDependent="True"/>
+                <Column id="Vmin" scenarioDependent="True"/>
+                <Column id="Vrated" scenarioDependent="True"/>
+                <Column id="Vmax" scenarioDependent="True"/>
+                <Column id="PowerFactor" scenarioDependent="True"/>
+                <Column id="Year" scenarioDependent="True"/>
+                <Column id="YearlyProd" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_WeightsK">
             <Version>v0.1.3</Version>
             <TableHeader>Power - Weights of representative hours</TableHeader>
@@ -393,6 +428,13 @@
             <ReadableName>Generator</ReadableName>
             <Description>Generator/Unit name</Description>
             <Unit>[g]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="HubHeight">
+            <ReadableName>Hub Height</ReadableName>
+            <Description>Heigth of the turbine</Description>
+            <Unit>[m]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
@@ -648,6 +690,13 @@
             <ColumnWidth>17.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
+        <Column id="PowerFactor">
+            <ReadableName>Power Factor</ReadableName>
+            <Description>Power Factor for this unit, correcting for maintenance, terrain specifics, etc.</Description>
+            <Unit>[0, n]</Unit>
+            <ColumnWidth>25.0</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </Column>
         <Column id="pPmax">
             <ReadableName>Pmax</ReadableName>
             <Description>Maximum active power transfer</Description>
@@ -774,6 +823,34 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="Vmax">
+            <ReadableName>Vmax</ReadableName>
+            <Description>Cut-out wind speed</Description>
+            <Unit>[m/s]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="Vmin">
+            <ReadableName>Vmin</ReadableName>
+            <Description>Cut-in wind speed</Description>
+            <Unit>[m/s]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="Vrated">
+            <ReadableName>Vrated</ReadableName>
+            <Description>Rated wind speed</Description>
+            <Unit>[m/s]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="Year">
+            <ReadableName>Year</ReadableName>
+            <Description>Year of the Yearly Production that is given</Description>
+            <Unit>[0, n]</Unit>
+            <ColumnWidth>19.5</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="YearCom">
             <ReadableName>Commission Year</ReadableName>
             <Description>Year where it is commissioned (1.1.xxxx)</Description>
@@ -787,6 +864,13 @@
             <Unit>[Year]</Unit>
             <ColumnWidth>19.5</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
+        </Column>
+        <Column id="YearlyProd">
+            <ReadableName>Yearly Production</ReadableName>
+            <Description>Yearly production for calibration (i.e., used to calculate Power Factor if it's not specified yet)</Description>
+            <Unit>[MW/h]</Unit>
+            <ColumnWidth>28.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
         <Column id="z">
             <ReadableName>Zone</ReadableName>
