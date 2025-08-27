@@ -31,7 +31,7 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
     # Drop helper column
     df = df.drop(columns=['MaxProd'])
 
-    return pd.concat([vresProfiles_df, df], axis=0).sort_index(level="k")
+    return pd.concat([vresProfiles_df, df], axis=0)
 
 
 def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFrame, inflows_df: pd.DataFrame) -> pd.DataFrame:
