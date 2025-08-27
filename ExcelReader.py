@@ -153,7 +153,7 @@ def get_Power_Demand(excel_file_path: str, keep_excluded_entries: bool = False, 
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_Demand
     """
-    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+    dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.3", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
@@ -169,7 +169,7 @@ def get_Power_Demand_KInRows(excel_file_path: str, keep_excluded_entries: bool =
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_Demand_KInRows
     """
-    dPower_Demand_KInRows = __read_pivoted_file(excel_file_path, "v0.1.2", ['rp', 'k', 'i'], 'i', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+    dPower_Demand_KInRows = __read_pivoted_file(excel_file_path, "v0.1.3", ['rp', 'k', 'i'], 'i', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand_KInRows', although nothing is excluded anyway - please check if this is intended.")
@@ -230,7 +230,7 @@ def get_Power_Storage(excel_file_path: str, keep_excluded_entries: bool = False,
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_Storage
     """
-    dPower_Storage = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
+    dPower_Storage = __read_non_pivoted_file(excel_file_path, "v0.0.2", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
 
     return dPower_Storage
 
