@@ -319,6 +319,15 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRESProfiles, folder_path, "Power_VRESProfiles")
 
+    def write_VRESProfiles_KInRows(self, dPower_VRESProfiles_KInRows: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_VRESProfiles_KInRows DataFrame to an Excel file in LEGO format.
+        :param dPower_VRESProfiles_KInRows: DataFrame containing the dPower_VRESProfiles_KInRows data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_VRESProfiles_KInRows, folder_path, "Power_VRESProfiles_KInRows")
+
     def write_Power_WeightsK(self, dPower_WeightsK: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_WeightsK DataFrame to an Excel file in LEGO format.
@@ -412,6 +421,7 @@ if __name__ == "__main__":
         ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
         ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_VRES),
         ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_VRESProfiles),
+        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows(), ew.write_VRESProfiles_KInRows),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
         ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
