@@ -73,7 +73,7 @@ def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFram
 
     # Remove inflow generators from vresProfiles_df after calculation if requested
     if remove_Inflows_from_VRESProfiles_inplace:
-        mask = ~vresProfiles_df.index.get_level_values('g').isin(inflow_generators)
-        vresProfiles_df.drop(vresProfiles_df.index[~mask], inplace=True)
+        mask = vresProfiles_df.index.get_level_values('g').isin(inflow_generators)
+        vresProfiles_df.drop(vresProfiles_df.index[mask], inplace=True)
 
     return df.set_index(['rp', 'k', 'g']).sort_index(level="k")
