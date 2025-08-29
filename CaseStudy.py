@@ -600,6 +600,12 @@ class CaseStudy:
         """
         caseStudy = self.copy() if not inplace else self
 
+        # First Adjustment of Hindex (important if the case study was filtered before, to get a coherent p-index)
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
+        for i in caseStudy.dPower_Hindex.index:
+            caseStudy.dPower_Hindex.loc[i, "p"] = f"h{i + 1:0>4}"
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+
         # Adjust Demand
         adjusted_demand = []
         for i in caseStudy.dPower_BusInfo.index:
@@ -631,7 +637,7 @@ class CaseStudy:
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.reset_index()
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.drop(caseStudy.dPower_WeightsK.index)
         for i in range(len(caseStudy.dPower_Hindex)):
-            caseStudy.dPower_WeightsK.loc[i] = f"k{i + 1:0>4}", None, 1, None, None, "ScenarioA"
+            caseStudy.dPower_WeightsK.loc[i] = f"{caseStudy.dPower_Hindex.index[i][2]}", None, 1, None, None, "ScenarioA"
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.set_index("k")
 
         # Adjust WeightsRP
