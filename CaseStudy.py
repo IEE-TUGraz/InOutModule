@@ -33,7 +33,8 @@ class CaseStudy:
                  power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
                  power_impexphubs_file: str = "Power_ImpExpHubs.xlsx", dPower_ImpExpHubs: pd.DataFrame = None,
-                 power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None):
+                 power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None,
+                 clip_method: str = "none", clip_value: float = 0):
         self.data_folder = data_folder if data_folder.endswith("/") else data_folder + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
@@ -132,7 +133,7 @@ class CaseStudy:
             self.power_hindex_file = power_hindex_file
             self.dPower_Hindex = ExcelReader.get_Power_Hindex(self.data_folder + self.power_hindex_file)
 
-        self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices()
+        self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
         if self.dPower_Parameters["pEnableThermalGen"]:
             if dPower_ThermalGen is not None:
@@ -569,7 +570,7 @@ class CaseStudy:
             self.dPower_VRESProfiles.sort_index(inplace=True)
 
     # Create transition matrix from Hindex
-    def get_rpTransitionMatrices(self):
+    def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         rps = sorted(self.dPower_Hindex.index.get_level_values('rp').unique().tolist())
         ks = sorted(self.dPower_Hindex.index.get_level_values('k').unique().tolist())
         rpTransitionMatrixAbsolute = pd.DataFrame(0, index=rps, columns=rps)  # Initialize with zeros
@@ -582,6 +583,27 @@ class CaseStudy:
         for rp in hindex_rps:
             rpTransitionMatrixAbsolute.at[previous_rp, rp] += 1
             previous_rp = rp
+
+        # Clip according to selected method
+        match clip_method:
+            case "none":
+                pass
+            case "absolute_count":  # Get 'clip_value' highest values of each row of the transition matrix, set all others to 0
+                if int(clip_value) != clip_value or clip_value < 0:
+                    raise ValueError(f"For 'absolute_count', clip_value must be a non-negative integer, not {clip_value}.")
+                for rp in rps:
+                    threshold = rpTransitionMatrixAbsolute.loc[rp].nlargest(int(clip_value)).min()
+                    if (rpTransitionMatrixAbsolute.loc[rp] == threshold).sum() > 1:
+                        printer.warning(f"For rp {rp}, there are multiple values with the same value as the threshold ({threshold}). This means that more than {clip_value} values are kept.")
+                    rpTransitionMatrixAbsolute.loc[rp, rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
+            case "relative_to_highest":  # Get all values that are at least 'clip_value' * 100 % of the highest value of each row of the transition matrix, set all others to 0
+                if clip_value < 0 or clip_value > 1:
+                    raise ValueError(f"For 'relative_to_highest', clip_value must be between 0 and 1, not {clip_value}.")
+                for rp in rps:
+                    threshold = rpTransitionMatrixAbsolute.loc[rp].max() * clip_value
+                    rpTransitionMatrixAbsolute.loc[rp][rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
+            case _:
+                raise ValueError(f"clip_method must be either 'none', 'absolute_count' or 'relative_to_highest', not {clip_method}.")
 
         # Calculate relative transition matrix (nerd info: for the sum, the axis is irrelevant, as there are the same number of transitions to an rp as there are transitions from an rp away. For the division however, the axis matters)
         rpTransitionMatrixRelativeTo = rpTransitionMatrixAbsolute.div(rpTransitionMatrixAbsolute.sum(axis=1), axis=0)  # Sum of probabilities is 1 for r -> all others
