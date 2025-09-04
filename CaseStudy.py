@@ -401,6 +401,7 @@ class CaseStudy:
 
     def merge_single_node_buses(self):
         # Create a connection matrix
+        # TODO check
         connectionMatrix = pd.DataFrame(index=self.dPower_BusInfo.index, columns=[self.dPower_BusInfo.index], data=False)
 
         for index, entry in self.dPower_Network.iterrows():
@@ -648,3 +649,41 @@ class CaseStudy:
             caseStudy._filter_dataframe("dPower_ImpExpProfiles", scenario_name)
 
         return caseStudy
+
+    def filter_timesteps(self, start: str, end: str) -> Self:
+        case_study = self.copy()
+
+        df_names = ["dPower_Demand", "dPower_VRESProfiles", "dPower_WeightsK", "dPower_Hindex"]
+
+        for df_name in df_names:
+            df = getattr(case_study, df_name)
+
+            index = df.index.names
+            df_reset = df.reset_index()
+
+            filtered_df_reset = df_reset.loc[(df_reset['k'] >= start) & (df_reset['k'] <= end)]
+
+            filtered_df = filtered_df_reset.set_index(index)
+
+            setattr(case_study, df_name, filtered_df)
+
+        return case_study
+
+    def filter_representative_periods(self, rp: str) -> Self:
+        case_study = self.copy()
+
+        df_names = ["dPower_Demand", "dPower_VRESProfiles", "dPower_WeightsRP", "dPower_Hindex"]
+
+        for df_name in df_names:
+            df = getattr(case_study, df_name)
+
+            index = df.index.names
+            df_reset = df.reset_index()
+
+            filtered_df_reset = df_reset.loc[(df_reset['rp'] == rp)]
+
+            filtered_df = filtered_df_reset.set_index(index)
+
+            setattr(case_study, df_name, filtered_df)
+
+        return case_study
