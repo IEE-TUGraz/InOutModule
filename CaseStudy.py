@@ -642,9 +642,8 @@ class CaseStudy:
             adjusted_vresprofiles = []
             caseStudy.dPower_VRESProfiles.sort_index(inplace=True)
             for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
-                if len(caseStudy.dPower_VRESProfiles.loc[:, :, g]) > 0:  # Check if VRESProfiles has entries for g
-                    for h in caseStudy.dPower_Hindex.index:
-                        adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
+                for h in caseStudy.dPower_Hindex.index:
+                    adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
 
             caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
             caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
@@ -654,9 +653,8 @@ class CaseStudy:
             adjusted_inflows = []
             caseStudy.dPower_Inflows.sort_index(inplace=True)
             for g in caseStudy.dPower_Inflows.index.get_level_values('g').unique().tolist():
-                if len(caseStudy.dPower_Inflows.loc[:, g]) > 0:  # Check if Inflows has entries for g
-                    for h in caseStudy.dPower_Hindex.index:
-                        adjusted_inflows.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_Inflows.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
+                for h in caseStudy.dPower_Hindex.index:
+                    adjusted_inflows.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_Inflows.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
             caseStudy.dPower_Inflows = pd.DataFrame(adjusted_inflows, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
             caseStudy.dPower_Inflows = caseStudy.dPower_Inflows.set_index(["rp", "k", "g"])
 
