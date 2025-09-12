@@ -57,7 +57,7 @@ class CaseStudy:
 
                 self.dGlobal_Scenarios = dGlobal_Scenarios
             else:
-                self.dGlobal_Scenarios = ExcelReader.get_dGlobal_Scenarios(self.data_folder + self.global_scenarios_file)
+                self.dGlobal_Scenarios = ExcelReader.get_Global_Scenarios(self.data_folder + self.global_scenarios_file)
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
@@ -648,6 +648,17 @@ class CaseStudy:
 
             caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
             caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
+
+        # Adjust Inflows
+        if hasattr(caseStudy, "dPower_Inflows"):
+            adjusted_inflows = []
+            caseStudy.dPower_Inflows.sort_index(inplace=True)
+            for g in caseStudy.dPower_Inflows.index.get_level_values('g').unique().tolist():
+                if len(caseStudy.dPower_Inflows.loc[:, g]) > 0:  # Check if Inflows has entries for g
+                    for h in caseStudy.dPower_Hindex.index:
+                        adjusted_inflows.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_Inflows.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
+            caseStudy.dPower_Inflows = pd.DataFrame(adjusted_inflows, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
+            caseStudy.dPower_Inflows = caseStudy.dPower_Inflows.set_index(["rp", "k", "g"])
 
         # Adjust Hindex
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
