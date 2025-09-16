@@ -63,7 +63,7 @@
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_Demand">
-            <Version>v0.1.3</Version>
+            <Version>v0.1.4</Version>
             <TableHeader>Power - Demand</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
@@ -77,7 +77,7 @@
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_Demand_KInRows">
-            <Version>v0.1.3</Version>
+            <Version>v0.1.4</Version>
             <TableHeader>Power - Demand</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
             <Columns>
@@ -530,9 +530,9 @@
         </Column>
         <Column id="k">
             <ReadableName>k</ReadableName>
-            <Description>Representative hour within rp</Description>
+            <Description>Representative time step within rp</Description>
             <Unit>[k]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
+            <ColumnWidth>17.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="lastEdited">
@@ -932,18 +932,18 @@
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
-        <PivotColumn id="demand_by_k">
+        <PivotColumn id="demand_by_node">
             <ReadableName/>
-            <DatabaseName>k</DatabaseName>
-            <Description>Demand at node for representative hour k</Description>
+            <DatabaseName>i</DatabaseName>
+            <Description>Demand at this node i</Description>
             <Unit>[MW]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </PivotColumn>
-        <PivotColumn id="demand_by_node">
+        <PivotColumn id="demand_by_k">
             <ReadableName/>
-            <DatabaseName>i</DatabaseName>
-            <Description>Demand at node at node i</Description>
+            <DatabaseName>k</DatabaseName>
+            <Description>Demand at this representative time step k</Description>
             <Unit>[MW]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
