@@ -10,9 +10,28 @@ import ExcelReader
 
 
 class CaseStudy:
-    rpk_dependent_dataframes: list[str] = ["dPower_Demand", "dPower_Hindex", "dPower_ImpExpProfiles", "dPower_Inflows", "dPower_VRESProfiles"]
-    rp_dependent_dataframes: list[str] = rpk_dependent_dataframes + ["dPower_WeightsRP"]
-    k_dependent_dataframes: list[str] = rpk_dependent_dataframes + ["dPower_WeightsK"]
+    # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
+    rpk_dependent_dataframes: list[str] = ["dPower_Demand",
+                                           "dPower_Hindex",
+                                           "dPower_ImpExpProfiles",
+                                           "dPower_Inflows",
+                                           "dPower_VRESProfiles"]
+    rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
+    k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
+    non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
+                                                "dPower_ImpExpHubs",
+                                                "dPower_Network",
+                                                "dPower_Storage",
+                                                "dPower_ThermalGen",
+                                                "dPower_VRES"]
+    non_dependent_dataframes: list[str] = ["dGlobal_Parameters",
+                                           "dGlobal_Scenarios",
+                                           "dPower_Parameters"]
+
+    # Subsets and supersets of the above lists
+    rp_dependent_dataframes: list[str] = rpk_dependent_dataframes + rp_only_dependent_dataframes
+    k_dependent_dataframes: list[str] = rpk_dependent_dataframes + k_only_dependent_dataframes
+    scenario_dependent_dataframes: list[str] = rpk_dependent_dataframes + rp_only_dependent_dataframes + k_only_dependent_dataframes + non_time_dependent_dataframes
 
     def __init__(self,
                  data_folder: str,
@@ -603,55 +622,27 @@ class CaseStudy:
         else:
             return None
 
-    def _filter_dataframe(self, df_name: str, scenario_name: str) -> None:
-        """
-        Filters the dataframe with the given name to only include the scenario with the given name.
-        :param df_name: The name of the dataframe to filter.
-        :param scenario_name: The name of the scenario to filter for.
-        :return: None
-        """
-        if not hasattr(self, df_name):
-            raise ValueError(f"Dataframe '{df_name}' not found in the case study. Please check the input data.")
-        df = getattr(self, df_name)
-
-        filtered_df = df.loc[df['scenario'] == scenario_name]
-
-        if len(df) > 0 and len(filtered_df) == 0:
-            raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
-
-        setattr(self, df_name, filtered_df)
-
-    def filter_scenario(self, scenario_name) -> Self:
+    def filter_scenario(self, scenario_name, inplace: bool = False) -> Optional[Self]:
         """
         Filters each (relevant) dataframe in the case study to only include the scenario with the given name.
         :param scenario_name: The name of the scenario to filter for.
-        :return: Copy of the case study with the filtered dataframes.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
         """
-        caseStudy = self.copy()
+        caseStudy = self if inplace else self.copy()
 
-        # dGlobal_Parameters is not filtered, as it is the same for all scenarios
-        # dPower_Parameters is not filtered, as it is the same for all scenarios
-        caseStudy._filter_dataframe("dPower_BusInfo", scenario_name)
-        caseStudy._filter_dataframe("dPower_Network", scenario_name)
-        caseStudy._filter_dataframe("dPower_Demand", scenario_name)
-        caseStudy._filter_dataframe("dPower_WeightsRP", scenario_name)
-        caseStudy._filter_dataframe("dPower_WeightsK", scenario_name)
-        caseStudy._filter_dataframe("dPower_Hindex", scenario_name)
+        for df_name in CaseStudy.scenario_dependent_dataframes:
+            if hasattr(caseStudy, df_name):
+                df = getattr(self, df_name)
 
-        if hasattr(caseStudy, "dPower_ThermalGen"):
-            caseStudy._filter_dataframe("dPower_ThermalGen", scenario_name)
-        if hasattr(caseStudy, "dPower_Inflows"):
-            caseStudy._filter_dataframe("dPower_Inflows", scenario_name)
-        if hasattr(caseStudy, "dPower_VRES"):
-            caseStudy._filter_dataframe("dPower_VRES", scenario_name)
-            caseStudy._filter_dataframe("dPower_VRESProfiles", scenario_name)
-        if hasattr(caseStudy, "dPower_Storage"):
-            caseStudy._filter_dataframe("dPower_Storage", scenario_name)
-        if hasattr(caseStudy, "dPower_ImpExpHubs") and caseStudy.dPower_ImpExpHubs is not None:
-            caseStudy._filter_dataframe("dPower_ImpExpHubs", scenario_name)
-            caseStudy._filter_dataframe("dPower_ImpExpProfiles", scenario_name)
+                filtered_df = df.loc[df['scenario'] == scenario_name]
 
-        return caseStudy
+                if len(df) > 0 and len(filtered_df) == 0:
+                    raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
+
+                setattr(self, df_name, filtered_df)
+
+        return None if inplace else caseStudy
 
     def filter_timesteps(self, start: str, end: str, inplace: bool = False) -> Optional[Self]:
         """
