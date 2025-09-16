@@ -201,12 +201,28 @@ def get_Power_Inflows(excel_file_path: str, keep_excluded_entries: bool = False,
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_Inflows
     """
-    dPower_Inflows = __read_pivoted_file(excel_file_path, "v0.0.1", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+    dPower_Inflows = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_Inflows', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Inflows
+
+
+def get_Power_Inflows_KInRows(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Inflows_KInRows data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Inflows
+    """
+    dPower_Inflows_KInRows = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'g', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Inflows_KInRows', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_Inflows_KInRows
 
 
 def get_Power_Network(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:

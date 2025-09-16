@@ -274,6 +274,15 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Inflows, folder_path, "Power_Inflows")
 
+    def write_Power_Inflows_KInRows(self, dPower_Inflows_KInRows: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Inflows_KInRows DataFrame to an Excel file in LEGO format.
+        :param dPower_Inflows_KInRows: DataFrame containing the dPower_Inflows_KInRows data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_Inflows_KInRows, folder_path, "Power_Inflows_KInRows")
+
     def write_Power_Network(self, dPower_Network: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Network DataFrame to an Excel file in LEGO format.

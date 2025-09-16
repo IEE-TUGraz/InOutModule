@@ -105,7 +105,7 @@
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_Inflows">
-            <Version>v0.0.1</Version>
+            <Version>v0.1.0</Version>
             <TableHeader>Power - Inflows</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
@@ -116,6 +116,20 @@
                 <Column id="dataPackage" scenarioDependent="True"/>
                 <Column id="dataSource" scenarioDependent="True"/>
                 <PivotColumn id="inflow_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Inflows_KInRows">
+            <Version>v0.1.0</Version>
+            <TableHeader>Power - Inflows</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="inflow_by_g" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_Network">
@@ -948,10 +962,18 @@
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </PivotColumn>
+        <PivotColumn id="inflow_by_g">
+            <ReadableName/>
+            <DatabaseName>g</DatabaseName>
+            <Description>Inflow at this generator g</Description>
+            <Unit>[MWh]</Unit>
+            <ColumnWidth>14.00</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </PivotColumn>
         <PivotColumn id="inflow_by_k">
             <ReadableName/>
             <DatabaseName>k</DatabaseName>
-            <Description>Inflow for each unit at this k</Description>
+            <Description>Inflow at this representative time step k</Description>
             <Unit>[MWh]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>

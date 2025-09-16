@@ -17,6 +17,7 @@ combinations = [
     ("Power_Demand_KInRows", f"{case_study_folder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
     ("Power_Hindex", f"{case_study_folder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
     ("Power_Inflows", f"{case_study_folder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
+    ("Power_Inflows_KInRows", f"{case_study_folder}Power_Inflows_KInRows.xlsx", ExcelReader.get_Power_Inflows_KInRows, ew.write_Power_Inflows_KInRows),
     ("Power_Network", f"{case_study_folder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
     ("Power_Storage", f"{case_study_folder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_Power_Storage),
     ("Power_ThermalGen", f"{case_study_folder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
