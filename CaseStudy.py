@@ -10,6 +10,9 @@ import ExcelReader
 
 
 class CaseStudy:
+    rpk_dependent_dataframes: list[str] = ["dPower_Demand", "dPower_Hindex", "dPower_ImpExpProfiles", "dPower_Inflows", "dPower_VRESProfiles"]
+    rp_dependent_dataframes: list[str] = rpk_dependent_dataframes + ["dPower_WeightsRP"]
+    k_dependent_dataframes: list[str] = rpk_dependent_dataframes + ["dPower_WeightsK"]
 
     def __init__(self,
                  data_folder: str,
@@ -650,40 +653,51 @@ class CaseStudy:
 
         return caseStudy
 
-    def filter_timesteps(self, start: str, end: str) -> Self:
-        case_study = self.copy()
+    def filter_timesteps(self, start: str, end: str, inplace: bool = False) -> Optional[Self]:
+        """
+        Filters each (relevant) dataframe in the case study to only include the timesteps between start and end (both inclusive).
+        :param start: Start timestep (inclusive).
+        :param end: End timestep (inclusive).
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
 
-        df_names = ["dPower_Demand", "dPower_VRESProfiles", "dPower_WeightsK", "dPower_Hindex"]
+        for df_name in CaseStudy.k_dependent_dataframes:
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
 
-        for df_name in df_names:
-            df = getattr(case_study, df_name)
+                index = df.index.names
+                df_reset = df.reset_index()
 
-            index = df.index.names
-            df_reset = df.reset_index()
+                filtered_df_reset = df_reset.loc[(df_reset['k'] >= start) & (df_reset['k'] <= end)]
 
-            filtered_df_reset = df_reset.loc[(df_reset['k'] >= start) & (df_reset['k'] <= end)]
+                filtered_df = filtered_df_reset.set_index(index)
 
-            filtered_df = filtered_df_reset.set_index(index)
+                setattr(case_study, df_name, filtered_df)
 
-            setattr(case_study, df_name, filtered_df)
+        return None if inplace else case_study
 
-        return case_study
+    def filter_representative_periods(self, rp: str, inplace: bool = False) -> Optional[Self]:
+        """
+        Filters each (relevant) dataframe in the case study to only include the representative period with the given name.
+        :param rp: Name of the representative period to filter for.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
 
-    def filter_representative_periods(self, rp: str) -> Self:
-        case_study = self.copy()
+        for df_name in CaseStudy.rp_dependent_dataframes:
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
 
-        df_names = ["dPower_Demand", "dPower_VRESProfiles", "dPower_WeightsRP", "dPower_Hindex"]
+                index = df.index.names
+                df_reset = df.reset_index()
 
-        for df_name in df_names:
-            df = getattr(case_study, df_name)
+                filtered_df_reset = df_reset.loc[(df_reset['rp'] == rp)]
 
-            index = df.index.names
-            df_reset = df.reset_index()
+                filtered_df = filtered_df_reset.set_index(index)
 
-            filtered_df_reset = df_reset.loc[(df_reset['rp'] == rp)]
+                setattr(case_study, df_name, filtered_df)
 
-            filtered_df = filtered_df_reset.set_index(index)
-
-            setattr(case_study, df_name, filtered_df)
-
-        return case_study
+        return None if inplace else case_study
