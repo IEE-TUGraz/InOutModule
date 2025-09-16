@@ -218,15 +218,6 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
 
-    def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
-        """
-        Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
-        :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
-        :param folder_path: Path to the folder where the Excel file will be saved.
-        :return: None
-        """
-        self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
-
     def write_Global_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
@@ -235,6 +226,15 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
+
+    def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
+        :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
 
     def write_Power_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
         """

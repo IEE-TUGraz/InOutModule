@@ -26,7 +26,7 @@ combinations = [
     ("Power_VRESProfiles_KInRows", f"{case_study_folder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_VRESProfiles_KInRows),
     ("Power_WeightsK", f"{case_study_folder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
     ("Power_WeightsRP", f"{case_study_folder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
-    ("Power_Wind_TechnicalDetails", f"{case_study_folder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
+    ("Power_Wind_TechnicalDetails", f"{case_study_folder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails),
 ]
 
 

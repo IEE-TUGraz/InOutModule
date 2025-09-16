@@ -317,7 +317,7 @@ def get_Power_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dPower_WeightsK
     """
-    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["k"], False, False, fail_on_wrong_version)
+    dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.4", ["k"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")

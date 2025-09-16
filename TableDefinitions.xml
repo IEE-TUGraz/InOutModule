@@ -289,7 +289,33 @@
                 <PivotColumn id="capacity_by_g" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="Power_Wind_TechnicalDetails">
+        <TableDefinition id="Power_WeightsK">
+            <Version>v0.1.4</Version>
+            <TableHeader>Power - Weights of representative hours</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="pWeight_k" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_WeightsRP">
+            <Version>v0.1.3</Version>
+            <TableHeader>Power - Weights of representative periods</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="pWeight_rp" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Power_Wind_TechnicalDetails" inLegoDB="False">
             <Version>v0.1.0</Version>
             <TableHeader>Power - Wind Technical Details</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
@@ -322,32 +348,6 @@
                 <Column id="PowerFactor" scenarioDependent="True"/>
                 <Column id="Year" scenarioDependent="True"/>
                 <Column id="YearlyProd" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_WeightsK">
-            <Version>v0.1.3</Version>
-            <TableHeader>Power - Weights of representative hours</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="k" scenarioDependent="False"/>
-                <Column id="pWeight_k" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
-            </Columns>
-        </TableDefinition>
-        <TableDefinition id="Power_WeightsRP">
-            <Version>v0.1.3</Version>
-            <TableHeader>Power - Weights of representative periods</TableHeader>
-            <DescriptionRowHeight>30.0</DescriptionRowHeight>
-            <Columns>
-                <Column id="NOEXCL" scenarioDependent="False"/>
-                <Column id="id" scenarioDependent="True"/>
-                <Column id="rp" scenarioDependent="False"/>
-                <Column id="pWeight_rp" scenarioDependent="True"/>
-                <Column id="dataPackage" scenarioDependent="True"/>
-                <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
     </TableDefinitions>
