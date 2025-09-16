@@ -262,7 +262,7 @@
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_VRESProfiles">
-            <Version>v0.1.0</Version>
+            <Version>v0.1.1</Version>
             <TableHeader>Power - Variable Renewable Energy Sources Profiles</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
@@ -276,7 +276,7 @@
             </Columns>
         </TableDefinition>
         <TableDefinition id="Power_VRESProfiles_KInRows">
-            <Version>v0.1.0</Version>
+            <Version>v0.1.1</Version>
             <TableHeader>Power - Variable Renewable Energy Sources Profiles</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
@@ -930,18 +930,18 @@
     </Columns>
 
     <PivotColumns> <!-- NOTE: PivotColumns are sorted alphabetically (by id) -->
-        <PivotColumn id="capacity_by_k">
+        <PivotColumn id="capacity_by_g">
             <ReadableName/>
-            <DatabaseName>k</DatabaseName>
-            <Description>Capacity factor for each VRES unit at this k</Description>
+            <DatabaseName>g</DatabaseName>
+            <Description>Capacity factor at this generator g</Description>
             <Unit>[%, 0-1]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
-        <PivotColumn id="capacity_by_g">
+        <PivotColumn id="capacity_by_k">
             <ReadableName/>
-            <DatabaseName>g</DatabaseName>
-            <Description>Capacity factor for each VRES unit at this generator g</Description>
+            <DatabaseName>k</DatabaseName>
+            <Description>Capacity factor at this representative time step k</Description>
             <Unit>[%, 0-1]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
