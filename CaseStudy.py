@@ -13,6 +13,28 @@ printer = Printer.getInstance()
 
 
 class CaseStudy:
+    # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
+    rpk_dependent_dataframes: list[str] = ["dPower_Demand",
+                                           "dPower_Hindex",
+                                           "dPower_ImpExpProfiles",
+                                           "dPower_Inflows",
+                                           "dPower_VRESProfiles"]
+    rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
+    k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
+    non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
+                                                "dPower_ImpExpHubs",
+                                                "dPower_Network",
+                                                "dPower_Storage",
+                                                "dPower_ThermalGen",
+                                                "dPower_VRES"]
+    non_dependent_dataframes: list[str] = ["dGlobal_Parameters",
+                                           "dGlobal_Scenarios",
+                                           "dPower_Parameters"]
+
+    # Subsets and supersets of the above lists
+    rp_dependent_dataframes: list[str] = rpk_dependent_dataframes + rp_only_dependent_dataframes
+    k_dependent_dataframes: list[str] = rpk_dependent_dataframes + k_only_dependent_dataframes
+    scenario_dependent_dataframes: list[str] = rpk_dependent_dataframes + rp_only_dependent_dataframes + k_only_dependent_dataframes + non_time_dependent_dataframes
 
     def __init__(self,
                  data_folder: str,
@@ -680,90 +702,73 @@ class CaseStudy:
         else:
             return None
 
-    def _filter_dataframe(self, df_name: str, scenario_name: str) -> None:
-        """
-        Filters the dataframe with the given name to only include the scenario with the given name.
-        :param df_name: The name of the dataframe to filter.
-        :param scenario_name: The name of the scenario to filter for.
-        :return: None
-        """
-        if not hasattr(self, df_name):
-            raise ValueError(f"Dataframe '{df_name}' not found in the case study. Please check the input data.")
-        df = getattr(self, df_name)
-
-        filtered_df = df.loc[df['scenario'] == scenario_name]
-
-        if len(df) > 0 and len(filtered_df) == 0:
-            raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
-
-        setattr(self, df_name, filtered_df)
-
-    def filter_scenario(self, scenario_name) -> Self:
+    def filter_scenario(self, scenario_name, inplace: bool = False) -> Optional[Self]:
         """
         Filters each (relevant) dataframe in the case study to only include the scenario with the given name.
         :param scenario_name: The name of the scenario to filter for.
-        :return: Copy of the case study with the filtered dataframes.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
         """
-        caseStudy = self.copy()
+        caseStudy = self if inplace else self.copy()
 
-        # dGlobal_Parameters is not filtered, as it is the same for all scenarios
-        # dPower_Parameters is not filtered, as it is the same for all scenarios
-        caseStudy._filter_dataframe("dPower_BusInfo", scenario_name)
-        caseStudy._filter_dataframe("dPower_Network", scenario_name)
-        caseStudy._filter_dataframe("dPower_Demand", scenario_name)
-        caseStudy._filter_dataframe("dPower_WeightsRP", scenario_name)
-        caseStudy._filter_dataframe("dPower_WeightsK", scenario_name)
-        caseStudy._filter_dataframe("dPower_Hindex", scenario_name)
+        for df_name in CaseStudy.scenario_dependent_dataframes:
+            if hasattr(caseStudy, df_name):
+                df = getattr(self, df_name)
 
-        if hasattr(caseStudy, "dPower_ThermalGen"):
-            caseStudy._filter_dataframe("dPower_ThermalGen", scenario_name)
-        if hasattr(caseStudy, "dPower_Inflows"):
-            caseStudy._filter_dataframe("dPower_Inflows", scenario_name)
-        if hasattr(caseStudy, "dPower_VRES"):
-            caseStudy._filter_dataframe("dPower_VRES", scenario_name)
-            caseStudy._filter_dataframe("dPower_VRESProfiles", scenario_name)
-        if hasattr(caseStudy, "dPower_Storage"):
-            caseStudy._filter_dataframe("dPower_Storage", scenario_name)
-        if hasattr(caseStudy, "dPower_ImpExpHubs") and caseStudy.dPower_ImpExpHubs is not None:
-            caseStudy._filter_dataframe("dPower_ImpExpHubs", scenario_name)
-            caseStudy._filter_dataframe("dPower_ImpExpProfiles", scenario_name)
+                filtered_df = df.loc[df['scenario'] == scenario_name]
 
-        return caseStudy
+                if len(df) > 0 and len(filtered_df) == 0:
+                    raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
 
-    def filter_timesteps(self, start: str, end: str) -> Self:
-        case_study = self.copy()
+                setattr(self, df_name, filtered_df)
 
-        df_names = ["dPower_Demand", "dPower_VRESProfiles", "dPower_WeightsK", "dPower_Hindex"]
+        return None if inplace else caseStudy
 
-        for df_name in df_names:
-            df = getattr(case_study, df_name)
+    def filter_timesteps(self, start: str, end: str, inplace: bool = False) -> Optional[Self]:
+        """
+        Filters each (relevant) dataframe in the case study to only include the timesteps between start and end (both inclusive).
+        :param start: Start timestep (inclusive).
+        :param end: End timestep (inclusive).
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
 
-            index = df.index.names
-            df_reset = df.reset_index()
+        for df_name in CaseStudy.k_dependent_dataframes:
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
 
-            filtered_df_reset = df_reset.loc[(df_reset['k'] >= start) & (df_reset['k'] <= end)]
+                index = df.index.names
+                df_reset = df.reset_index()
 
-            filtered_df = filtered_df_reset.set_index(index)
+                filtered_df_reset = df_reset.loc[(df_reset['k'] >= start) & (df_reset['k'] <= end)]
 
-            setattr(case_study, df_name, filtered_df)
+                filtered_df = filtered_df_reset.set_index(index)
 
-        return case_study
+                setattr(case_study, df_name, filtered_df)
 
-    def filter_representative_periods(self, rp: str) -> Self:
-        case_study = self.copy()
+        return None if inplace else case_study
 
-        df_names = ["dPower_Demand", "dPower_VRESProfiles", "dPower_WeightsRP", "dPower_Hindex"]
+    def filter_representative_periods(self, rp: str, inplace: bool = False) -> Optional[Self]:
+        """
+        Filters each (relevant) dataframe in the case study to only include the representative period with the given name.
+        :param rp: Name of the representative period to filter for.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
 
-        for df_name in df_names:
-            df = getattr(case_study, df_name)
+        for df_name in CaseStudy.rp_dependent_dataframes:
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
 
-            index = df.index.names
-            df_reset = df.reset_index()
+                index = df.index.names
+                df_reset = df.reset_index()
 
-            filtered_df_reset = df_reset.loc[(df_reset['rp'] == rp)]
+                filtered_df_reset = df_reset.loc[(df_reset['rp'] == rp)]
 
-            filtered_df = filtered_df_reset.set_index(index)
+                filtered_df = filtered_df_reset.set_index(index)
 
-            setattr(case_study, df_name, filtered_df)
+                setattr(case_study, df_name, filtered_df)
 
-        return case_study
+        return None if inplace else case_study
