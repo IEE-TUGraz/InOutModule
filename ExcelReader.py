@@ -382,24 +382,29 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
             continue
         target_sheet = target[sheet]
 
-        for row in range(1, source_sheet.max_row + 1):
+        for row in range(1, min(source_sheet.max_row, target_sheet.max_row) + 1):
             if not dont_check_formatting:
                 if source_sheet.row_dimensions[row].height != target_sheet.row_dimensions[row].height:
                     printer.error(f"Mismatch in row height at {sheet}/row {row}: {source_sheet.row_dimensions[row].height} != {target_sheet.row_dimensions[row].height}")
                     equal = False
 
-            for col in range(1, source_sheet.max_column + 1):
+            for col in range(1, min(source_sheet.max_column, target_sheet.max_column) + 1):
                 source_cell = source_sheet.cell(row=row, column=col)
                 target_cell = target_sheet.cell(row=row, column=col)
 
                 # Value
                 if source_cell.value != target_cell.value:
-                    if isinstance(source_cell.value, float) and isinstance(target_cell.value, float):
-                        if abs(source_cell.value - target_cell.value) >= precision:
+                    if (isinstance(source_cell.value, float) or isinstance(source_cell.value, int)) and (isinstance(target_cell.value, float) or isinstance(target_cell.value, int)):
+                        if abs(source_cell.value - target_cell.value) / (source_cell.value if source_cell.value != 0 else 1) >= precision:
                             source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
                             target_value = str(target_cell.value).replace("[", r"\[")
                             printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
                             equal = False
+                    else:
+                        source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
+                        target_value = str(target_cell.value).replace("[", r"\[")
+                        printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
+                        equal = False
 
                 if not dont_check_formatting:
                     # Font
@@ -462,6 +467,12 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                         if source_columnwidth != target_columnwidth:
                             printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_columnwidth} != {target_columnwidth}")
                             equal = False
+        if source_sheet.max_column != target_sheet.max_column:
+            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_column - target_sheet.max_column)} {"more" if source_sheet.max_column > target_sheet.max_column else "less"} columns ({target_sheet.max_column} in total) than source sheet ({source_sheet.max_column} in total)")
+            equal = False
+        if source_sheet.max_row != target_sheet.max_row:
+            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_row - target_sheet.max_row)} {"more" if source_sheet.max_row > target_sheet.max_row else "less"} rows ({target_sheet.max_row} in total) than source sheet ({source_sheet.max_row} in total)")
+            equal = False
 
     printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")
     return equal
