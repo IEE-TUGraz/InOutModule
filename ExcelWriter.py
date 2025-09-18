@@ -214,16 +214,18 @@ class ExcelWriter:
         :param folder_path: Path to the folder where the Excel files will be saved.
         :return:
         """
-        self.write_dGlobal_Scenarios(cs.dGlobal_Scenarios, folder_path)
-        self.write_dPower_BusInfo(cs.dPower_BusInfo, folder_path)
-        self.write_dPower_Demand(cs.dPower_Demand, folder_path)
-        self.write_dPower_Hindex(cs.dPower_Hindex, folder_path)
-        self.write_dPower_Network(cs.dPower_Network, folder_path)
-        self.write_dPower_ThermalGen(cs.dPower_ThermalGen, folder_path)
-        self.write_dPower_WeightsK(cs.dPower_WeightsK, folder_path)
-        self.write_dPower_WeightsRP(cs.dPower_WeightsRP, folder_path)
-        self.write_VRES(cs.dPower_VRES, folder_path)
-        self.write_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        self.write_Global_Scenarios(cs.dGlobal_Scenarios, folder_path)
+        self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
+        self.write_Power_Demand(cs.dPower_Demand, folder_path)
+        self.write_Power_Hindex(cs.dPower_Hindex, folder_path)
+        self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
+        self.write_Power_Network(cs.dPower_Network, folder_path)
+        self.write_Power_Storage(cs.dPower_Storage, folder_path)
+        self.write_Power_ThermalGen(cs.dPower_ThermalGen, folder_path)
+        self.write_Power_VRES(cs.dPower_VRES, folder_path)
+        self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
+        self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)
 
     def write_Data_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
         """
@@ -335,7 +337,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_ThermalGen, folder_path, "Power_ThermalGen")
 
-    def write_VRES(self, dPower_VRES: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_VRES(self, dPower_VRES: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_VRES DataFrame to an Excel file in LEGO format.
         :param dPower_VRES: DataFrame containing the dPower_VRES data.
@@ -344,7 +346,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRES, folder_path, "Power_VRES")
 
-    def write_VRESProfiles(self, dPower_VRESProfiles: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_VRESProfiles(self, dPower_VRESProfiles: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_VRESProfiles DataFrame to an Excel file in LEGO format.
         :param dPower_VRESProfiles: DataFrame containing the dPower_VRESProfiles data.
@@ -488,8 +490,8 @@ if __name__ == "__main__":
         ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
         ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_Power_Storage),
         ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
-        ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_VRES),
-        ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_VRESProfiles),
+        ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_Power_VRES),
+        ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_Power_VRESProfiles),
         ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_VRESProfiles_KInRows),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
