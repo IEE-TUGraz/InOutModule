@@ -291,7 +291,8 @@ def _run_kmedoids_clustering(pivot_df: pd.DataFrame, k: int, rp_length: int):
         noTypicalPeriods=k,
         hoursPerPeriod=rp_length,
         clusterMethod='k_medoids',
-        rescaleClusterPeriods=False
+        rescaleClusterPeriods=False,
+        solver="gurobi"
     )
 
     typical_periods = aggregation.createTypicalPeriods()
