@@ -76,6 +76,7 @@ class CaseStudy:
 
                 # Create dataframe for only one Scenario
                 dGlobal_Scenarios = pd.DataFrame({"excl": np.nan, "id": np.nan, "scenarioID": ["ScenarioA"], "relativeWeight": [1], "comments": np.nan, "scenario": ["Scenarios"]})
+                dGlobal_Scenarios = dGlobal_Scenarios.set_index("scenarioID")
 
                 self.dGlobal_Scenarios = dGlobal_Scenarios
             else:

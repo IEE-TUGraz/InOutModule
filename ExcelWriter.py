@@ -200,7 +200,7 @@ class ExcelWriter:
                         ws.cell(row=i + 8, column=j + 1, value=values[col.db_name])
                     ExcelWriter.__setCellStyle(col.cell_style, ws.cell(row=i + 8, column=j + 1))
 
-        path = folder_path + "/" + excel_definition.file_name + ".xlsx"
+        path = folder_path + ("/" if not folder_path.endswith("/") else "") + excel_definition.file_name + ".xlsx"
         if not os.path.exists(os.path.dirname(path)) and os.path.dirname(path) != "":
             printer.information(f"Creating folder '{os.path.dirname(path)}'")
             os.makedirs(os.path.dirname(path))  # Create folder if it does not exist
@@ -391,65 +391,65 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Wind_TechnicalDetails, folder_path, "Power_Wind_TechnicalDetails")
 
+    @staticmethod
+    def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
+        """
+        Write all variables of the given Pyomo model to an Excel file.
 
-def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
-    """
-    Write all variables of the given Pyomo model to an Excel file.
+        :param model: The Pyomo model to be written to Excel.
+        :param target_path: Path to the target Excel file.
+        :return: None
+        """
+        printer.information(f"Writing model to '{target_path}'")
+        wb = openpyxl.Workbook()
+        ws = wb.active
 
-    :param model: The Pyomo model to be written to Excel.
-    :param target_path: Path to the target Excel file.
-    :return: None
-    """
-    printer.information(f"Writing model to '{target_path}'")
-    wb = openpyxl.Workbook()
-    ws = wb.active
+        for i, var in enumerate(model.component_objects(pyomo.core.Var, active=True)):
+            if i == 0:  # Use the automatically existing sheet for the first variable
+                ws.title = str(var)
+            else:  # Create a sheet for each (other) variable
+                ws = wb.create_sheet(title=str(var))
 
-    for i, var in enumerate(model.component_objects(pyomo.core.Var, active=True)):
-        if i == 0:  # Use the automatically existing sheet for the first variable
-            ws.title = str(var)
-        else:  # Create a sheet for each (other) variable
-            ws = wb.create_sheet(title=str(var))
+            # Prepare the data from the model
+            data = [(j, v.value if not v.stale else None) for j, v in var.items()]
 
-        # Prepare the data from the model
-        data = [(j, v.value if not v.stale else None) for j, v in var.items()]
+            # Extract parameter names from the variable's index structure
+            param_names = []
 
-        # Extract parameter names from the variable's index structure
-        param_names = []
+            if var.is_indexed():
+                index_set = var.index_set()
 
-        if var.is_indexed():
-            index_set = var.index_set()
+                try:
+                    # Get names from the index set
+                    if hasattr(index_set, 'subsets') and index_set.subsets():
+                        for idx, subset in enumerate(index_set.subsets()):
+                            if subset.domain.dimen is not None:
+                                for i, domain in enumerate(subset.domain.subsets()):
+                                    param_names.append(f"{subset.name}[{i}]: {domain.name}")
+                            else:
+                                param_names.append(subset.name)
+                        param_names.append(str(var))
+                except (AttributeError, TypeError):
+                    if len(data) > 0:
+                        # Determine from actual data structure
+                        col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
+                        param_names = [f"index_{j}" for j in range(col_number)] + [str(var)]
+                    else:
+                        param_names = []
 
-            try:
-                # Get names from the index set
-                if hasattr(index_set, 'subsets') and index_set.subsets():
-                    for idx, subset in enumerate(index_set.subsets()):
-                        if subset.domain.dimen is not None:
-                            for i, domain in enumerate(subset.domain.subsets()):
-                                param_names.append(f"{subset.name}[{i}]: {domain.name}")
-                        else:
-                            param_names.append(subset.name)
-                    param_names.append(str(var))
-            except (AttributeError, TypeError):
-                if len(data) > 0:
-                    # Determine from actual data structure
-                    col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
-                    param_names = [f"index_{j}" for j in range(col_number)] + [str(var)]
-                else:
-                    param_names = []
+            # Create header row with parameter names
+            ws.append(param_names)
 
-        # Create header row with parameter names
-        ws.append(param_names)
+            # Handle data writing
+            if len(data) == 0:
+                # Create a row showing "No entries" for each parameter
+                ws.append(["No entries"] * len(param_names))
+            else:
+                # Write data to the sheet
+                for j, v in data:
+                    ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
 
-        # Handle data writing
-        if len(data) == 0:
-            # Create a row showing "No entries" for each parameter
-            ws.append(["No entries"] * len(param_names))
-        else:
-            # Write data to the sheet
-            for j, v in data:
-                ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
-
-    wb.save(target_path)
+        wb.save(target_path)
 
 
 if __name__ == "__main__":
