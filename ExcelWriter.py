@@ -218,12 +218,17 @@ class ExcelWriter:
         self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
         self.write_Power_Demand(cs.dPower_Demand, folder_path)
         self.write_Power_Hindex(cs.dPower_Hindex, folder_path)
-        self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
+        if hasattr(cs, "dPower_Inflows"):
+            self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
         self.write_Power_Network(cs.dPower_Network, folder_path)
-        self.write_Power_Storage(cs.dPower_Storage, folder_path)
-        self.write_Power_ThermalGen(cs.dPower_ThermalGen, folder_path)
-        self.write_Power_VRES(cs.dPower_VRES, folder_path)
-        self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        if hasattr(cs, "dPower_Storage"):
+            self.write_Power_Storage(cs.dPower_Storage, folder_path)
+        if hasattr(cs, "dPower_ThermalGen"):
+            self.write_Power_ThermalGen(cs.dPower_ThermalGen, folder_path)
+        if hasattr(cs, "dPower_VRES"):
+            self.write_Power_VRES(cs.dPower_VRES, folder_path)
+        if hasattr(cs, "dPower_VRESProfiles"):
+            self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
         self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
         self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)
 
