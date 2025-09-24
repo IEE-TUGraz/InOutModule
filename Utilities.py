@@ -149,8 +149,8 @@ def apply_kmedoids_aggregation(
 
         all_processed_data[scenario] = {
             'Power_Demand': data["Power_Demand"],
-            'Power_VRESProfiles': data["Power_VRESProfiles"],
-            'Power_Inflows': data["Power_Inflows"],
+            'Power_VRESProfiles': data["Power_VRESProfiles"] if "Power_VRESProfiles" in data else [],
+            'Power_Inflows': data["Power_Inflows"] if "Power_Inflows" in data else [],
             'weights_rp': weights_rp,
             'weights_k': weights_k,
             'hindex': hindex
@@ -388,17 +388,13 @@ def _build_representative_periods(case_study, scenario: str, aggregation, rp_len
         df['p'] = (df['rp_num'] - 1) * rp_length + df['k_num']
         return df
 
-    time_series_tables = [
-        ("Power_Demand", case_study.dPower_Demand),
-        ("Power_VRESProfiles", case_study.dPower_VRESProfiles) if hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None else None,
-        ("Power_Inflows", case_study.dPower_Inflows) if hasattr(case_study, 'dPower_Inflows') and case_study.dPower_Inflows is not None else None,
-    ]
-
-    # Filter out None entries
-    time_series_tables = [(name, df) for name, df in time_series_tables if df is not None]
+    time_series_tables = [("Power_Demand", case_study.dPower_Demand)]
+    if hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None:
+        time_series_tables.append(("Power_VRESProfiles", case_study.dPower_VRESProfiles))
+    if hasattr(case_study, 'dPower_Inflows') and case_study.dPower_Inflows is not None:
+        time_series_tables.append(("Power_Inflows", case_study.dPower_Inflows))
 
     data = {name: [] for name, _ in time_series_tables}
-
     for name, df in time_series_tables:
         df_original = df.reset_index()
         df_original = df_original[df_original['scenario'] == scenario].copy()
