@@ -98,23 +98,24 @@ class ExcelWriter:
                 if column.db_name != "NOEXCL":  # Skip first column if it is the (empty and thus unused) placeholder for the excl column
                     pivot_columns.append(column.db_name)
 
+        column_templates = copy(excel_definition.columns)  # Create a copy of the column definitions and adapt this copy for pivoted data
         if target_column is not None:
             data.reset_index(inplace=True)
             data = data.pivot(index=pivot_columns + ["scenario"], columns=target_column.db_name, values="value")
-            excel_definition.columns.remove(target_column)  # Remove the pivot column from the list of columns
+            column_templates.remove(target_column)  # Remove the pivot column from the list of columns
             for i, column in enumerate(data.columns):
                 col_definition = copy(target_column)
                 col_definition.db_name = column
                 col_definition.readable_name = column
                 if i != 0:  # Remove description for all but the first pivoted column
                     col_definition.description = None
-                excel_definition.columns.append(col_definition)  # Add the new column definition to the list of columns
+                column_templates.append(col_definition)  # Add the new column definition to the list of columns
 
             data.reset_index(inplace=True)
 
         if len(data) == 0:
             printer.warning(f"No data found for Excel definition '{excel_definition_id}' - writing an empty file.")
-            data = pd.DataFrame(columns=[col.db_name for col in excel_definition.columns] + ["scenario"])
+            data = pd.DataFrame(columns=[col.db_name for col in column_templates] + ["scenario"])
             scenarios = ["ScenarioA"]
 
         for scenario_index, scenario in enumerate(scenarios):
@@ -137,7 +138,7 @@ class ExcelWriter:
             ws.row_dimensions[6].height = 30  # Standard for database behavior row
 
             # Prepare header columns
-            for i, column in enumerate(excel_definition.columns):
+            for i, column in enumerate(column_templates):
                 if i == 1:  # Column with title text & 'Format' text
                     ws.cell(row=1, column=i + 1, value=excel_definition.sheet_header)
                     ExcelWriter.__setCellStyle(self.cell_styles["title"], ws.cell(row=1, column=i + 1))
@@ -192,7 +193,7 @@ class ExcelWriter:
             # Write data to Excel
             scenario_data = scenario_data.reset_index()
             for i, values in scenario_data.iterrows():
-                for j, col in enumerate(excel_definition.columns):
+                for j, col in enumerate(column_templates):
                     if col.readable_name is None and j == 0: continue  # Skip first column if it is empty, since it is the (unused) placeholder for the excl column
                     if col.db_name == "excl":  # Excl. column is written by placing 'X' in lines which should be excluded
                         ws.cell(row=i + 8, column=j + 1, value='X' if isinstance(values[col.db_name], str) or not np.isnan(values[col.db_name]) else None)
