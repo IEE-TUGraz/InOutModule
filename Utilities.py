@@ -164,8 +164,30 @@ def apply_kmedoids_aggregation(
     return aggregated_case_study
 
 
-def _extract_scenario_data(case_study, scenario: str, capacity_normalization: str) -> pd.DataFrame:
-    """Extract and combine demand and VRES data for a single scenario - OPTIMIZED."""
+def _extract_scenario_data(case_study, scenario: str, capacity_normalization_strategy: str) -> pd.DataFrame:
+    """Extract and combine demand, VRES, and inflows data for a single scenario."""
+
+    def _apply_capacity_normalization_strategy(df, capacity_normalization_strategy):
+        """Apply capacity normalization strategy to a dataframe with technology data."""
+        if capacity_normalization_strategy == "installed":
+            return df['ExisUnits'].fillna(0)
+        else:  # maxInvestment
+            return np.maximum(
+                df['ExisUnits'].fillna(0),
+                df['EnableInvest'].fillna(0) * df['MaxInvest'].fillna(0)
+            )
+
+    def _pivot_technologies(df, value_column, index_cols=None):
+        """Pivot technologies as columns and drop 'g' column."""
+        if index_cols is None:
+            index_cols = ['scenario', 'rp', 'k', 'g', 'i']
+
+        return df.pivot_table(
+            index=index_cols,
+            columns='tec',
+            values=value_column,
+            fill_value=0
+        ).reset_index().drop(columns=['g'])
 
     # Extract demand data for this scenario
     demand_df = case_study.dPower_Demand.reset_index()
@@ -177,6 +199,7 @@ def _extract_scenario_data(case_study, scenario: str, capacity_normalization: st
     # Initialize with demand data
     scenario_df = demand_df[['scenario', 'rp', 'i', 'k', 'value']].rename(columns={'value': 'demand'})
 
+    vres_with_profiles = None
     # Process VRES data if available
     if (hasattr(case_study, 'dPower_VRES') and case_study.dPower_VRES is not None and
             hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None):
@@ -198,16 +221,8 @@ def _extract_scenario_data(case_study, scenario: str, capacity_normalization: st
                 how='left'
             )
 
-            # Apply capacity normalization (vectorized)
-            if capacity_normalization == "installed":
-                normalization_factor = vres_with_profiles['ExisUnits'].fillna(0)
-            else:  # maxInvestment
-                normalization_factor = np.maximum(
-                    vres_with_profiles['ExisUnits'].fillna(0),
-                    vres_with_profiles['EnableInvest'].fillna(0) * vres_with_profiles['MaxInvest'].fillna(0)
-                )
-
-            # Calculate weighted capacity factor
+            # Apply capacity normalization and calculate weighted capacity factor
+            normalization_factor = _apply_capacity_normalization_strategy(vres_with_profiles, capacity_normalization_strategy)
             vres_with_profiles['weighted_cf'] = (
                     vres_with_profiles['value'].fillna(0) *
                     vres_with_profiles['MaxProd'].fillna(0) *
@@ -215,20 +230,81 @@ def _extract_scenario_data(case_study, scenario: str, capacity_normalization: st
             )
 
             # Pivot technologies as columns
-            vres_with_profiles = vres_with_profiles.pivot_table(
-                index=['scenario', 'rp', 'k', 'g', 'i'],
-                columns='tec',
-                values='weighted_cf',
-                fill_value=0
-            ).reset_index().drop(columns=['g'])
+            vres_with_profiles = _pivot_technologies(vres_with_profiles, 'weighted_cf')
 
-            # Merge with demand data
-            scenario_df = pd.merge(
-                scenario_df,
-                vres_with_profiles,
-                on=['scenario', 'rp', 'k', 'i'],
-                how='left'
-            )
+    inflows_with_tech = None
+    # Process Inflows data if available
+    if hasattr(case_study, 'dPower_Inflows') and case_study.dPower_Inflows is not None:
+        # Get Inflows data for this scenario
+        inflows_df = case_study.dPower_Inflows.reset_index()
+        inflows_df = inflows_df[inflows_df['scenario'] == scenario].copy()
+
+        if len(inflows_df) > 0:
+            # Collect all inflows data from different sources
+            inflows_parts = []
+
+            # Try to merge with Power_VRES data
+            if (hasattr(case_study, 'dPower_VRES') and case_study.dPower_VRES is not None and
+                    'vres_df' in locals() and len(vres_df) > 0):
+                inflows_with_vres = pd.merge(
+                    inflows_df,
+                    vres_df[['g', 'tec', 'i', 'ExisUnits', 'EnableInvest', 'MaxInvest']],
+                    on='g',
+                    how='left'
+                )
+                inflows_parts.append(inflows_with_vres)
+
+            # Try to merge with Power_Storage data
+            if hasattr(case_study, 'dPower_Storage') and case_study.dPower_Storage is not None:
+                storage_df = case_study.dPower_Storage.reset_index()
+                storage_df = storage_df[storage_df['scenario'] == scenario].copy()
+
+                if len(storage_df) > 0:
+                    inflows_with_storage = pd.merge(
+                        inflows_df,
+                        storage_df[['g', 'tec', 'i', 'ExisUnits', 'EnableInvest', 'MaxInvest']],
+                        on='g',
+                        how='inner'
+                    )
+                    inflows_parts.append(inflows_with_storage)
+
+            # Combine all inflows parts
+            if inflows_parts:
+                inflows_with_tech = pd.concat(inflows_parts, ignore_index=True)
+
+                # Apply capacity normalization
+                normalization_factor = _apply_capacity_normalization_strategy(inflows_with_tech, capacity_normalization_strategy)
+                inflows_with_tech['value'] = inflows_with_tech['value'].fillna(0) * normalization_factor
+
+                # Pivot technologies as columns
+                inflows_with_tech = _pivot_technologies(inflows_with_tech, 'value')
+
+    # Combine VRES and inflows data
+    combined_tech_data = None
+    if vres_with_profiles is not None and inflows_with_tech is not None:
+        combined_tech_data = pd.concat([vres_with_profiles, inflows_with_tech],
+                                       ignore_index=True, sort=False)
+    elif vres_with_profiles is not None:
+        combined_tech_data = vres_with_profiles
+    elif inflows_with_tech is not None:
+        combined_tech_data = inflows_with_tech
+
+    # Merge the combined technology data with scenario_df
+    if combined_tech_data is not None:
+        # Use right join to keep ALL demand data (even nodes without technology data)
+        # Replicates demand for nodes with technology, and preserves demand-only nodes
+        scenario_df = pd.merge(
+            combined_tech_data,
+            scenario_df,
+            on=['scenario', 'rp', 'k', 'i'],
+            how='right'
+        )
+
+        # Fill NaN values in technology columns with 0 for demand-only nodes
+        tech_columns = [col for col in scenario_df.columns
+                        if col not in ['scenario', 'rp', 'k', 'i', 'demand']]
+        if tech_columns:
+            scenario_df[tech_columns] = scenario_df[tech_columns].fillna(0)
 
     return scenario_df
 
@@ -303,7 +379,7 @@ def _run_kmedoids_clustering(pivot_df: pd.DataFrame, k: int, rp_length: int):
 
 
 def _build_representative_periods(case_study, scenario: str, aggregation, rp_length: int):
-    """Build demand and VRES profile data for representative periods."""
+    """Build demand, VRES profile, and inflows data for representative periods."""
 
     def _extract_numeric_and_calc_p(df, rp_length):
         """Extract numeric values from rp/k strings and calculate absolute hour."""
@@ -317,6 +393,9 @@ def _build_representative_periods(case_study, scenario: str, aggregation, rp_len
         ("Power_VRESProfiles", case_study.dPower_VRESProfiles) if hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None else None,
         ("Power_Inflows", case_study.dPower_Inflows) if hasattr(case_study, 'dPower_Inflows') and case_study.dPower_Inflows is not None else None,
     ]
+
+    # Filter out None entries
+    time_series_tables = [(name, df) for name, df in time_series_tables if df is not None]
 
     data = {name: [] for name, _ in time_series_tables}
 
