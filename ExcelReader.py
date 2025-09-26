@@ -9,7 +9,7 @@ from printer import Printer
 printer = Printer.getInstance()
 
 
-def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
+def check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
     """
     Check if the Excel file has the correct version specifier.
     :param excel_file_path: Path to the Excel file
@@ -42,7 +42,7 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: DataFrame containing the data from the Excel file
     """
-    __check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
+    check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
     xls = pd.ExcelFile(excel_file_path)
     data = pd.DataFrame()
 
