@@ -185,7 +185,7 @@ class CaseStudy:
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.scale_dPower_ThermalGen()
 
-        if self.dPower_Inflows is not None:
+        if hasattr(self, "dPower_Inflows") and self.dPower_Inflows is not None:
             self.scale_dPower_Inflows()
 
         if self.dPower_Parameters["pEnableVRES"]:
