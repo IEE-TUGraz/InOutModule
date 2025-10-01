@@ -215,6 +215,7 @@ class CaseStudy:
     def scale_dPower_Links(self):
         self.dPower_Links["pPmaxLink"] *= self.power_scaling_factor
         self.dPower_Links["pExpCost"] *= self.cost_scaling_factor / self.power_scaling_factor
+        self.dPower_Links["pExpTrafoP"] *= self.power_scaling_factor
         
     def scale_dPower_Demand(self):
         self.dPower_Demand["value"] *= self.power_scaling_factor
@@ -301,7 +302,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnableLinks', 'pEnablePowerImportExport'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnableLinks', 'pEnableLinksTrafo', 'pEnablePowerImportExport'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
