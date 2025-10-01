@@ -773,3 +773,43 @@ class CaseStudy:
                 setattr(case_study, df_name, filtered_df)
 
         return None if inplace else case_study
+
+    def shift_ks(self, shift: int, inplace: bool = False) -> Optional[Self]:
+        """
+        Shifts all k indices by the given amount, i.e., if shift is 4, then the first 4
+        timesteps are moved to the back of the time series.
+
+        :param shift: The amount to shift the k indices by.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
+
+        for df_name in CaseStudy.k_dependent_dataframes:
+            if df_name in ["dPower_WeightsK", "dPower_Hindex"]:
+                continue  # These dataframes are not shifted, as they are not time series
+
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
+                if df is None or df.empty:
+                    continue
+
+                index = df.index.names
+                df = df.reset_index()
+
+                df["k_int"] = df["k"].str.replace("k", "").astype(int)
+                k_int_max = df["k_int"].max()
+                k_int_min = df["k_int"].min()
+
+                df["k_int_new"] = ((df["k_int"] - k_int_min + shift) % (k_int_max - k_int_min + 1)) + k_int_min
+
+                df["k"] = "k" + df["k_int_new"].astype(str).str.zfill(4)
+                df = df.drop(columns=["k_int", "k_int_new"])
+                df = df.set_index(index)
+
+                # Sort by index to ensure that the order of the indices is correct after shifting
+                df = df.sort_index()
+
+                setattr(case_study, df_name, df)
+
+        return None if inplace else case_study
