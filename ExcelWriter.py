@@ -11,6 +11,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 import ExcelReader
 import TableDefinition
+from CaseStudy import CaseStudy
 from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
 from printer import Printer
 
@@ -199,6 +200,31 @@ class ExcelWriter:
             os.makedirs(os.path.dirname(path))  # Create folder if it does not exist
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
+
+    def write_caseStudy(self, cs: CaseStudy, folder_path: str) -> None:
+        """
+        Write the case study to a folder in LEGO-Excel format.
+        :param cs: CaseStudy object containing the data to be written.
+        :param folder_path: Path to the folder where the Excel files will be saved.
+        :return:
+        """
+        self.write_Global_Scenarios(cs.dGlobal_Scenarios, folder_path)
+        self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
+        self.write_Power_Demand(cs.dPower_Demand, folder_path)
+        self.write_Power_Hindex(cs.dPower_Hindex, folder_path)
+        if hasattr(cs, "dPower_Inflows"):
+            self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
+        self.write_Power_Network(cs.dPower_Network, folder_path)
+        if hasattr(cs, "dPower_Storage"):
+            self.write_Power_Storage(cs.dPower_Storage, folder_path)
+        if hasattr(cs, "dPower_ThermalGen"):
+            self.write_Power_ThermalGen(cs.dPower_ThermalGen, folder_path)
+        if hasattr(cs, "dPower_VRES"):
+            self.write_Power_VRES(cs.dPower_VRES, folder_path)
+        if hasattr(cs, "dPower_VRESProfiles"):
+            self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
+        self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)
 
     def write_Data_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
         """
