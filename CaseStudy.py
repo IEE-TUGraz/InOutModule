@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 
 import ExcelReader
+from printer import Printer
+
+printer = Printer.getInstance()
 
 
 class CaseStudy:
@@ -67,7 +70,16 @@ class CaseStudy:
             self.dGlobal_Scenarios = dGlobal_Scenarios
         else:
             self.global_scenarios_file = global_scenarios_file
-            self.dGlobal_Scenarios = ExcelReader.get_Global_Scenarios(self.data_folder + self.global_scenarios_file)
+            if not os.path.exists(self.data_folder + self.global_scenarios_file):
+                printer.warning(f"Executing without 'Global_Scenarios' (since no file was found at '{self.data_folder + self.global_scenarios_file}').")
+
+                # Create dataframe for only one Scenario
+                dGlobal_Scenarios = pd.DataFrame({"excl": np.nan, "id": np.nan, "scenarioID": ["ScenarioA"], "relativeWeight": [1], "comments": np.nan, "scenario": ["Scenarios"]})
+                dGlobal_Scenarios = dGlobal_Scenarios.set_index("scenarioID")
+
+                self.dGlobal_Scenarios = dGlobal_Scenarios
+            else:
+                self.dGlobal_Scenarios = ExcelReader.get_Global_Scenarios(self.data_folder + self.global_scenarios_file)
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
