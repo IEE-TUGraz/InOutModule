@@ -273,6 +273,7 @@ class CaseStudy:
 
     def scale_dPower_ImpExpProfiles(self):
         self.dPower_ImpExpProfiles["ImpExp"] *= self.power_scaling_factor
+        self.dPower_ImpExpProfiles["Price"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
