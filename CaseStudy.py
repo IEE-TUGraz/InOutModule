@@ -304,6 +304,7 @@ class CaseStudy:
 
     def scale_dPower_ImpExpProfiles(self):
         self.dPower_ImpExpProfiles["ImpExp"] *= self.power_scaling_factor
+        self.dPower_ImpExpProfiles["Price"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         ExcelReader.check_LEGOExcel_version(self.data_folder + self.global_parameters_file, "v0.1.0", False)
