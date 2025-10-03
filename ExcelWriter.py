@@ -473,6 +473,9 @@ if __name__ == "__main__":
 
     printer.set_width(300)
 
+    if not args.caseStudyFolder.endswith("/"):
+        args.caseStudyFolder += "/"
+
     printer.information(f"Loading case study from '{args.caseStudyFolder}'")
 
     if args.excelDefinitionsPath is None:
