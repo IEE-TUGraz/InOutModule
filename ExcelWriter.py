@@ -2,6 +2,7 @@ import os
 import time
 import xml.etree.ElementTree as ET
 from copy import copy, deepcopy
+from pathlib import Path
 
 import numpy as np
 import openpyxl
@@ -208,13 +209,15 @@ class ExcelWriter:
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
 
-    def write_caseStudy(self, cs: CaseStudy, folder_path: str) -> None:
+    def write_caseStudy(self, cs: CaseStudy, folder_path: str | Path) -> None:
         """
         Write the case study to a folder in LEGO-Excel format.
         :param cs: CaseStudy object containing the data to be written.
         :param folder_path: Path to the folder where the Excel files will be saved.
         :return:
         """
+        folder_path = str(folder_path)
+
         self.write_Global_Scenarios(cs.dGlobal_Scenarios, folder_path)
         self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
         self.write_Power_Demand(cs.dPower_Demand, folder_path)

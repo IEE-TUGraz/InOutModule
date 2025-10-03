@@ -1,6 +1,7 @@
 import copy
 import os
 import warnings
+from pathlib import Path
 from typing import Optional, Self
 
 import numpy as np
@@ -37,7 +38,7 @@ class CaseStudy:
     scenario_dependent_dataframes: list[str] = rpk_dependent_dataframes + rp_only_dependent_dataframes + k_only_dependent_dataframes + non_time_dependent_dataframes
 
     def __init__(self,
-                 data_folder: str,
+                 data_folder: str | Path,
                  do_not_scale_units: bool = False,
                  do_not_merge_single_node_buses: bool = False,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
@@ -56,7 +57,7 @@ class CaseStudy:
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
                  power_impexphubs_file: str = "Power_ImpExpHubs.xlsx", dPower_ImpExpHubs: pd.DataFrame = None,
                  power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None):
-        self.data_folder = data_folder if data_folder.endswith("/") else data_folder + "/"
+        self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
 
