@@ -201,6 +201,9 @@ class CaseStudy:
         if hasattr(self, "dPower_Inflows") and self.dPower_Inflows is not None:
             self.scale_dPower_Inflows()
 
+        if hasattr(self, "dPower_VRESProfiles") and self.dPower_VRESProfiles is not None:
+            self.scale_dPower_VRESProfiles()
+
         if self.dPower_Parameters["pEnableVRES"]:
             self.scale_dPower_VRES()
 
@@ -270,6 +273,9 @@ class CaseStudy:
 
     def scale_dPower_Inflows(self):
         self.dPower_Inflows["value"] *= self.power_scaling_factor
+
+    def scale_dPower_VRESProfiles(self):
+        self.dPower_VRESProfiles["Capacity"] *= self.power_scaling_factor
 
     def scale_dPower_VRES(self):
         if "MinProd" not in self.dPower_VRES.columns:
