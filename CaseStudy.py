@@ -22,7 +22,7 @@ class CaseStudy:
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
-                 power_demand_file: str = "Power_Demand.xlsx", dPower_Demand: pd.DataFrame = None,
+                 power_demand_file: str = "Power_Demand_KInRows.xlsx", dPower_Demand: pd.DataFrame = None,
                  power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
                  power_vresprofiles_file: str = "Power_VRESProfiles.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
                  power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
@@ -69,7 +69,7 @@ class CaseStudy:
             self.dPower_Demand = dPower_Demand
         else:
             self.power_demand_file = power_demand_file
-            self.dPower_Demand = ExcelReader.get_Power_Demand(self.data_folder + self.power_demand_file)
+            self.dPower_Demand = ExcelReader.get_Power_Demand_KInRows(self.data_folder + self.power_demand_file)
 
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
