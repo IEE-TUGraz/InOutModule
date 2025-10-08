@@ -24,7 +24,7 @@ class CaseStudy:
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
                  power_demand_file: str = "Power_Demand_KInRows.xlsx", dPower_Demand: pd.DataFrame = None,
                  power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
-                 power_vresprofiles_file: str = "Power_VRESProfiles.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
+                 power_vresprofiles_file: str = "Power_VRESProfiles_KInRows.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
                  power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
                  power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
                  power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
@@ -109,7 +109,7 @@ class CaseStudy:
                 self.dPower_VRESProfiles = dPower_VRESProfiles
             elif os.path.isfile(self.data_folder + power_vresprofiles_file):
                 self.power_vresprofiles_file = power_vresprofiles_file
-                self.dPower_VRESProfiles = ExcelReader.get_Power_VRESProfiles(self.data_folder + self.power_vresprofiles_file)
+                self.dPower_VRESProfiles = ExcelReader.get_Power_VRESProfiles_KInRows(self.data_folder + self.power_vresprofiles_file)
 
         if self.dPower_Parameters["pEnableStorage"]:
             if dPower_Storage is not None:
