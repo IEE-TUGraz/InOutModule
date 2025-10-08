@@ -225,9 +225,9 @@ class CaseStudy:
         self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].fillna(0)
 
         # Check that both MinUpTime and MinDownTime are integers and raise error if not
-        if not self.dPower_ThermalGen.MinUpTime.dtype == np.int64:
+        if not self.dPower_ThermalGen['MinUpTime'].apply(float.is_integer).all():
             raise ValueError("MinUpTime must be an integer for all entries.")
-        if not self.dPower_ThermalGen.MinDownTime.dtype == np.int64:
+        if not self.dPower_ThermalGen['MinDownTime'].apply(float.is_integer).all():
             raise ValueError("MinDownTime must be an integer for all entries.")
         self.dPower_ThermalGen['MinUpTime'] = self.dPower_ThermalGen['MinUpTime'].astype('int64')
         self.dPower_ThermalGen['MinDownTime'] = self.dPower_ThermalGen['MinDownTime'].astype('int64')
