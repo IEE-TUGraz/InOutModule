@@ -2,6 +2,7 @@ import os
 import time
 import xml.etree.ElementTree as ET
 from copy import copy, deepcopy
+from pathlib import Path
 
 import numpy as np
 import openpyxl
@@ -11,6 +12,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 import ExcelReader
 import TableDefinition
+from CaseStudy import CaseStudy
 from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
 from printer import Printer
 
@@ -97,19 +99,25 @@ class ExcelWriter:
                 if column.db_name != "NOEXCL":  # Skip first column if it is the (empty and thus unused) placeholder for the excl column
                     pivot_columns.append(column.db_name)
 
+        column_templates = copy(excel_definition.columns)  # Create a copy of the column definitions and adapt this copy for pivoted data
         if target_column is not None:
             data.reset_index(inplace=True)
             data = data.pivot(index=pivot_columns + ["scenario"], columns=target_column.db_name, values="value")
-            excel_definition.columns.remove(target_column)  # Remove the pivot column from the list of columns
+            column_templates.remove(target_column)  # Remove the pivot column from the list of columns
             for i, column in enumerate(data.columns):
                 col_definition = copy(target_column)
                 col_definition.db_name = column
                 col_definition.readable_name = column
                 if i != 0:  # Remove description for all but the first pivoted column
                     col_definition.description = None
-                excel_definition.columns.append(col_definition)  # Add the new column definition to the list of columns
+                column_templates.append(col_definition)  # Add the new column definition to the list of columns
 
             data.reset_index(inplace=True)
+
+        if len(data) == 0:
+            printer.warning(f"No data found for Excel definition '{excel_definition_id}' - writing an empty file.")
+            data = pd.DataFrame(columns=[col.db_name for col in column_templates] + ["scenario"])
+            scenarios = ["ScenarioA"]
 
         for scenario_index, scenario in enumerate(scenarios):
             scenario_data = data[data["scenario"] == scenario]
@@ -126,11 +134,12 @@ class ExcelWriter:
             ws.freeze_panes = "C8"  # Freeze panes at row 8 (below the header)
 
             # Prepare row heights
+            ws.row_dimensions[1].height = 24
             ws.row_dimensions[5].height = excel_definition.description_row_height
             ws.row_dimensions[6].height = 30  # Standard for database behavior row
 
             # Prepare header columns
-            for i, column in enumerate(excel_definition.columns):
+            for i, column in enumerate(column_templates):
                 if i == 1:  # Column with title text & 'Format' text
                     ws.cell(row=1, column=i + 1, value=excel_definition.sheet_header)
                     ExcelWriter.__setCellStyle(self.cell_styles["title"], ws.cell(row=1, column=i + 1))
@@ -185,7 +194,7 @@ class ExcelWriter:
             # Write data to Excel
             scenario_data = scenario_data.reset_index()
             for i, values in scenario_data.iterrows():
-                for j, col in enumerate(excel_definition.columns):
+                for j, col in enumerate(column_templates):
                     if col.readable_name is None and j == 0: continue  # Skip first column if it is empty, since it is the (unused) placeholder for the excl column
                     if col.db_name == "excl":  # Excl. column is written by placing 'X' in lines which should be excluded
                         ws.cell(row=i + 8, column=j + 1, value='X' if isinstance(values[col.db_name], str) or not np.isnan(values[col.db_name]) else None)
@@ -193,12 +202,39 @@ class ExcelWriter:
                         ws.cell(row=i + 8, column=j + 1, value=values[col.db_name])
                     ExcelWriter.__setCellStyle(col.cell_style, ws.cell(row=i + 8, column=j + 1))
 
-        path = folder_path + "/" + excel_definition.file_name + ".xlsx"
+        path = folder_path + ("/" if not folder_path.endswith("/") else "") + excel_definition.file_name + ".xlsx"
         if not os.path.exists(os.path.dirname(path)) and os.path.dirname(path) != "":
             printer.information(f"Creating folder '{os.path.dirname(path)}'")
             os.makedirs(os.path.dirname(path))  # Create folder if it does not exist
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
+
+    def write_caseStudy(self, cs: CaseStudy, folder_path: str | Path) -> None:
+        """
+        Write the case study to a folder in LEGO-Excel format.
+        :param cs: CaseStudy object containing the data to be written.
+        :param folder_path: Path to the folder where the Excel files will be saved.
+        :return:
+        """
+        folder_path = str(folder_path)
+
+        self.write_Global_Scenarios(cs.dGlobal_Scenarios, folder_path)
+        self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
+        self.write_Power_Demand(cs.dPower_Demand, folder_path)
+        self.write_Power_Hindex(cs.dPower_Hindex, folder_path)
+        if hasattr(cs, "dPower_Inflows"):
+            self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
+        self.write_Power_Network(cs.dPower_Network, folder_path)
+        if hasattr(cs, "dPower_Storage"):
+            self.write_Power_Storage(cs.dPower_Storage, folder_path)
+        if hasattr(cs, "dPower_ThermalGen"):
+            self.write_Power_ThermalGen(cs.dPower_ThermalGen, folder_path)
+        if hasattr(cs, "dPower_VRES"):
+            self.write_Power_VRES(cs.dPower_VRES, folder_path)
+        if hasattr(cs, "dPower_VRESProfiles"):
+            self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
+        self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)
 
     def write_Data_Packages(self, dData_Packages: pd.DataFrame, folder_path: str) -> None:
         """
@@ -218,15 +254,6 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
 
-    def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
-        """
-        Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
-        :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
-        :param folder_path: Path to the folder where the Excel file will be saved.
-        :return: None
-        """
-        self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
-
     def write_Global_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
@@ -235,6 +262,15 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
+
+    def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
+        :param dPower_BusInfo: DataFrame containing the dPower_BusInfo data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_BusInfo, folder_path, "Power_BusInfo")
 
     def write_Power_Demand(self, dPower_Demand: pd.DataFrame, folder_path: str) -> None:
         """
@@ -274,6 +310,15 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Inflows, folder_path, "Power_Inflows")
 
+    def write_Power_Inflows_KInRows(self, dPower_Inflows_KInRows: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_Inflows_KInRows DataFrame to an Excel file in LEGO format.
+        :param dPower_Inflows_KInRows: DataFrame containing the dPower_Inflows_KInRows data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_Inflows_KInRows, folder_path, "Power_Inflows_KInRows")
+
     def write_Power_Network(self, dPower_Network: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Network DataFrame to an Excel file in LEGO format.
@@ -301,7 +346,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_ThermalGen, folder_path, "Power_ThermalGen")
 
-    def write_VRES(self, dPower_VRES: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_VRES(self, dPower_VRES: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_VRES DataFrame to an Excel file in LEGO format.
         :param dPower_VRES: DataFrame containing the dPower_VRES data.
@@ -310,7 +355,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRES, folder_path, "Power_VRES")
 
-    def write_VRESProfiles(self, dPower_VRESProfiles: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_VRESProfiles(self, dPower_VRESProfiles: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_VRESProfiles DataFrame to an Excel file in LEGO format.
         :param dPower_VRESProfiles: DataFrame containing the dPower_VRESProfiles data.
@@ -319,7 +364,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRESProfiles, folder_path, "Power_VRESProfiles")
 
-    def write_VRESProfiles_KInRows(self, dPower_VRESProfiles_KInRows: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_VRESProfiles_KInRows(self, dPower_VRESProfiles_KInRows: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_VRESProfiles_KInRows DataFrame to an Excel file in LEGO format.
         :param dPower_VRESProfiles_KInRows: DataFrame containing the dPower_VRESProfiles_KInRows data.
@@ -428,6 +473,9 @@ if __name__ == "__main__":
 
     printer.set_width(300)
 
+    if not args.caseStudyFolder.endswith("/"):
+        args.caseStudyFolder += "/"
+
     printer.information(f"Loading case study from '{args.caseStudyFolder}'")
 
     if args.excelDefinitionsPath is None:
@@ -446,12 +494,13 @@ if __name__ == "__main__":
         ("Power_Demand_KInRows", f"{args.caseStudyFolder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
         ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
         ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
+        ("Power_Inflows_KInRows", f"{args.caseStudyFolder}Power_Inflows_KInRows.xlsx", ExcelReader.get_Power_Inflows_KInRows, ew.write_Power_Inflows_KInRows),
         ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
         ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_Power_Storage),
         ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
-        ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_VRES),
-        ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_VRESProfiles),
-        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_VRESProfiles_KInRows),
+        ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_Power_VRES),
+        ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_Power_VRESProfiles),
+        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_Power_VRESProfiles_KInRows),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
         ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
