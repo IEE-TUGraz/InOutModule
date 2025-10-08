@@ -736,7 +736,7 @@ class CaseStudy:
         case_study = self if inplace else self.copy()
 
         for df_name in CaseStudy.k_dependent_dataframes:
-            if hasattr(case_study, df_name):
+            if hasattr(case_study, df_name) and getattr(case_study, df_name) is not None:
                 df = getattr(case_study, df_name)
 
                 index = df.index.names
