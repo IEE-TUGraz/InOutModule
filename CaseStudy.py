@@ -17,13 +17,12 @@ class CaseStudy:
     # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
     rpk_dependent_dataframes: list[str] = ["dPower_Demand",
                                            "dPower_Hindex",
-                                           "dPower_ImpExpProfiles",
+                                           "dPower_ImportExport",
                                            "dPower_Inflows",
                                            "dPower_VRESProfiles"]
     rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
     k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
     non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
-                                                "dPower_ImpExpHubs",
                                                 "dPower_Network",
                                                 "dPower_Storage",
                                                 "dPower_ThermalGen",
@@ -55,8 +54,7 @@ class CaseStudy:
                  power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
                  power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
-                 power_impexphubs_file: str = "Power_ImpExpHubs.xlsx", dPower_ImpExpHubs: pd.DataFrame = None,
-                 power_impexpprofiles_file: str = "Power_ImpExpProfiles.xlsx", dPower_ImpExpProfiles: pd.DataFrame = None):
+                 power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None):
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
@@ -161,20 +159,13 @@ class CaseStudy:
                 self.dPower_Inflows = ExcelReader.get_Power_Inflows(self.data_folder + self.power_inflows_file)
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
-            if dPower_ImpExpHubs is not None:
-                self.dPower_ImpExpHubs = dPower_ImpExpHubs
+            if dPower_ImportExport is not None:
+                self.dPower_ImportExport = dPower_ImportExport
             else:
-                self.power_impexphubs_file = power_impexphubs_file
-                self.dPower_ImpExpHubs = self.get_dPower_ImpExpHubs()
-
-            if dPower_ImpExpProfiles is not None:
-                self.dPower_ImpExpProfiles = dPower_ImpExpProfiles
-            else:
-                self.power_impexpprofiles_file = power_impexpprofiles_file
-                self.dPower_ImpExpProfiles = self.get_dPower_ImpExpProfiles()
+                self.power_importexport_file = power_importexport_file
+                self.dPower_ImportExport = self.get_dPower_ImportExport()
         else:
-            self.dPower_ImpExpHubs = None
-            self.dPower_ImpExpProfiles = None
+            self.dPower_ImportExport = None
 
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
@@ -298,13 +289,10 @@ class CaseStudy:
         if self.dPower_Storage['DisEffic'].isna().any() or self.dPower_Storage['ChEffic'].isna().any():
             raise ValueError("DisEffic and ChEffic in 'Power_Storage.xlsx' must not contain NaN values. Please check the data.")
 
-    def scale_dPower_ImpExpHubs(self):
-        self.dPower_ImpExpHubs["Pmax Import"] *= self.power_scaling_factor
-        self.dPower_ImpExpHubs["Pmax Export"] *= self.power_scaling_factor
-
-    def scale_dPower_ImpExpProfiles(self):
-        self.dPower_ImpExpProfiles["ImpExp"] *= self.power_scaling_factor
-        self.dPower_ImpExpProfiles["Price"] *= self.cost_scaling_factor / self.power_scaling_factor
+    def scale_dPower_ImportExport(self):
+        self.dPower_ImportExport["ImpExpMin"] *= self.power_scaling_factor
+        self.dPower_ImportExport["ImpExpMax"] *= self.power_scaling_factor
+        self.dPower_ImportExport["ImpExpPrice"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         ExcelReader.check_LEGOExcel_version(self.data_folder + self.global_parameters_file, "v0.1.0", False)
@@ -346,76 +334,6 @@ class CaseStudy:
                 case _:
                     raise ValueError(f"Value for {column} must be either 'Yes' or 'No'.")
         return df
-
-    def get_dPower_ImpExpHubs(self):
-        dPower_ImpExpHubs = pd.read_excel(self.data_folder + self.power_impexphubs_file, skiprows=[0, 1, 3, 4, 5])
-        dPower_ImpExpHubs = dPower_ImpExpHubs.drop(dPower_ImpExpHubs.columns[0], axis=1)
-        dPower_ImpExpHubs = dPower_ImpExpHubs.set_index(['hub', 'i'])
-
-        # Validate that all values for "Import Type" and "Export Type" == [Imp/ExpFix or Imp/ExpMax]
-        errors = dPower_ImpExpHubs[~dPower_ImpExpHubs['Import Type'].isin(['ImpFix', 'ImpMax'])]
-        if len(errors) > 0:
-            raise ValueError(f"'Import Type' must be 'ImpFix' or 'ImpMax'. Please check: \n{errors}\n")
-        errors = dPower_ImpExpHubs[~dPower_ImpExpHubs['Export Type'].isin(['ExpFix', 'ExpMax'])]
-        if len(errors) > 0:
-            raise ValueError(f"'Export Type' must be 'ExpFix' or 'ExpMax'. Please check: \n{errors}\n")
-
-        # Validate that for each hub, all connections have the same Import Type and Export Type
-        errors = dPower_ImpExpHubs.groupby('hub').agg({'Import Type': 'nunique', 'Export Type': 'nunique'})
-        errors = errors[(errors['Import Type'] > 1) | (errors['Export Type'] > 1)]
-        if len(errors) > 0:
-            raise ValueError(f"Each hub must have the same Import Type (Fix or Max) and the same Export Type (Fix or Max) for each connection. Please check: \n{errors.index}\n")
-
-        # If column 'scenario' is not present, add it
-        if 'scenario' not in dPower_ImpExpHubs.columns:
-            dPower_ImpExpHubs['scenario'] = 'ScenarioA'  # TODO: Fill this dynamically, once the Excel file is updated
-        return dPower_ImpExpHubs
-
-    def get_dPower_ImpExpProfiles(self):
-        with warnings.catch_warnings(action="ignore", category=UserWarning):  # Otherwise there is a warning regarding data validation in the Excel-File (see https://stackoverflow.com/questions/53965596/python-3-openpyxl-userwarning-data-validation-extension-not-supported)
-            dPower_ImpExpProfiles = pd.read_excel(self.data_folder + self.power_impexpprofiles_file, skiprows=[0, 1, 3, 4, 5], sheet_name='Power ImpExpProfiles')
-        dPower_ImpExpProfiles = dPower_ImpExpProfiles.drop(dPower_ImpExpProfiles.columns[0], axis=1)
-        dPower_ImpExpProfiles = dPower_ImpExpProfiles.melt(id_vars=['hub', 'rp', 'Type'], var_name='k', value_name='Value')
-
-        # Validate that each multiindex is only present once
-        dPower_ImpExpProfiles = dPower_ImpExpProfiles.set_index(['hub', 'rp', 'k', 'Type'])
-        if not dPower_ImpExpProfiles.index.is_unique:
-            raise ValueError(f"Indices for Imp-/Export values must be unique (i.e., no two entries for the same hub, rp, Type and k). Please check these indices: {dPower_ImpExpProfiles.index[dPower_ImpExpProfiles.index.duplicated(keep=False)]}")
-
-        # Validate that all values for "Type" == [ImpExp, Price]
-        dPower_ImpExpProfiles = dPower_ImpExpProfiles.reset_index().set_index(['hub', 'rp', 'k'])
-        errors = dPower_ImpExpProfiles[~dPower_ImpExpProfiles['Type'].isin(['ImpExp', 'Price'])]
-        if len(errors) > 0:
-            raise ValueError(f"'Type' must be 'ImpExp' or 'Price'. Please check: \n{errors}\n")
-
-        # Create combined table (with one row for each hub, rp and k)
-        dPower_ImpExpProfiles = dPower_ImpExpProfiles.pivot(columns="Type", values="Value")
-        dPower_ImpExpProfiles.columns.name = None  # Fix name of columns/indices (which are altered through pivot)
-
-        # Check that Pmax of ImpExpConnections can handle the maximum import and export (for those connections that are ImpFix or ExpFix)
-        max_import = dPower_ImpExpProfiles[dPower_ImpExpProfiles["ImpExp"] >= 0]["ImpExp"].groupby("hub").max()
-        max_export = -dPower_ImpExpProfiles[dPower_ImpExpProfiles["ImpExp"] <= 0]["ImpExp"].groupby("hub").min()
-
-        pmax_sum_by_hub = self.dPower_ImpExpHubs.groupby('hub').agg({'Pmax Import': 'sum', 'Pmax Export': 'sum', 'Import Type': 'first', 'Export Type': 'first'})
-        import_violations = max_import[(max_import > pmax_sum_by_hub['Pmax Import']) & (pmax_sum_by_hub['Import Type'] == 'ImpFix')]
-        export_violations = max_export[(max_export > pmax_sum_by_hub['Pmax Export']) & (pmax_sum_by_hub['Export Type'] == 'ExpFix')]
-
-        if not import_violations.empty:
-            error_information = pd.concat([import_violations, pmax_sum_by_hub['Pmax Import']], axis=1)  # Concat Pmax information and maximum import
-            error_information = error_information[error_information["ImpExp"].notna()]  # Only show rows where there is a violation
-            error_information = error_information.rename(columns={"ImpExp": "Max Import from Profiles", "Pmax Import": "Sum of Pmax Import from Hub Definition"})  # Rename columns for readability
-            raise ValueError(f"At least one hub has ImpFix imports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
-
-        if not export_violations.empty:
-            error_information = pd.concat([export_violations, pmax_sum_by_hub['Pmax Export']], axis=1)  # Concat Pmax information and maximum export
-            error_information = error_information[error_information["ImpExp"].notna()]  # Only show rows where there is a violation
-            error_information = error_information.rename(columns={"ImpExp": "Max Export from Profiles", "Pmax Export": "Sum of Pmax Export from Hub Definition"})  # Rename columns for readability
-            raise ValueError(f"At least one hub has ExpFix exports which exceed the sum of Pmax of all connections. Please check: \n{error_information}\n")
-
-        # If column 'scenario' is not present, add it
-        if 'scenario' not in dPower_ImpExpProfiles.columns:
-            dPower_ImpExpProfiles['scenario'] = "ScenarioA"  # TODO: Fill this dynamically, once the Excel file is updated
-        return dPower_ImpExpProfiles
 
     @staticmethod
     def get_connected_buses(connection_matrix, bus: str):
@@ -671,6 +589,8 @@ class CaseStudy:
         for df_name in CaseStudy.k_dependent_dataframes:
             if hasattr(case_study, df_name):
                 df = getattr(case_study, df_name)
+                if df is None:
+                    continue
 
                 index = df.index.names
                 df_reset = df.reset_index()
