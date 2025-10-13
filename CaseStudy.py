@@ -163,7 +163,7 @@ class CaseStudy:
                 self.dPower_ImportExport = dPower_ImportExport
             else:
                 self.power_importexport_file = power_importexport_file
-                self.dPower_ImportExport = self.get_dPower_ImportExport()
+                self.dPower_ImportExport = ExcelReader.get_Power_ImportExport(self.data_folder + self.power_importexport_file)
         else:
             self.dPower_ImportExport = None
 
@@ -199,8 +199,7 @@ class CaseStudy:
             self.scale_dPower_Storage()
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
-            self.scale_dPower_ImpExpHubs()
-            self.scale_dPower_ImpExpProfiles()
+            self.scale_dPower_ImportExport()
 
     def remove_scaling(self):
         self.power_scaling_factor = 1 / self.power_scaling_factor
@@ -290,8 +289,8 @@ class CaseStudy:
             raise ValueError("DisEffic and ChEffic in 'Power_Storage.xlsx' must not contain NaN values. Please check the data.")
 
     def scale_dPower_ImportExport(self):
-        self.dPower_ImportExport["ImpExpMin"] *= self.power_scaling_factor
-        self.dPower_ImportExport["ImpExpMax"] *= self.power_scaling_factor
+        self.dPower_ImportExport["ImpExpMinimum"] *= self.power_scaling_factor
+        self.dPower_ImportExport["ImpExpMaximum"] *= self.power_scaling_factor
         self.dPower_ImportExport["ImpExpPrice"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
