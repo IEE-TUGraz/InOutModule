@@ -154,7 +154,7 @@ class CellStyle:
 
 
 class Column:
-    def __init__(self, readable_name: str, db_name: str, description: str, unit: str, column_width: float, cell_style: CellStyle, pivoted: bool, scenario_dependent: bool = False):
+    def __init__(self, readable_name: str, db_name: str, description: str, unit: str, column_width: float, cell_style: CellStyle, pivoted: bool, scenario_dependent: bool = False, grouped: bool = False, matching_index: Optional[str] = None):
         self.readable_name = readable_name
         self.db_name = db_name
         self.description = description
@@ -163,6 +163,8 @@ class Column:
         self.cell_style = cell_style
         self.scenario_dependent = scenario_dependent
         self.pivoted = pivoted
+        self.grouped = grouped
+        self.matching_index = matching_index
 
     def get_copy_with_scenario_dependent(self, scenario_dependent: bool, color_dict: dict[str, Color]) -> Self:
         """
@@ -210,6 +212,7 @@ class Column:
                 unit = column.find("Unit").text
                 column_width = float(column.find("ColumnWidth").text)
                 cell_style = cell_style_dict[column.find("CellStyle").text] if column.find("CellStyle").text is not None else None
+                matching_index = column.find("MatchingIndex").text if column.tag == "GroupedColumn" else None
 
                 return_dict[column_id] = Column(readable_name=readable_name,
                                                 db_name=column_id if column.tag != "PivotColumn" else column.find("DatabaseName").text,
@@ -217,7 +220,9 @@ class Column:
                                                 unit=unit,
                                                 column_width=column_width,
                                                 cell_style=cell_style,
-                                                pivoted=column.tag == "PivotColumn")
+                                                pivoted=column.tag == "PivotColumn",
+                                                grouped=column.tag == "GroupedColumn",
+                                                matching_index=matching_index)
         except KeyError as e:
             missing_styles = []
             for column in columns:

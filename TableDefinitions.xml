@@ -104,6 +104,22 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Power_ImportExport">
+            <Version>v0.0.1</Version>
+            <TableHeader>Power - Import/Export Hubs and Profiles</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="k" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <GroupedColumn id="ImpExpMinimum" scenarioDependent="True"/>
+                <GroupedColumn id="ImpExpMaximum" scenarioDependent="True"/>
+                <GroupedColumn id="ImpExpPrice" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_Inflows">
             <Version>v0.1.0</Version>
             <TableHeader>Power - Inflows</TableHeader>
@@ -928,6 +944,34 @@
             <CellStyle>right</CellStyle>
         </Column>
     </Columns>
+
+    <GroupedColumns>
+        <GroupedColumn id="ImpExpMaximum">
+            <ReadableName>Maximum Imp-/Export</ReadableName>
+            <Description/>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>23</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+            <MatchingIndex>i</MatchingIndex>
+        </GroupedColumn>
+        <GroupedColumn id="ImpExpMinimum">
+            <ReadableName>Minimum Imp-/Export</ReadableName>
+            <Description>Minimum/Maximum Import/Export (positive numbers are imports, going from hub to the node) and price at this hub. Always specify the hub above 'ImpExpMinimum' and the connected node above 'ImpExpMaximum'.
+            </Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>23</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+            <MatchingIndex>hub</MatchingIndex>
+        </GroupedColumn>
+        <GroupedColumn id="ImpExpPrice">
+            <ReadableName>Imp-/Export Price</ReadableName>
+            <Description/>
+            <Unit>[€/MWh]</Unit>
+            <ColumnWidth>23</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+            <MatchingIndex/>
+        </GroupedColumn>
+    </GroupedColumns>
 
     <PivotColumns> <!-- NOTE: PivotColumns are sorted alphabetically (by id) -->
         <PivotColumn id="capacity_by_g">
