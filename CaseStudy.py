@@ -48,7 +48,7 @@ class CaseStudy:
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
                  power_demand_file: str = "Power_Demand_KInRows.xlsx", dPower_Demand: pd.DataFrame = None,
-                 power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
+                 power_inflows_file: str = "Power_Inflows_KInRows.xlsx", dPower_Inflows: pd.DataFrame = None,
                  power_vresprofiles_file: str = "Power_VRESProfiles_KInRows.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
                  power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
                  power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
@@ -156,7 +156,7 @@ class CaseStudy:
                 self.dPower_Inflows = dPower_Inflows
             elif os.path.isfile(self.data_folder + power_inflows_file):
                 self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = ExcelReader.get_Power_Inflows(self.data_folder + self.power_inflows_file)
+                self.dPower_Inflows = ExcelReader.get_Power_Inflows_KInRows(self.data_folder + self.power_inflows_file)
 
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             if dPower_ImportExport is not None:
