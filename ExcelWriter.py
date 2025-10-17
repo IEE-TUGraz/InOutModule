@@ -457,7 +457,7 @@ def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
             ws = wb.create_sheet(title=str(var))
 
         # Prepare the data from the model
-        data = [(j, v.value if not v.stale else None) for j, v in var.items()]
+        data = [(j, v.value if not v.stale or v.fixed else None) for j, v in var.items()]
 
         # Extract parameter names from the variable's index structure
         param_names = []
