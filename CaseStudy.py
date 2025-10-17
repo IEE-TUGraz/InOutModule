@@ -2,7 +2,7 @@ import copy
 import os
 import warnings
 from pathlib import Path
-from typing import Optional, Self
+from typing import Optional, Self, List
 
 import numpy as np
 import pandas as pd
@@ -58,7 +58,7 @@ class CaseStudy:
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
-
+        self.constraints_active_k: Optional[List[str]] = None  # Used for moving window approach
         if dGlobal_Parameters is not None:
             self.dGlobal_Parameters = dGlobal_Parameters
         else:
