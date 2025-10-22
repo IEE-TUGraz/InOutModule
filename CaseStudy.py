@@ -19,7 +19,8 @@ class CaseStudy:
                                            "dPower_Hindex",
                                            "dPower_ImportExport",
                                            "dPower_Inflows",
-                                           "dPower_VRESProfiles"]
+                                           "dPower_VRESProfiles",
+                                           "dPowerQ_Demand"]
     rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
     k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
     non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
@@ -48,6 +49,7 @@ class CaseStudy:
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
                  power_demand_file: str = "Power_Demand_KInRows.xlsx", dPower_Demand: pd.DataFrame = None,
+                 powerQ_demand_file: str = "PowerQ_Demand_KInRows.xlsx", dPowerQ_Demand: pd.DataFrame =None,
                  power_inflows_file: str = "Power_Inflows_KInRows.xlsx", dPower_Inflows: pd.DataFrame = None,
                  power_vresprofiles_file: str = "Power_VRESProfiles_KInRows.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
                  power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
@@ -104,6 +106,11 @@ class CaseStudy:
             self.power_demand_file = power_demand_file
             self.dPower_Demand = ExcelReader.get_Power_Demand_KInRows(self.data_folder + self.power_demand_file)
 
+        if dPowerQ_Demand is not None:
+            self.dPowerQ_Demand = dPowerQ_Demand
+        else:
+            self.powerQ_demand_file = powerQ_demand_file
+            self.dPowerQ_Demand = ExcelReader.get_PowerQ_Demand_KInRows(self.data_folder + self.powerQ_demand_file)
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
@@ -185,6 +192,7 @@ class CaseStudy:
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
         self.scale_dPower_Demand()
+        self.scale_dPowerQ_Demand()
 
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.scale_dPower_ThermalGen()
@@ -225,6 +233,9 @@ class CaseStudy:
 
     def scale_dPower_Demand(self):
         self.dPower_Demand["value"] *= self.power_scaling_factor
+
+    def scale_dPowerQ_Demand(self):
+        self.dPowerQ_Demand["value"] *= self.power_scaling_factor
 
     def scale_dPower_ThermalGen(self):
         self.dPower_ThermalGen['EFOR'] = self.dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR

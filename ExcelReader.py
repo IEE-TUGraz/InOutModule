@@ -177,6 +177,21 @@ def get_Power_Demand_KInRows(excel_file_path: str, keep_excluded_entries: bool =
 
     return dPower_Demand_KInRows
 
+def get_PowerQ_Demand_KInRows(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Demand_KInRows data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Demand_KInRows
+    """
+    dPowerQ_Demand_KInRows = __read_pivoted_file(excel_file_path, "v0.1.4", ['rp', 'k', 'i'], 'i', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_PowerQ_Demand_KInRows', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPowerQ_Demand_KInRows
+
 
 def get_Power_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """

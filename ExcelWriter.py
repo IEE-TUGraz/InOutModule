@@ -249,6 +249,7 @@ class ExcelWriter:
         self.write_Global_Scenarios(cs.dGlobal_Scenarios, folder_path)
         self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
         self.write_Power_Demand(cs.dPower_Demand, folder_path)
+        self.write_PowerQ_Demand(cs.dPowerQ_Demand, folder_path)
         self.write_Power_Hindex(cs.dPower_Hindex, folder_path)
         if hasattr(cs, "dPower_Inflows"):
             self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
@@ -319,6 +320,16 @@ class ExcelWriter:
         """
 
         self._write_Excel_from_definition(dPower_Demand_KInRows, folder_path, "Power_Demand_KInRows")
+
+    def write_PowerQ_Demand_KInRows(self, dPowerQ_Demand_KInRows: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPowerQ_Demand_KInRows DataFrame to an Excel file in LEGO format.
+        :param dPowerQ_Demand_KInRows: DataFrame containing the dPowerQ_Demand_KInRows data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dPowerQ_Demand_KInRows, folder_path, "PowerQ_Demand_KInRows")
 
     def write_Power_Hindex(self, dPower_Hindex: pd.DataFrame, folder_path: str) -> None:
         """
@@ -529,6 +540,7 @@ if __name__ == "__main__":
         ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
         ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
         ("Power_Demand_KInRows", f"{args.caseStudyFolder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
+        ("PowerQ_Demand_KInRows", f"{args.caseStudyFolder}PowerQ_Demand_KInRows.xlsx", ExcelReader.get_PowerQ_Demand_KInRows, ew.write_PowerQ_Demand_KInRows),
         ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
         ("Power_ImportExport", f"{args.caseStudyFolder}Power_ImportExport.xlsx", ExcelReader.get_Power_ImportExport, ew.write_Power_ImportExport),
         ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
