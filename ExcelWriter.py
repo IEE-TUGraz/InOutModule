@@ -2,6 +2,7 @@ import os
 import time
 import xml.etree.ElementTree as ET
 from copy import copy, deepcopy
+from pathlib import Path
 
 import numpy as np
 import openpyxl
@@ -208,13 +209,15 @@ class ExcelWriter:
         wb.save(path)
         printer.information(f"Saved Excel file to '{path}' after {time.time() - start_time:.2f} seconds")
 
-    def write_caseStudy(self, cs: CaseStudy, folder_path: str) -> None:
+    def write_caseStudy(self, cs: CaseStudy, folder_path: str | Path) -> None:
         """
         Write the case study to a folder in LEGO-Excel format.
         :param cs: CaseStudy object containing the data to be written.
         :param folder_path: Path to the folder where the Excel files will be saved.
         :return:
         """
+        folder_path = str(folder_path)
+
         self.write_Global_Scenarios(cs.dGlobal_Scenarios, folder_path)
         self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
         self.write_Power_Demand(cs.dPower_Demand, folder_path)
@@ -361,7 +364,7 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_VRESProfiles, folder_path, "Power_VRESProfiles")
 
-    def write_VRESProfiles_KInRows(self, dPower_VRESProfiles_KInRows: pd.DataFrame, folder_path: str) -> None:
+    def write_Power_VRESProfiles_KInRows(self, dPower_VRESProfiles_KInRows: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_VRESProfiles_KInRows DataFrame to an Excel file in LEGO format.
         :param dPower_VRESProfiles_KInRows: DataFrame containing the dPower_VRESProfiles_KInRows data.
@@ -498,7 +501,7 @@ if __name__ == "__main__":
         ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
         ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_Power_VRES),
         ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_Power_VRESProfiles),
-        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_VRESProfiles_KInRows),
+        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_Power_VRESProfiles_KInRows),
         ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
         ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
         ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)

@@ -4,6 +4,10 @@ import numpy as np
 import pandas as pd
 import tsam.timeseriesaggregation as tsam
 
+from InOutModule.printer import Printer
+
+printer = Printer.getInstance()
+
 
 def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vresProfiles_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -27,7 +31,9 @@ def inflowsToCapacityFactors(inflows_df: pd.DataFrame, vres_df: pd.DataFrame, vr
     df = df.join(maxProd, on='g', how='left')
 
     if df['MaxProd'].isna().any() or (df['MaxProd'] == 0).any():
-        raise ValueError("MaxProd is missing or zero for some generators in inflows.")
+        printer.warning(f"Some inflows correspond to generators which are not in Power_VRES (or have MaxProd=0). They will be ignored: {df[df['MaxProd'].isna() | (df['MaxProd'] == 0)].index.get_level_values('g').unique()}")
+        df = df.dropna(subset=['MaxProd'])
+        df = df[df['MaxProd'] != 0]
 
     # Divide inflow value by MaxProd
     df['value'] = df['value'] / df['MaxProd']

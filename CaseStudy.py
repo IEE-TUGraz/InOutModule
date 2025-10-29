@@ -1,6 +1,7 @@
 import copy
 import os
 import warnings
+from pathlib import Path
 from typing import Optional, Self
 
 import numpy as np
@@ -37,7 +38,7 @@ class CaseStudy:
     scenario_dependent_dataframes: list[str] = rpk_dependent_dataframes + rp_only_dependent_dataframes + k_only_dependent_dataframes + non_time_dependent_dataframes
 
     def __init__(self,
-                 data_folder: str,
+                 data_folder: str | Path,
                  do_not_scale_units: bool = False,
                  do_not_merge_single_node_buses: bool = False,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
@@ -230,7 +231,7 @@ class CaseStudy:
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.scale_dPower_ThermalGen()
 
-        if hasattr(self, "dPower_Inflows"):
+        if hasattr(self, "dPower_Inflows") and self.dPower_Inflows is not None:
             self.scale_dPower_Inflows()
 
         if self.dPower_Parameters["pEnableVRES"]:
@@ -269,8 +270,6 @@ class CaseStudy:
         self.dPower_Demand["value"] *= self.power_scaling_factor
 
     def scale_dPower_ThermalGen(self):
-        self.dPower_ThermalGen = self.dPower_ThermalGen[(self.dPower_ThermalGen["ExisUnits"] > 0) | (self.dPower_ThermalGen["EnableInvest"] > 0)]  # Filter out all generators that are not existing and not investable
-
         self.dPower_ThermalGen['EFOR'] = self.dPower_ThermalGen['EFOR'].fillna(0)  # Fill NaN values with 0 for EFOR
 
         # Only FuelCost is adjusted by efficiency (OMVarCost is not), then both are scaled by the cost_scaling_factor / power_scaling_factor
@@ -306,7 +305,6 @@ class CaseStudy:
         self.dPower_Inflows["value"] *= self.power_scaling_factor
 
     def scale_dPower_VRES(self):
-        self.dPower_VRES = self.dPower_VRES[(self.dPower_VRES["ExisUnits"] > 0) | ((self.dPower_VRES["EnableInvest"] > 0) & (self.dPower_VRES["MaxInvest"] > 0))]  # Filter out all generators that are not existing and not investable
         if "MinProd" not in self.dPower_VRES.columns:
             self.dPower_VRES['MinProd'] = 0
 
@@ -318,7 +316,6 @@ class CaseStudy:
         self.dPower_VRES['Qmax'] = self.dPower_VRES['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_Storage(self):
-        self.dPower_Storage = self.dPower_Storage[(self.dPower_Storage["ExisUnits"] > 0) | ((self.dPower_Storage["EnableInvest"] > 0) & (self.dPower_Storage["MaxInvest"] > 0))]  # Filter out all generators that are not existing and not investable
         self.dPower_Storage['IniReserve'] = self.dPower_Storage['IniReserve'].fillna(0)
         self.dPower_Storage['MinReserve'] = self.dPower_Storage['MinReserve'].fillna(0)
         self.dPower_Storage['MinProd'] = self.dPower_Storage["MinProd"].fillna(0)
@@ -340,8 +337,10 @@ class CaseStudy:
 
     def scale_dPower_ImpExpProfiles(self):
         self.dPower_ImpExpProfiles["ImpExp"] *= self.power_scaling_factor
+        self.dPower_ImpExpProfiles["Price"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
+        ExcelReader.check_LEGOExcel_version(self.data_folder + self.global_parameters_file, "v0.1.0", False)
         dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
@@ -355,6 +354,7 @@ class CaseStudy:
         return dGlobal_Parameters
 
     def get_dPower_Parameters(self):
+        ExcelReader.check_LEGOExcel_version(self.data_folder + self.power_parameters_file, "v0.1.0", False)
         dPower_Parameters = pd.read_excel(self.data_folder + self.power_parameters_file, skiprows=[0, 1])
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[0], axis=1)
         dPower_Parameters = dPower_Parameters.dropna(how="all")
@@ -714,14 +714,16 @@ class CaseStudy:
 
         for df_name in CaseStudy.scenario_dependent_dataframes:
             if hasattr(caseStudy, df_name):
-                df = getattr(self, df_name)
+                df = getattr(caseStudy, df_name)
+                if df is None:
+                    continue
 
                 filtered_df = df.loc[df['scenario'] == scenario_name]
 
                 if len(df) > 0 and len(filtered_df) == 0:
                     raise ValueError(f"Scenario '{scenario_name}' not found in '{df_name}'. Please check the input data.")
 
-                setattr(self, df_name, filtered_df)
+                setattr(caseStudy, df_name, filtered_df)
 
         return None if inplace else caseStudy
 

@@ -9,7 +9,7 @@ from printer import Printer
 printer = Printer.getInstance()
 
 
-def __check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
+def check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
     """
     Check if the Excel file has the correct version specifier.
     :param excel_file_path: Path to the Excel file
@@ -44,7 +44,7 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: DataFrame containing the data from the Excel file
     """
-    __check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
+    check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
     xls = pd.ExcelFile(excel_file_path)
     data = pd.DataFrame()
 
@@ -98,7 +98,7 @@ def get_Data_Packages(excel_file_path: str, keep_excluded_entries: bool = False,
     dData_Packages = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataPackage"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dData_Packages', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Data_Packages', although nothing is excluded anyway - please check if this is intended.")
 
     return dData_Packages
 
@@ -114,7 +114,7 @@ def get_Data_Sources(excel_file_path: str, keep_excluded_entries: bool = False, 
     dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.2.0", ["dataSource"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dData_Sources', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Data_Sources', although nothing is excluded anyway - please check if this is intended.")
 
     return dData_Sources
 
@@ -161,7 +161,7 @@ def get_Power_Demand(excel_file_path: str, keep_excluded_entries: bool = False, 
     dPower_Demand = __read_pivoted_file(excel_file_path, "v0.1.4", ['rp', 'k', 'i'], 'k', ['rp', 'i', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_Demand', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Demand
 
@@ -177,7 +177,7 @@ def get_Power_Demand_KInRows(excel_file_path: str, keep_excluded_entries: bool =
     dPower_Demand_KInRows = __read_pivoted_file(excel_file_path, "v0.1.4", ['rp', 'k', 'i'], 'i', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Demand_KInRows', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_Demand_KInRows', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Demand_KInRows
 
@@ -193,7 +193,7 @@ def get_Power_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, 
     dPower_Hindex = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["p", "rp", "k"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Hindex', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_Hindex', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Hindex
 
@@ -209,7 +209,7 @@ def get_Power_Inflows(excel_file_path: str, keep_excluded_entries: bool = False,
     dPower_Inflows = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Inflows', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_Inflows', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Inflows
 
@@ -225,7 +225,7 @@ def get_Power_Inflows_KInRows(excel_file_path: str, keep_excluded_entries: bool 
     dPower_Inflows_KInRows = __read_pivoted_file(excel_file_path, "v0.1.0", ['rp', 'k', 'g'], 'g', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_Inflows_KInRows', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_Inflows_KInRows', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Inflows_KInRows
 
@@ -293,7 +293,7 @@ def get_Power_VRESProfiles(excel_file_path: str, keep_excluded_entries: bool = F
     dPower_VRESProfiles = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_VRESProfiles', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_VRESProfiles', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_VRESProfiles
 
@@ -309,7 +309,7 @@ def get_Power_VRESProfiles_KInRows(excel_file_path: str, keep_excluded_entries: 
     dPower_VRESProfiles_KInRows = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'g'], 'g', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_VRESProfiles_KInRows', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_VRESProfiles_KInRows', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_VRESProfiles_KInRows
 
@@ -325,7 +325,7 @@ def get_Power_WeightsK(excel_file_path: str, keep_excluded_entries: bool = False
     dPower_WeightsK = __read_non_pivoted_file(excel_file_path, "v0.1.4", ["k"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsK', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_WeightsK', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_WeightsK
 
@@ -341,7 +341,7 @@ def get_Power_WeightsRP(excel_file_path: str, keep_excluded_entries: bool = Fals
     dPower_WeightsRP = __read_non_pivoted_file(excel_file_path, "v0.1.3", ["rp"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
-        printer.warning("'keep_excluded_entries' is set for 'get_dPower_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_WeightsRP', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_WeightsRP
 
