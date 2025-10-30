@@ -304,8 +304,8 @@ class CaseStudy:
 
     def scale_dPower_VRESProfiles(self):
         # Allow only positive capacity factors
-        if (self.dPower_VRESProfiles["Capacity"] < 0).any():
-            negative_values = self.dPower_VRESProfiles[self.dPower_VRESProfiles["Capacity"] < 0]
+        if (self.dPower_VRESProfiles["value"] < 0).any():
+            negative_values = self.dPower_VRESProfiles[self.dPower_VRESProfiles["value"] < 0]
             raise ValueError(f"VRES_Profiles contains negative values:\n{negative_values}")
 
     def scale_dPower_VRES(self):
