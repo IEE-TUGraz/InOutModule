@@ -343,12 +343,19 @@ class CaseStudy:
     def get_dGlobal_Parameters(self):
         file_path = self.data_folder + self.global_parameters_file
         version_spec = "v0.1.0"
+        fail_on_wrong_version = False
 
         try:
             xls = pd.ExcelFile(file_path, engine="calamine")
         except FileNotFoundError:
             printer.error(f"File not found: {file_path}")
             raise
+
+        # Check all sheets for version
+        for sheet in xls.sheet_names:
+            if sheet.startswith("~"):
+                continue
+            ExcelReader.check_LEGOExcel_version(xls, sheet, version_spec, file_path, fail_on_wrong_version)
 
         # Check all sheets for version
         dGlobal_Parameters = pd.read_excel(xls, skiprows=[0, 1])
@@ -366,11 +373,20 @@ class CaseStudy:
     def get_dPower_Parameters(self):
         file_path = self.data_folder + self.power_parameters_file
         version_spec = "v0.1.0"
+        fail_on_wrong_version = False
+
         try:
             xls = pd.ExcelFile(file_path, engine="calamine")
         except FileNotFoundError:
             printer.error(f"File not found: {file_path}")
             raise
+
+        # Check all sheets for version
+        for sheet in xls.sheet_names:
+            if sheet.startswith("~"):
+                continue
+            ExcelReader.check_LEGOExcel_version(xls, sheet, version_spec, file_path, fail_on_wrong_version)
+
         dPower_Parameters = pd.read_excel(xls, skiprows=[0, 1])
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[0], axis=1)
         dPower_Parameters = dPower_Parameters.dropna(how="all")

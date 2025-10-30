@@ -10,26 +10,32 @@ from printer import Printer
 printer = Printer.getInstance()
 
 
-def check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
+def check_LEGOExcel_version(xls: pd.ExcelFile, sheet_name: str, version_specifier: str, excel_file_path: str, fail_on_wrong_version: bool = False):
     """
-    Check if the Excel file has the correct version specifier.
-    :param excel_file_path: Path to the Excel file
+    Check if a specific sheet in an open Excel file has the correct version specifier.
+    :param xls: The open pandas.ExcelFile object
+    :param sheet_name: The name of the sheet to check
     :param version_specifier: Expected version specifier (e.g., "v0.1.0")
-    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
-    :return: None
-    :raises ValueError: If the version specifier does not match and fail_on_wrong_version
+    :param excel_file_path: Path to the Excel file (for error logging)
+    :param fail_on_wrong_version: If True, raise an error if the version does not match
     """
-    # Check if the file has the correct version specifier
-    wb = openpyxl.load_workbook(excel_file_path)
-    for sheet in wb.sheetnames:
-        if sheet.startswith("~"):  # Skip sheets that start with '~'
-            continue
-        if wb[sheet].cell(row=2, column=3).value != version_specifier:
-            if fail_on_wrong_version:
-                raise ValueError(f"Excel file '{excel_file_path}' does not have the correct version specifier. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
-            else:
-                printer.error(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
-                printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
+    try:
+        # Read only cell C2 (row=2, col=3) from the specified sheet
+        version_cell = pd.read_excel(xls, sheet_name=sheet_name, usecols="C", skiprows=1, nrows=1, header=None).iloc[0, 0]
+    except Exception as e:
+        printer.error(f"Could not read version cell [C2] from sheet '{sheet_name}' in '{excel_file_path}'. Error: {e}")
+        version_cell = None
+
+    if version_cell != version_specifier:
+        if fail_on_wrong_version:
+            raise ValueError(
+                f"Excel file '{excel_file_path}' (sheet '{sheet_name}') does not have the correct version specifier. "
+                f"Expected '{version_specifier}' but got '{version_cell}'.")
+        else:
+            printer.error(
+                f"Excel file '{excel_file_path}' (sheet '{sheet_name}') does not have the correct version specifier. "
+                f"Expected '{version_specifier}' but got '{version_cell}'.")
+            printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
     pass
 
 
@@ -46,14 +52,16 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     :return: DataFrame containing the data from the Excel file
     """
     xls = pd.ExcelFile(excel_file_path, engine="calamine")
-    xls = pd.ExcelFile(excel_file_path)
     data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
         if scenario.startswith("~"):
             printer.warning(f"Skipping sheet '{scenario}' from '{excel_file_path}' because it starts with '~'.")
             continue
-        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
+
+        check_LEGOExcel_version(xls, scenario, version_specifier, excel_file_path, fail_on_wrong_version)
+
+        df = pd.read_excel(xls, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         if has_excl_column:
             if not keep_excl_columns:
                 df = df[df["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
@@ -210,13 +218,19 @@ def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = F
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_Power_ImportExport', although nothing is excluded anyway - please check if this is intended.")
 
-    check_LEGOExcel_version(excel_file_path, "v0.0.1", fail_on_wrong_version)
+    version_specifier = "v0.0.1"
     xls = pd.ExcelFile(excel_file_path, engine="calamine")
     data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
+        if scenario.startswith("~"):
+            printer.warning(f"Skipping sheet '{scenario}' from '{excel_file_path}' because it starts with '~'.")
+            continue
+
+        check_LEGOExcel_version(xls, scenario, version_specifier, excel_file_path, fail_on_wrong_version)
+
         # Read row 3 (information about hubs and nodes)
-        hub_i_df = pd.read_excel(excel_file_path, skiprows=[0, 1, 3], nrows=2, sheet_name=scenario)
+        hub_i_df = pd.read_excel(xls, skiprows=[0, 1, 3], nrows=2, sheet_name=scenario)
         hub_i = []
         hubs = []
         i = 6  # Start checking from column 7 (index 6, zero-based)
@@ -230,7 +244,7 @@ def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = F
         if len(hubs) != len(set(hubs)):
             raise ValueError(f"Power_ImportExport: Found duplicate hub names in the header row. Hubs must be unique. Please check the Excel file.")
 
-        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
+        df = pd.read_excel(xls, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
 
         for i, col in enumerate(df.columns):
