@@ -395,7 +395,7 @@ class CaseStudy:
                 continue
             ExcelReader.check_LEGOExcel_version(xls, sheet, version_spec, file_path, fail_on_wrong_version)
 
-        # Check all sheets for version
+        # Read global parameters from Excel
         dGlobal_Parameters = pd.read_excel(xls, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
