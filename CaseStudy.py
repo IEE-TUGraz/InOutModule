@@ -1,3 +1,4 @@
+import concurrent.futures
 import copy
 import os
 import warnings
@@ -40,6 +41,8 @@ class CaseStudy:
                  data_folder: str | Path,
                  do_not_scale_units: bool = False,
                  do_not_merge_single_node_buses: bool = False,
+                 parallel_read: bool = True,
+                 n_jobs: int = 4,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
@@ -60,6 +63,7 @@ class CaseStudy:
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
 
+        # === SEQUENTIAL READS ===
         if dGlobal_Parameters is not None:
             self.dGlobal_Parameters = dGlobal_Parameters
         else:
@@ -87,30 +91,109 @@ class CaseStudy:
             self.power_parameters_file = power_parameters_file
             self.dPower_Parameters = self.get_dPower_Parameters()
 
-        if dPower_BusInfo is not None:
+        # === PARALLEL READS ===
+        tasks = []  # List of (attribute_name, function, args_tuple)
+
+        # Define file paths
+        self.power_businfo_file = power_businfo_file
+        self.power_network_file = power_network_file
+        self.power_demand_file = power_demand_file
+        self.power_hindex_file = power_hindex_file
+        self.power_weightsk_file = power_weightsk_file
+
+        # Add independent tasks
+        if dPower_BusInfo is None:
+            tasks.append(("dPower_BusInfo", ExcelReader.get_Power_BusInfo, (self.data_folder + self.power_businfo_file,)))
+        else:
             self.dPower_BusInfo = dPower_BusInfo
-        else:
-            self.power_businfo_file = power_businfo_file
-            self.dPower_BusInfo = ExcelReader.get_Power_BusInfo(self.data_folder + self.power_businfo_file)
 
-        if dPower_Network is not None:
+        if dPower_Network is None:
+            tasks.append(("dPower_Network", ExcelReader.get_Power_Network, (self.data_folder + self.power_network_file,)))
+        else:
             self.dPower_Network = dPower_Network
-        else:
-            self.power_network_file = power_network_file
-            self.dPower_Network = ExcelReader.get_Power_Network(self.data_folder + self.power_network_file)
 
-        if dPower_Demand is not None:
+        if dPower_Demand is None:
+            tasks.append(("dPower_Demand", ExcelReader.get_Power_Demand, (self.data_folder + self.power_demand_file,)))
+        else:
             self.dPower_Demand = dPower_Demand
-        else:
-            self.power_demand_file = power_demand_file
-            self.dPower_Demand = ExcelReader.get_Power_Demand(self.data_folder + self.power_demand_file)
 
-        if dPower_Hindex is not None:
+        if dPower_Hindex is None:
+            tasks.append(("dPower_Hindex", ExcelReader.get_Power_Hindex, (self.data_folder + self.power_hindex_file,)))
+        else:
             self.dPower_Hindex = dPower_Hindex
-        else:
-            self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_Power_Hindex(self.data_folder + self.power_hindex_file)
 
+        if dPower_WeightsK is None:
+            tasks.append(("dPower_WeightsK", ExcelReader.get_Power_WeightsK, (self.data_folder + self.power_weightsk_file,)))
+        else:
+            self.dPower_WeightsK = dPower_WeightsK
+
+        # Add conditional tasks (dependent on dPower_Parameters)
+        if self.dPower_Parameters["pEnableThermalGen"]:
+            self.power_thermalgen_file = power_thermalgen_file
+            if dPower_ThermalGen is None:
+                tasks.append(("dPower_ThermalGen", ExcelReader.get_Power_ThermalGen, (self.data_folder + self.power_thermalgen_file,)))
+            else:
+                self.dPower_ThermalGen = dPower_ThermalGen
+
+        if self.dPower_Parameters["pEnableVRES"]:
+            self.power_vres_file = power_vres_file
+            if dPower_VRES is None:
+                tasks.append(("dPower_VRES", ExcelReader.get_Power_VRES, (self.data_folder + self.power_vres_file,)))
+            else:
+                self.dPower_VRES = dPower_VRES
+
+            if dPower_VRESProfiles is None and os.path.isfile(self.data_folder + power_vresprofiles_file):
+                self.power_vresprofiles_file = power_vresprofiles_file
+                tasks.append(("dPower_VRESProfiles", ExcelReader.get_Power_VRESProfiles, (self.data_folder + self.power_vresprofiles_file,)))
+            else:
+                self.dPower_VRESProfiles = dPower_VRESProfiles
+
+        if self.dPower_Parameters["pEnableStorage"]:
+            self.power_storage_file = power_storage_file
+            if dPower_Storage is None:
+                tasks.append(("dPower_Storage", ExcelReader.get_Power_Storage, (self.data_folder + self.power_storage_file,)))
+            else:
+                self.dPower_Storage = dPower_Storage
+
+        if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
+            if dPower_Inflows is None and os.path.isfile(self.data_folder + power_inflows_file):
+                self.power_inflows_file = power_inflows_file
+                tasks.append(("dPower_Inflows", ExcelReader.get_Power_Inflows, (self.data_folder + self.power_inflows_file,)))
+            else:
+                self.dPower_Inflows = dPower_Inflows
+
+        if self.dPower_Parameters["pEnablePowerImportExport"]:
+            self.power_importexport_file = power_importexport_file
+            if dPower_ImportExport is None:
+                tasks.append(("dPower_ImportExport", ExcelReader.get_Power_ImportExport, (self.data_folder + self.power_importexport_file,)))
+            else:
+                self.dPower_ImportExport = dPower_ImportExport
+        else:
+            self.dPower_ImportExport = None
+
+        # --- Execute Tasks (Parallel or Sequential) ---
+        if parallel_read and len(tasks) > 0:
+            num_workers = min(n_jobs, len(tasks))
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+                future_to_attr = {task[0]: executor.submit(task[1], *task[2]) for task in tasks}
+
+                for future in concurrent.futures.as_completed(future_to_attr.values()):
+                    attr_name = next(attr for attr, f in future_to_attr.items() if f == future)
+                    try:
+                        result_df = future.result()
+                        setattr(self, attr_name, result_df)
+                    except Exception as exc:
+                        printer.error(f"Error reading for '{attr_name}': {exc}")
+                        raise exc
+        else:
+            for attr_name, func, args in tasks:
+                try:
+                    setattr(self, attr_name, func(*args))
+                except Exception as exc:
+                    printer.error(f"Error reading for '{attr_name}': {exc}")
+                    raise exc
+
+        # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
@@ -143,62 +226,7 @@ class CaseStudy:
                 printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
 
-        if dPower_WeightsK is not None:
-            self.dPower_WeightsK = dPower_WeightsK
-        else:
-            self.power_weightsk_file = power_weightsk_file
-            self.dPower_WeightsK = ExcelReader.get_Power_WeightsK(self.data_folder + self.power_weightsk_file)
-
-        if dPower_Hindex is not None:
-            self.dPower_Hindex = dPower_Hindex
-        else:
-            self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_Power_Hindex(self.data_folder + self.power_hindex_file)
-
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
-
-        if self.dPower_Parameters["pEnableThermalGen"]:
-            if dPower_ThermalGen is not None:
-                self.dPower_ThermalGen = dPower_ThermalGen
-            else:
-                self.power_thermalgen_file = power_thermalgen_file
-                self.dPower_ThermalGen = ExcelReader.get_Power_ThermalGen(self.data_folder + self.power_thermalgen_file)
-
-        if self.dPower_Parameters["pEnableVRES"]:
-            if dPower_VRES is not None:
-                self.dPower_VRES = dPower_VRES
-            else:
-                self.power_vres_file = power_vres_file
-                self.dPower_VRES = ExcelReader.get_Power_VRES(self.data_folder + self.power_vres_file)
-
-            if dPower_VRESProfiles is not None:
-                self.dPower_VRESProfiles = dPower_VRESProfiles
-            elif os.path.isfile(self.data_folder + power_vresprofiles_file):
-                self.power_vresprofiles_file = power_vresprofiles_file
-                self.dPower_VRESProfiles = ExcelReader.get_Power_VRESProfiles(self.data_folder + self.power_vresprofiles_file)
-
-        if self.dPower_Parameters["pEnableStorage"]:
-            if dPower_Storage is not None:
-                self.dPower_Storage = dPower_Storage
-            else:
-                self.power_storage_file = power_storage_file
-                self.dPower_Storage = ExcelReader.get_Power_Storage(self.data_folder + self.power_storage_file)
-
-        if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
-            if dPower_Inflows is not None:
-                self.dPower_Inflows = dPower_Inflows
-            elif os.path.isfile(self.data_folder + power_inflows_file):
-                self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = ExcelReader.get_Power_Inflows(self.data_folder + self.power_inflows_file)
-
-        if self.dPower_Parameters["pEnablePowerImportExport"]:
-            if dPower_ImportExport is not None:
-                self.dPower_ImportExport = dPower_ImportExport
-            else:
-                self.power_importexport_file = power_importexport_file
-                self.dPower_ImportExport = ExcelReader.get_Power_ImportExport(self.data_folder + self.power_importexport_file)
-        else:
-            self.dPower_ImportExport = None
 
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
@@ -519,22 +547,25 @@ class CaseStudy:
             self.dPower_Network = self.dPower_Network.groupby(['i', 'j']).agg(aggregation_methods_for_columns)
 
             ### Adapt dPower_ThermalGen
-            for i, row in self.dPower_ThermalGen.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_ThermalGen.loc[i] = row
+            if hasattr(self, "dPower_ThermalGen"):
+                for i, row in self.dPower_ThermalGen.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_ThermalGen.loc[i] = row
 
             # Adapt dPower_VRES
-            for i, row in self.dPower_VRES.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_VRES.loc[i] = row
+            if hasattr(self, "dPower_VRES"):
+                for i, row in self.dPower_VRES.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_VRES.loc[i] = row
 
             # Adapt dPower_Storage
-            for i, row in self.dPower_Storage.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_Storage.loc[i] = row
+            if hasattr(self, "dPower_Storage"):
+                for i, row in self.dPower_Storage.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_Storage.loc[i] = row
 
             # Adapt dPower_Demand
             self.dPower_Demand = self.dPower_Demand.reset_index()
@@ -545,14 +576,15 @@ class CaseStudy:
             self.dPower_Demand = self.dPower_Demand.groupby(['rp', 'i', 'k']).sum()
 
             # Adapt dPower_VRESProfiles
-            self.dPower_VRESProfiles = self.dPower_VRESProfiles.reset_index()
-            for i, row in self.dPower_VRESProfiles.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_VRESProfiles.loc[i] = row
+            if hasattr(self, "dPower_VRESProfiles"):
+                self.dPower_VRESProfiles = self.dPower_VRESProfiles.reset_index()
+                for i, row in self.dPower_VRESProfiles.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_VRESProfiles.loc[i] = row
 
-            self.dPower_VRESProfiles = self.dPower_VRESProfiles.groupby(['rp', 'i', 'k', 'tec']).mean()  # TODO: Aggregate using more complex method (capacity * productionCapacity * ... * / Total Production Capacity)
-            self.dPower_VRESProfiles.sort_index(inplace=True)
+                self.dPower_VRESProfiles = self.dPower_VRESProfiles.groupby(['rp', 'i', 'k', 'tec']).mean()  # TODO: Aggregate using more complex method (capacity * productionCapacity * ... * / Total Production Capacity)
+                self.dPower_VRESProfiles.sort_index(inplace=True)
 
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
