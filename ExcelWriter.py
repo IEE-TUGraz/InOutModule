@@ -400,65 +400,65 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Wind_TechnicalDetails, folder_path, "Power_Wind_TechnicalDetails")
 
+    @staticmethod
+    def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
+        """
+        Write all variables of the given Pyomo model to an Excel file.
 
-def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
-    """
-    Write all variables of the given Pyomo model to an Excel file.
+        :param model: The Pyomo model to be written to Excel.
+        :param target_path: Path to the target Excel file.
+        :return: None
+        """
+        printer.information(f"Writing model to '{target_path}'")
+        wb = openpyxl.Workbook()
+        ws = wb.active
 
-    :param model: The Pyomo model to be written to Excel.
-    :param target_path: Path to the target Excel file.
-    :return: None
-    """
-    printer.information(f"Writing model to '{target_path}'")
-    wb = openpyxl.Workbook()
-    ws = wb.active
+        for i, var in enumerate(model.component_objects(pyomo.core.Var, active=True)):
+            if i == 0:  # Use the automatically existing sheet for the first variable
+                ws.title = str(var)
+            else:  # Create a sheet for each (other) variable
+                ws = wb.create_sheet(title=str(var))
 
-    for i, var in enumerate(model.component_objects(pyomo.core.Var, active=True)):
-        if i == 0:  # Use the automatically existing sheet for the first variable
-            ws.title = str(var)
-        else:  # Create a sheet for each (other) variable
-            ws = wb.create_sheet(title=str(var))
+            # Prepare the data from the model
+            data = [(j, v.value if not v.stale else None) for j, v in var.items()]
 
-        # Prepare the data from the model
-        data = [(j, v.value if not v.stale else None) for j, v in var.items()]
+            # Extract parameter names from the variable's index structure
+            param_names = []
 
-        # Extract parameter names from the variable's index structure
-        param_names = []
+            if var.is_indexed():
+                index_set = var.index_set()
 
-        if var.is_indexed():
-            index_set = var.index_set()
+                try:
+                    # Get names from the index set
+                    if hasattr(index_set, 'subsets') and index_set.subsets():
+                        for idx, subset in enumerate(index_set.subsets()):
+                            if subset.domain.dimen is not None:
+                                for j, domain in enumerate(subset.domain.subsets()):
+                                    param_names.append(f"{subset.name}[{j}]: {domain.name}")
+                            else:
+                                param_names.append(subset.name)
+                        param_names.append(str(var))
+                except (AttributeError, TypeError):
+                    if len(data) > 0:
+                        # Determine from actual data structure
+                        col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
+                        param_names = [f"index_{j}" for j in range(col_number)] + [str(var)]
+                    else:
+                        param_names = []
 
-            try:
-                # Get names from the index set
-                if hasattr(index_set, 'subsets') and index_set.subsets():
-                    for idx, subset in enumerate(index_set.subsets()):
-                        if subset.domain.dimen is not None:
-                            for i, domain in enumerate(subset.domain.subsets()):
-                                param_names.append(f"{subset.name}[{i}]: {domain.name}")
-                        else:
-                            param_names.append(subset.name)
-                    param_names.append(str(var))
-            except (AttributeError, TypeError):
-                if len(data) > 0:
-                    # Determine from actual data structure
-                    col_number = len(data[0][0]) if not isinstance(data[0][0], str) else 1
-                    param_names = [f"index_{j}" for j in range(col_number)] + [str(var)]
-                else:
-                    param_names = []
+            # Create header row with parameter names
+            ws.append(param_names)
 
-        # Create header row with parameter names
-        ws.append(param_names)
+            # Handle data writing
+            if len(data) == 0:
+                # Create a row showing "No entries" for each parameter
+                ws.append(["No entries"] * len(param_names))
+            else:
+                # Write data to the sheet
+                for j, v in data:
+                    ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
 
-        # Handle data writing
-        if len(data) == 0:
-            # Create a row showing "No entries" for each parameter
-            ws.append(["No entries"] * len(param_names))
-        else:
-            # Write data to the sheet
-            for j, v in data:
-                ws.append(([j_index for j_index in j] if not isinstance(j, str) else [j]) + [v])
-
-    wb.save(target_path)
+        wb.save(target_path)
 
 
 if __name__ == "__main__":
@@ -466,16 +466,17 @@ if __name__ == "__main__":
     from rich_argparse import RichHelpFormatter
 
     parser = argparse.ArgumentParser(description="Re-write all files in given folder and compare against source", formatter_class=RichHelpFormatter)
-    parser.add_argument("caseStudyFolder", type=str, default="data/example/", help="Path to folder containing data for LEGO model.", nargs="?")
+    parser.add_argument("caseStudyFolder", type=str, help="Path to folder containing data for LEGO model.")
     parser.add_argument("excelDefinitionsPath", type=str, help="Path to the Excel definitions XML file. Uses default if none is supplied.", nargs="?")
     parser.add_argument("--dontCheckFormatting", action="store_true", help="Do not check formatting of the Excel files. Only check if they are equal.")
+    parser.add_argument("--dontFailOnWrongVersion", action="store_true", help="Do not fail if the version in the Excel file does not match the version in the XML definitions file.")
+    parser.add_argument("--precision", type=float, default=1e-6, help="Precision for comparing floating point values, default is 1e-6")
     args = parser.parse_args()
 
     printer.set_width(300)
 
     if not args.caseStudyFolder.endswith("/"):
         args.caseStudyFolder += "/"
-
     printer.information(f"Loading case study from '{args.caseStudyFolder}'")
 
     if args.excelDefinitionsPath is None:
@@ -508,14 +509,17 @@ if __name__ == "__main__":
 
     for excel_definition_id, file_path, read, write in combinations:
         printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
-        data = read(file_path, True, True)
+        data = read(file_path, True, not args.dontFailOnWrongVersion)
         write(data, f"{args.caseStudyFolder}output")
 
         printer.information(f"Comparing '{args.caseStudyFolder}output/{excel_definition_id}.xlsx' against source file '{file_path}'")
-        filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting)
-        if filesEqual:
-            printer.success(f"Excel files are equal")
+        if not os.path.exists(file_path):
+            printer.warning(f"Input file '{file_path}' does not exist - skipping comparison")
         else:
-            printer.error(f"Excel files are NOT equal - see above for details")
+            filesEqual = ExcelReader.compare_Excels(file_path, f"{args.caseStudyFolder}output/{excel_definition_id}.xlsx", args.dontCheckFormatting, args.precision)
+            if filesEqual:
+                printer.success(f"Excel files are equal")
+            else:
+                printer.error(f"Excel files are NOT equal - see above for details")
 
         printer.separator()
