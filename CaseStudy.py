@@ -220,8 +220,18 @@ class CaseStudy:
 
                 calculated = dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
                 fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
-                if not (calculated['pWeight_rp'] / calculated['pWeight_rp'].sum()).equals(fromFile['pWeight_rp'] / fromFile['pWeight_rp'].sum()):
-                    printer.warning(f"Values for 'pWeight_rp' in '{self.data_folder + self.power_weightsrp_file}' do not match the calculated values based on '{self.power_hindex_file}'. Please check if this is intended, using the file '{self.data_folder + self.power_weightsrp_file}' instead of the calculated values.")
+
+                # Normalize both to sum to 1 for comparison
+                calc_norm = calculated['pWeight_rp'] / calculated['pWeight_rp'].sum()
+                file_norm = fromFile['pWeight_rp'] / fromFile['pWeight_rp'].sum()
+                # Align indices and fill missing with 0 for comparison
+                combined = pd.concat([calc_norm, file_norm], axis=1, keys=['calculated', 'fromFile']).fillna(0)
+                diff_mask = ~np.isclose(combined['calculated'], combined['fromFile'])
+                if diff_mask.any():
+                    printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
+                    # Print all differing lines
+                    diffs = combined[diff_mask]
+                    printer.warning("Differing entries (index -> calculated | fromFile):\n" + diffs.to_string())
             else:  # Use calculated dPower_WeightsRP otherwise
                 printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
@@ -323,7 +333,7 @@ class CaseStudy:
         self.dPower_ThermalGen['Qmax'] = self.dPower_ThermalGen['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_Inflows(self):
-        # Allow only positive capacity factors
+        # Allow only positive inflows
         if (self.dPower_Inflows["value"] < 0).any():
             negative_values = self.dPower_Inflows[self.dPower_Inflows["value"] < 0]
             raise ValueError(f"Inflows contains negative values:\n{negative_values}")
@@ -400,7 +410,7 @@ class CaseStudy:
 
     def get_dPower_Parameters(self):
         file_path = self.data_folder + self.power_parameters_file
-        version_spec = "v0.1.0"
+        version_spec = "v0.2.0"
         fail_on_wrong_version = False
 
         try:
