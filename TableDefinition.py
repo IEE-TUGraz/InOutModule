@@ -159,7 +159,15 @@ class Column:
         self.db_name = db_name
         self.description = description
         self.unit = unit
-        self.column_width = column_width + 0.7109375  # Difference between Excel's default font and the shown column width (see https://foss.heptapod.net/openpyxl/openpyxl/-/issues/293)
+        match column_width:  # This is required since Excel saves some widths with a slightly different value than what is shown in the GUI (please add more cases if you find any)
+            case 19.5:
+                self.column_width = column_width + 0.640625
+            case 4.86 | 16.86 | 23.86:
+                self.column_width = column_width + 0.7103125
+            case 10.57:
+                self.column_width = column_width + 0.71515625
+            case _:
+                self.column_width = column_width + 0.7109375  # Difference between Excel's default font and the shown column width (see https://foss.heptapod.net/openpyxl/openpyxl/-/issues/293)
         self.cell_style = cell_style
         self.scenario_dependent = scenario_dependent
         self.pivoted = pivoted
