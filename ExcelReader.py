@@ -3,6 +3,7 @@ import time
 import openpyxl
 import pandas as pd
 from openpyxl import load_workbook
+from openpyxl.utils.cell import get_column_letter
 
 from printer import Printer
 
@@ -196,6 +197,84 @@ def get_Power_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, 
         printer.warning("'keep_excluded_entries' is set for 'get_Power_Hindex', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Hindex
+
+
+def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_ImportExport data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_ImportExport
+    """
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_ImportExport', although nothing is excluded anyway - please check if this is intended.")
+
+    check_LEGOExcel_version(excel_file_path, "v0.0.1", fail_on_wrong_version)
+    xls = pd.ExcelFile(excel_file_path)
+    data = pd.DataFrame()
+
+    for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
+        # Read row 3 (information about hubs and nodes)
+        hub_i_df = pd.read_excel(excel_file_path, skiprows=[0, 1, 3], nrows=2, sheet_name=scenario)
+        hub_i = []
+        hubs = []
+        i = 6  # Start checking from column 7 (index 6, zero-based)
+        while i < hub_i_df.shape[1]:
+            hubs.append(hub_i_df.columns[i])
+            hub_i.append((hub_i_df.columns[i], hub_i_df.columns[i + 1]))
+            if "Unnamed" not in hub_i_df.columns[i + 2]:
+                raise ValueError(f"Power_ImportExport: Expected pairs of columns for hub and i, but found an unexpected text '{hub_i_df.columns[i + 2]}' at column index {get_column_letter(i + 3)}. Please check the Excel file format.")
+            i += 3  # Move to the next pair (skip the "Unnamed" column)
+
+        if len(hubs) != len(set(hubs)):
+            raise ValueError(f"Power_ImportExport: Found duplicate hub names in the header row. Hubs must be unique. Please check the Excel file.")
+
+        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
+        df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
+
+        for i, col in enumerate(df.columns):
+            if i < 5:
+                continue  # Skip the first five columns
+            hub = hub_i[(i - 5) // 3][0]
+            node = hub_i[(i - 5) // 3][1]
+
+            match (i - 5) % 3:
+                case 0:
+                    if "ImpExpMinimum" not in col:
+                        raise ValueError(f"Power_ImportExport: Expected column 'ImpExpMinimum' at column index {get_column_letter(i + 2)}, but found '{col}'. Please check the Excel file format.")
+                    col_name = "ImpExpMinimum"
+                case 1:
+                    if "ImpExpMaximum" not in col:
+                        raise ValueError(f"Power_ImportExport: Expected column 'ImpExpMaximum' at column index {get_column_letter(i + 2)}, but found '{col}'. Please check the Excel file format.")
+                    col_name = "ImpExpMaximum"
+                case 2:
+                    if "ImpExpPrice" not in col:
+                        raise ValueError(f"Power_ImportExport: Expected column 'ImpExpPrice' at column index {get_column_letter(i + 2)}, but found '{col}'. Please check the Excel file format.")
+                    col_name = "ImpExpPrice"
+                case _:
+                    raise ValueError("This should never happen.")
+
+            if "@" in hub:
+                raise ValueError(f"Power_ImportExport: Found '@' in hub name {hub}, which is not allowed. Please rename it.")
+            elif "@" in node:
+                raise ValueError(f"Power_ImportExport: Found '@' in node name {node}, which is not allowed. Please rename it.")
+            df = df.rename(columns={col: f"{hub}@{node}@{col_name}"})
+
+        df = df.melt(id_vars=["id", "rp", "k", "dataPackage", "dataSource"])
+
+        df[["hub", "i", "valueType"]] = df["variable"].str.split("@", expand=True)  # Split the variable column into hub, i and valueType
+
+        df = df.pivot(index=["id", "rp", "k", "dataPackage", "dataSource", "hub", "i"], columns="valueType", values="value")
+        df.columns.name = None  # Fix name of columns/indices (which are altered through pivot)
+
+        df["scenario"] = scenario
+
+        df = df.reset_index().set_index(["hub", "i", "rp", "k"])  # Set multiindex
+
+        data = pd.concat([data, df], ignore_index=False)  # Append the DataFrame to the main DataFrame
+
+    return data
 
 
 def get_Power_Inflows(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:

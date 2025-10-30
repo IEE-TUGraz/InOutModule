@@ -44,7 +44,7 @@ class ExcelWriter:
         self.fonts = Font.dict_from_xml(self.xml_root.find("Fonts"), self.colors)
         self.texts = Text.dict_from_xml(self.xml_root.find("Texts"))
         self.cell_styles = CellStyle.dict_from_xml(self.xml_root.find("CellStyles"), self.fonts, self.colors, self.number_formats, self.alignments)
-        self.columns = Column.dict_from_xml(self.xml_root.find("Columns"), self.cell_styles) | Column.dict_from_xml(self.xml_root.find("PivotColumns"), self.cell_styles)
+        self.columns = Column.dict_from_xml(self.xml_root.find("Columns"), self.cell_styles) | Column.dict_from_xml(self.xml_root.find("GroupedColumns"), self.cell_styles) | Column.dict_from_xml(self.xml_root.find("PivotColumns"), self.cell_styles)
         self.excel_definitions = TableDefinition.dict_from_xml(self.xml_root.find("TableDefinitions"), self.columns, self.colors, self.cell_styles)
         pass
 
@@ -85,8 +85,9 @@ class ExcelWriter:
 
         data = data.copy()  # Create a copy of the DataFrame to avoid modifying the original data
 
-        # Prepare columns if data should be pivoted
+        # Prepare columns if data should be pivoted or grouped
         pivot_columns = []
+        grouped_columns = []
         target_column = None
         target_column_index = None
         for i, column in enumerate(excel_definition.columns):
@@ -95,6 +96,8 @@ class ExcelWriter:
                     raise ValueError(f"Excel definition '{excel_definition_id}' has (at least) two pivot columns defined: '{target_column.db_name}' and '{column.db_name}'. Only one pivot column is allowed.")
                 target_column = column
                 target_column_index = i
+            elif column.grouped:
+                grouped_columns.append(column)
             else:
                 if column.db_name != "NOEXCL":  # Skip first column if it is the (empty and thus unused) placeholder for the excl column
                     pivot_columns.append(column.db_name)
@@ -114,6 +117,19 @@ class ExcelWriter:
 
             data.reset_index(inplace=True)
 
+        if len(grouped_columns) > 0:
+            matchingColumns = [col.matching_index for col in grouped_columns]
+            matchingColumnsWithoutNone = list(filter(lambda x: x is not None, matchingColumns))
+            matchingIndices = data.reset_index().set_index(matchingColumnsWithoutNone).index.unique()
+            for i in range(len(matchingIndices) - 1):
+                for col in grouped_columns:
+                    column_templates.append(col)
+
+            # Restructure data to similar shape as Excel
+            data = data.reset_index().pivot(index=["id", "rp", "k", "dataPackage", "dataSource", "scenario"], columns=matchingColumnsWithoutNone, values=[col.db_name for col in grouped_columns])
+            data.columns.name = None  # Fix name of columns/indices (which are altered through pivot)
+            data = data.reset_index().set_index(["id", "rp", "k", "dataPackage", "dataSource"])
+
         if len(data) == 0:
             printer.warning(f"No data found for Excel definition '{excel_definition_id}' - writing an empty file.")
             data = pd.DataFrame(columns=[col.db_name for col in column_templates] + ["scenario"])
@@ -121,6 +137,7 @@ class ExcelWriter:
 
         for scenario_index, scenario in enumerate(scenarios):
             scenario_data = data[data["scenario"] == scenario]
+            no_wrap_description_set = False
 
             if scenario_index == 0:
                 ws = wb.active
@@ -166,7 +183,12 @@ class ExcelWriter:
 
                 if column.db_name != "NOEXCL":  # Skip first column if it is the (empty and thus unused) placeholder for the excl column
                     # Readable name
-                    ws.cell(row=3, column=i + 1, value=column.readable_name)
+                    if not column.grouped:
+                        ws.cell(row=3, column=i + 1, value=column.readable_name)
+                    else:
+                        group_number = (i - 6) // len(grouped_columns)
+                        group_index = (i - 6) % len(grouped_columns)
+                        ws.cell(row=3, column=i + 1, value=str(matchingIndices[group_number][group_index] if group_index < len(matchingIndices[group_number]) else ""))
                     ExcelWriter.__setCellStyle(self.cell_styles["readableName"], ws.cell(row=3, column=i + 1))
 
                     # Database name
@@ -174,13 +196,16 @@ class ExcelWriter:
                     ExcelWriter.__setCellStyle(self.cell_styles["dbName"], ws.cell(row=4, column=i + 1))
 
                     # Description
-                    ws.cell(row=5, column=i + 1, value=column.description)
-                    if i != target_column_index:
+                    if not column.grouped or not no_wrap_description_set:
+                        ws.cell(row=5, column=i + 1, value=column.description)
+                        if column.grouped:
+                            no_wrap_description_set = True
+                    if i != target_column_index and not column.grouped:
                         ExcelWriter.__setCellStyle(self.cell_styles["description"], ws.cell(row=5, column=i + 1))
                     else:  # If the column is a pivoted column, set the style without wrapping text
-                        cell_style_withou_wrap_text = deepcopy(self.cell_styles["description"])
-                        cell_style_withou_wrap_text.alignment.wrap_text = False
-                        ExcelWriter.__setCellStyle(cell_style_withou_wrap_text, ws.cell(row=5, column=i + 1))
+                        cell_style_without_wrap_text = deepcopy(self.cell_styles["description"])
+                        cell_style_without_wrap_text.alignment.wrap_text = False
+                        ExcelWriter.__setCellStyle(cell_style_without_wrap_text, ws.cell(row=5, column=i + 1))
 
                     # Database behavior
                     if i != 0:  # Skip db-behavior for the first column (excl)
@@ -198,8 +223,11 @@ class ExcelWriter:
                     if col.readable_name is None and j == 0: continue  # Skip first column if it is empty, since it is the (unused) placeholder for the excl column
                     if col.db_name == "excl":  # Excl. column is written by placing 'X' in lines which should be excluded
                         ws.cell(row=i + 8, column=j + 1, value='X' if isinstance(values[col.db_name], str) or not np.isnan(values[col.db_name]) else None)
+                    elif col.grouped:
+                        group_number = (j - 6) // len(grouped_columns)
+                        ws.cell(row=i + 8, column=j + 1, value=values[col.db_name, *matchingIndices[group_number]])
                     else:
-                        ws.cell(row=i + 8, column=j + 1, value=values[col.db_name])
+                        ws.cell(row=i + 8, column=j + 1, value=values[col.db_name].iloc[-1] if isinstance(values[col.db_name], pd.Series) else values[col.db_name])
                     ExcelWriter.__setCellStyle(col.cell_style, ws.cell(row=i + 8, column=j + 1))
 
         path = folder_path + ("/" if not folder_path.endswith("/") else "") + excel_definition.file_name + ".xlsx"
@@ -300,6 +328,15 @@ class ExcelWriter:
         :return: None
         """
         self._write_Excel_from_definition(dPower_Hindex, folder_path, "Power_Hindex")
+
+    def write_Power_ImportExport(self, dPower_ImportExport: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPower_ImportExport DataFrame to an Excel file in LEGO format.
+        :param dPower_ImportExport: DataFrame containing the dPower_ImportExport data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dPower_ImportExport, folder_path, "Power_ImportExport")
 
     def write_Power_Inflows(self, dPower_Inflows: pd.DataFrame, folder_path: str) -> None:
         """
@@ -494,6 +531,7 @@ if __name__ == "__main__":
         ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
         ("Power_Demand_KInRows", f"{args.caseStudyFolder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
         ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
+        ("Power_ImportExport", f"{args.caseStudyFolder}Power_ImportExport.xlsx", ExcelReader.get_Power_ImportExport, ew.write_Power_ImportExport),
         ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
         ("Power_Inflows_KInRows", f"{args.caseStudyFolder}Power_Inflows_KInRows.xlsx", ExcelReader.get_Power_Inflows_KInRows, ew.write_Power_Inflows_KInRows),
         ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
