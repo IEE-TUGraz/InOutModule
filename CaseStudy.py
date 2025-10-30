@@ -175,10 +175,10 @@ class CaseStudy:
         if parallel_read and len(tasks) > 0:
             num_workers = min(n_jobs, len(tasks))
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-                future_to_attr = {task[0]: executor.submit(task[1], *task[2]) for task in tasks}
+                future_to_attr = {executor.submit(task[1], *task[2]): task[0] for task in tasks}
 
-                for future in concurrent.futures.as_completed(future_to_attr.values()):
-                    attr_name = next(attr for attr, f in future_to_attr.items() if f == future)
+                for future in concurrent.futures.as_completed(future_to_attr):
+                    attr_name = future_to_attr[future]
                     try:
                         result_df = future.result()
                         setattr(self, attr_name, result_df)
