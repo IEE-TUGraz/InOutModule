@@ -45,7 +45,7 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: DataFrame containing the data from the Excel file
     """
-    check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
+    xls = pd.ExcelFile(excel_file_path, engine="calamine")
     xls = pd.ExcelFile(excel_file_path)
     data = pd.DataFrame()
 
@@ -211,7 +211,7 @@ def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = F
         printer.warning("'keep_excluded_entries' is set for 'get_Power_ImportExport', although nothing is excluded anyway - please check if this is intended.")
 
     check_LEGOExcel_version(excel_file_path, "v0.0.1", fail_on_wrong_version)
-    xls = pd.ExcelFile(excel_file_path)
+    xls = pd.ExcelFile(excel_file_path, engine="calamine")
     data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios

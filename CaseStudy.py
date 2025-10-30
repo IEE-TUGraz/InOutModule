@@ -341,8 +341,17 @@ class CaseStudy:
         self.dPower_ImportExport["ImpExpPrice"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
-        ExcelReader.check_LEGOExcel_version(self.data_folder + self.global_parameters_file, "v0.1.0", False)
-        dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
+        file_path = self.data_folder + self.global_parameters_file
+        version_spec = "v0.1.0"
+
+        try:
+            xls = pd.ExcelFile(file_path, engine="calamine")
+        except FileNotFoundError:
+            printer.error(f"File not found: {file_path}")
+            raise
+
+        # Check all sheets for version
+        dGlobal_Parameters = pd.read_excel(xls, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
 
@@ -355,8 +364,14 @@ class CaseStudy:
         return dGlobal_Parameters
 
     def get_dPower_Parameters(self):
-        ExcelReader.check_LEGOExcel_version(self.data_folder + self.power_parameters_file, "v0.1.0", False)
-        dPower_Parameters = pd.read_excel(self.data_folder + self.power_parameters_file, skiprows=[0, 1])
+        file_path = self.data_folder + self.power_parameters_file
+        version_spec = "v0.1.0"
+        try:
+            xls = pd.ExcelFile(file_path, engine="calamine")
+        except FileNotFoundError:
+            printer.error(f"File not found: {file_path}")
+            raise
+        dPower_Parameters = pd.read_excel(xls, skiprows=[0, 1])
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[0], axis=1)
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
