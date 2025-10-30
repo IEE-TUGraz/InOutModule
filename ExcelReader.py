@@ -534,7 +534,9 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                             equal = False
 
                     # Comment
-                    if source_cell.comment != target_cell.comment:
+                    if ((source_cell.comment is None and target_cell.comment is not None) or
+                            (source_cell.comment is not None and target_cell.comment is None) or
+                            (source_cell.comment != target_cell.comment)):
                         printer.error(f"Mismatch in comment at {sheet}/{source_cell.coordinate}: {source_cell.comment} != {target_cell.comment}")
                         equal = False
 
