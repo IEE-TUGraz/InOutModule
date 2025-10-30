@@ -433,8 +433,8 @@ class ExcelWriter:
                     if hasattr(index_set, 'subsets') and index_set.subsets():
                         for idx, subset in enumerate(index_set.subsets()):
                             if subset.domain.dimen is not None:
-                                for i, domain in enumerate(subset.domain.subsets()):
-                                    param_names.append(f"{subset.name}[{i}]: {domain.name}")
+                                for j, domain in enumerate(subset.domain.subsets()):
+                                    param_names.append(f"{subset.name}[{j}]: {domain.name}")
                             else:
                                 param_names.append(subset.name)
                         param_names.append(str(var))
