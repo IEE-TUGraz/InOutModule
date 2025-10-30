@@ -225,6 +225,9 @@ class CaseStudy:
         if hasattr(self, "dPower_Inflows") and self.dPower_Inflows is not None:
             self.scale_dPower_Inflows()
 
+        if hasattr(self, "dPower_VRESProfiles") and self.dPower_VRESProfiles is not None:
+            self.scale_dPower_VRESProfiles()
+
         if self.dPower_Parameters["pEnableVRES"]:
             self.scale_dPower_VRES()
 
@@ -292,7 +295,18 @@ class CaseStudy:
         self.dPower_ThermalGen['Qmax'] = self.dPower_ThermalGen['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_Inflows(self):
+        # Allow only positive capacity factors
+        if (self.dPower_Inflows["value"] < 0).any():
+            negative_values = self.dPower_Inflows[self.dPower_Inflows["value"] < 0]
+            raise ValueError(f"Inflows contains negative values:\n{negative_values}")
+
         self.dPower_Inflows["value"] *= self.power_scaling_factor
+
+    def scale_dPower_VRESProfiles(self):
+        # Allow only positive capacity factors
+        if (self.dPower_VRESProfiles["Capacity"] < 0).any():
+            negative_values = self.dPower_VRESProfiles[self.dPower_VRESProfiles["Capacity"] < 0]
+            raise ValueError(f"VRES_Profiles contains negative values:\n{negative_values}")
 
     def scale_dPower_VRES(self):
         if "MinProd" not in self.dPower_VRES.columns:
