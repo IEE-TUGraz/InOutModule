@@ -285,8 +285,6 @@ class CaseStudy:
             negative_values = self.dPower_VRESProfiles[self.dPower_VRESProfiles["Capacity"] < 0]
             raise ValueError(f"VRES_Profiles contains negative values:\n{negative_values}")
 
-        self.dPower_VRESProfiles["Capacity"] *= self.power_scaling_factor
-
     def scale_dPower_VRES(self):
         if "MinProd" not in self.dPower_VRES.columns:
             self.dPower_VRES['MinProd'] = 0
