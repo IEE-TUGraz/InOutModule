@@ -547,6 +547,10 @@ if __name__ == "__main__":
 
     for excel_definition_id, file_path, read, write in combinations:
         printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
+        if not os.path.exists(file_path):
+            printer.error(f"Input file '{file_path}' does not exist - skipping")
+            printer.separator()
+            continue
         data = read(file_path, True, not args.dontFailOnWrongVersion)
         write(data, f"{args.caseStudyFolder}output")
 
