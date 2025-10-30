@@ -214,7 +214,7 @@ def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = F
         hub_i_df = pd.read_excel(excel_file_path, skiprows=[0, 1, 3], nrows=2, sheet_name=scenario)
         hub_i = []
         hubs = []
-        i = 6  # Start checking from column 6 (index 5)
+        i = 6  # Start checking from column 7 (index 6, zero-based)
         while i < hub_i_df.shape[1]:
             hubs.append(hub_i_df.columns[i])
             hub_i.append((hub_i_df.columns[i], hub_i_df.columns[i + 1]))
