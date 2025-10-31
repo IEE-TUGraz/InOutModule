@@ -1,3 +1,4 @@
+import concurrent.futures
 import copy
 import os
 import warnings
@@ -41,6 +42,8 @@ class CaseStudy:
                  data_folder: str | Path,
                  do_not_scale_units: bool = False,
                  do_not_merge_single_node_buses: bool = False,
+                 parallel_read: bool = True,
+                 n_jobs: int = 4,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
@@ -56,11 +59,13 @@ class CaseStudy:
                  power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
                  power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
-                 power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None):
+                 power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None,
+                 clip_method: str = "none", clip_value: float = 0):
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
-        self.constraints_active_k: Optional[List[str]] = None  # Used for moving window approach
+
+        # === SEQUENTIAL READS ===
         if dGlobal_Parameters is not None:
             self.dGlobal_Parameters = dGlobal_Parameters
         else:
@@ -88,91 +93,152 @@ class CaseStudy:
             self.power_parameters_file = power_parameters_file
             self.dPower_Parameters = self.get_dPower_Parameters()
 
-        if dPower_BusInfo is not None:
+        # === PARALLEL READS ===
+        tasks = []  # List of (attribute_name, function, args_tuple)
+
+        # Define file paths
+        self.power_businfo_file = power_businfo_file
+        self.power_network_file = power_network_file
+        self.power_demand_file = power_demand_file
+        self.power_hindex_file = power_hindex_file
+        self.power_weightsk_file = power_weightsk_file
+
+        # Add independent tasks
+        if dPower_BusInfo is None:
+            tasks.append(("dPower_BusInfo", ExcelReader.get_Power_BusInfo, (self.data_folder + self.power_businfo_file,)))
+        else:
             self.dPower_BusInfo = dPower_BusInfo
-        else:
-            self.power_businfo_file = power_businfo_file
-            self.dPower_BusInfo = ExcelReader.get_Power_BusInfo(self.data_folder + self.power_businfo_file)
 
-        if dPower_Network is not None:
+        if dPower_Network is None:
+            tasks.append(("dPower_Network", ExcelReader.get_Power_Network, (self.data_folder + self.power_network_file,)))
+        else:
             self.dPower_Network = dPower_Network
-        else:
-            self.power_network_file = power_network_file
-            self.dPower_Network = ExcelReader.get_Power_Network(self.data_folder + self.power_network_file)
 
-        if dPower_Demand is not None:
+        if dPower_Demand is None:
+            tasks.append(("dPower_Demand", ExcelReader.get_Power_Demand, (self.data_folder + self.power_demand_file,)))
+        else:
             self.dPower_Demand = dPower_Demand
-        else:
-            self.power_demand_file = power_demand_file
-            self.dPower_Demand = ExcelReader.get_Power_Demand_KInRows(self.data_folder + self.power_demand_file)
 
-        if dPowerQ_Demand is not None:
-            self.dPowerQ_Demand = dPowerQ_Demand
+        if dPower_Hindex is None:
+            tasks.append(("dPower_Hindex", ExcelReader.get_Power_Hindex, (self.data_folder + self.power_hindex_file,)))
         else:
-            self.powerQ_demand_file = powerQ_demand_file
-            self.dPowerQ_Demand = ExcelReader.get_PowerQ_Demand_KInRows(self.data_folder + self.powerQ_demand_file)
+            self.dPower_Hindex = dPower_Hindex
+
+        if dPower_WeightsK is None:
+            tasks.append(("dPower_WeightsK", ExcelReader.get_Power_WeightsK, (self.data_folder + self.power_weightsk_file,)))
+        else:
+            self.dPower_WeightsK = dPower_WeightsK
+
+        # Add conditional tasks (dependent on dPower_Parameters)
+        if self.dPower_Parameters["pEnableThermalGen"]:
+            self.power_thermalgen_file = power_thermalgen_file
+            if dPower_ThermalGen is None:
+                tasks.append(("dPower_ThermalGen", ExcelReader.get_Power_ThermalGen, (self.data_folder + self.power_thermalgen_file,)))
+            else:
+                self.dPower_ThermalGen = dPower_ThermalGen
+
+        if self.dPower_Parameters["pEnableVRES"]:
+            self.power_vres_file = power_vres_file
+            if dPower_VRES is None:
+                tasks.append(("dPower_VRES", ExcelReader.get_Power_VRES, (self.data_folder + self.power_vres_file,)))
+            else:
+                self.dPower_VRES = dPower_VRES
+
+            if dPower_VRESProfiles is None and os.path.isfile(self.data_folder + power_vresprofiles_file):
+                self.power_vresprofiles_file = power_vresprofiles_file
+                tasks.append(("dPower_VRESProfiles", ExcelReader.get_Power_VRESProfiles, (self.data_folder + self.power_vresprofiles_file,)))
+            else:
+                self.dPower_VRESProfiles = dPower_VRESProfiles
+
+        if self.dPower_Parameters["pEnableStorage"]:
+            self.power_storage_file = power_storage_file
+            if dPower_Storage is None:
+                tasks.append(("dPower_Storage", ExcelReader.get_Power_Storage, (self.data_folder + self.power_storage_file,)))
+            else:
+                self.dPower_Storage = dPower_Storage
+
+        if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
+            if dPower_Inflows is None and os.path.isfile(self.data_folder + power_inflows_file):
+                self.power_inflows_file = power_inflows_file
+                tasks.append(("dPower_Inflows", ExcelReader.get_Power_Inflows, (self.data_folder + self.power_inflows_file,)))
+            else:
+                self.dPower_Inflows = dPower_Inflows
+
+        if self.dPower_Parameters["pEnablePowerImportExport"]:
+            self.power_importexport_file = power_importexport_file
+            if dPower_ImportExport is None:
+                tasks.append(("dPower_ImportExport", ExcelReader.get_Power_ImportExport, (self.data_folder + self.power_importexport_file,)))
+            else:
+                self.dPower_ImportExport = dPower_ImportExport
+        else:
+            self.dPower_ImportExport = None
+
+        # --- Execute Tasks (Parallel or Sequential) ---
+        if parallel_read and len(tasks) > 0:
+            num_workers = min(n_jobs, len(tasks))
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+                future_to_attr = {executor.submit(task[1], *task[2]): task[0] for task in tasks}
+
+                for future in concurrent.futures.as_completed(future_to_attr):
+                    attr_name = future_to_attr[future]
+                    try:
+                        result_df = future.result()
+                        setattr(self, attr_name, result_df)
+                    except Exception as exc:
+                        printer.error(f"Error reading for '{attr_name}': {exc}")
+                        raise exc
+        else:
+            for attr_name, func, args in tasks:
+                try:
+                    setattr(self, attr_name, func(*args))
+                except Exception as exc:
+                    printer.error(f"Error reading for '{attr_name}': {exc}")
+                    raise exc
+
+        # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
             self.power_weightsrp_file = power_weightsrp_file
-            self.dPower_WeightsRP = ExcelReader.get_Power_WeightsRP(self.data_folder + self.power_weightsrp_file)
+            # Calculate dPower_WeightsRP from Hindex
+            dPower_WeightsRPs = []
+            for scenario in self.dPower_Hindex['scenario'].unique().tolist():
+                # Count occurences of each value in column 'rp' of dPower_Hindex
+                dPower_WeightsRP_scenario = pd.DataFrame(self.dPower_Hindex[self.dPower_Hindex['scenario'] == scenario].reset_index()['rp'].value_counts().sort_index())
+                dPower_WeightsRP_scenario = dPower_WeightsRP_scenario.rename(columns={'count': 'pWeight_rp'})
+                dPower_WeightsRP_scenario['scenario'] = scenario  # Add scenario ID
 
-        if dPower_WeightsK is not None:
-            self.dPower_WeightsK = dPower_WeightsK
-        else:
-            self.power_weightsk_file = power_weightsk_file
-            self.dPower_WeightsK = ExcelReader.get_Power_WeightsK(self.data_folder + self.power_weightsk_file)
+                # Add other columns with default values
+                dPower_WeightsRP_scenario['id'] = np.nan
+                dPower_WeightsRP_scenario['dataPackage'] = np.nan
+                dPower_WeightsRP_scenario['dataSource'] = np.nan
 
-        if dPower_Hindex is not None:
-            self.dPower_Hindex = dPower_Hindex
-        else:
-            self.power_hindex_file = power_hindex_file
-            self.dPower_Hindex = ExcelReader.get_Power_Hindex(self.data_folder + self.power_hindex_file)
+                dPower_WeightsRPs.append(dPower_WeightsRP_scenario)
 
-        self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices()
+            dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
 
-        if self.dPower_Parameters["pEnableThermalGen"]:
-            if dPower_ThermalGen is not None:
-                self.dPower_ThermalGen = dPower_ThermalGen
-            else:
-                self.power_thermalgen_file = power_thermalgen_file
-                self.dPower_ThermalGen = ExcelReader.get_Power_ThermalGen(self.data_folder + self.power_thermalgen_file)
+            if os.path.exists(self.data_folder + self.power_weightsrp_file):  # Compare with given file if it exists
+                self.dPower_WeightsRP = ExcelReader.get_Power_WeightsRP(self.data_folder + self.power_weightsrp_file)
 
-        if self.dPower_Parameters["pEnableVRES"]:
-            if dPower_VRES is not None:
-                self.dPower_VRES = dPower_VRES
-            else:
-                self.power_vres_file = power_vres_file
-                self.dPower_VRES = ExcelReader.get_Power_VRES(self.data_folder + self.power_vres_file)
+                calculated = dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
+                fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
 
-            if dPower_VRESProfiles is not None:
-                self.dPower_VRESProfiles = dPower_VRESProfiles
-            elif os.path.isfile(self.data_folder + power_vresprofiles_file):
-                self.power_vresprofiles_file = power_vresprofiles_file
-                self.dPower_VRESProfiles = ExcelReader.get_Power_VRESProfiles_KInRows(self.data_folder + self.power_vresprofiles_file)
+                # Normalize both to sum to 1 for comparison
+                calc_norm = calculated['pWeight_rp'] / calculated['pWeight_rp'].sum()
+                file_norm = fromFile['pWeight_rp'] / fromFile['pWeight_rp'].sum()
+                # Align indices and fill missing with 0 for comparison
+                combined = pd.concat([calc_norm, file_norm], axis=1, keys=['calculated', 'fromFile']).fillna(0)
+                diff_mask = ~np.isclose(combined['calculated'], combined['fromFile'])
+                if diff_mask.any():
+                    printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
+                    # Print all differing lines
+                    diffs = combined[diff_mask]
+                    printer.warning("Differing entries (index -> calculated | fromFile):\n" + diffs.to_string())
+            else:  # Use calculated dPower_WeightsRP otherwise
+                printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
+                self.dPower_WeightsRP = dPower_WeightsRP
 
-        if self.dPower_Parameters["pEnableStorage"]:
-            if dPower_Storage is not None:
-                self.dPower_Storage = dPower_Storage
-            else:
-                self.power_storage_file = power_storage_file
-                self.dPower_Storage = ExcelReader.get_Power_Storage(self.data_folder + self.power_storage_file)
-
-        if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
-            if dPower_Inflows is not None:
-                self.dPower_Inflows = dPower_Inflows
-            elif os.path.isfile(self.data_folder + power_inflows_file):
-                self.power_inflows_file = power_inflows_file
-                self.dPower_Inflows = ExcelReader.get_Power_Inflows_KInRows(self.data_folder + self.power_inflows_file)
-
-        if self.dPower_Parameters["pEnablePowerImportExport"]:
-            if dPower_ImportExport is not None:
-                self.dPower_ImportExport = dPower_ImportExport
-            else:
-                self.power_importexport_file = power_importexport_file
-                self.dPower_ImportExport = ExcelReader.get_Power_ImportExport(self.data_folder + self.power_importexport_file)
-        else:
-            self.dPower_ImportExport = None
+        self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
@@ -199,6 +265,9 @@ class CaseStudy:
 
         if hasattr(self, "dPower_Inflows") and self.dPower_Inflows is not None:
             self.scale_dPower_Inflows()
+
+        if hasattr(self, "dPower_VRESProfiles") and self.dPower_VRESProfiles is not None:
+            self.scale_dPower_VRESProfiles()
 
         if self.dPower_Parameters["pEnableVRES"]:
             self.scale_dPower_VRES()
@@ -270,7 +339,18 @@ class CaseStudy:
         self.dPower_ThermalGen['Qmax'] = self.dPower_ThermalGen['Qmax'].fillna(0) * self.reactive_power_scaling_factor
 
     def scale_dPower_Inflows(self):
+        # Allow only positive inflows
+        if (self.dPower_Inflows["value"] < 0).any():
+            negative_values = self.dPower_Inflows[self.dPower_Inflows["value"] < 0]
+            raise ValueError(f"Inflows contains negative values:\n{negative_values}")
+
         self.dPower_Inflows["value"] *= self.power_scaling_factor
+
+    def scale_dPower_VRESProfiles(self):
+        # Allow only positive capacity factors
+        if (self.dPower_VRESProfiles["value"] < 0).any():
+            negative_values = self.dPower_VRESProfiles[self.dPower_VRESProfiles["value"] < 0]
+            raise ValueError(f"VRES_Profiles contains negative values:\n{negative_values}")
 
     def scale_dPower_VRES(self):
         if "MinProd" not in self.dPower_VRES.columns:
@@ -305,8 +385,24 @@ class CaseStudy:
         self.dPower_ImportExport["ImpExpPrice"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
-        ExcelReader.check_LEGOExcel_version(self.data_folder + self.global_parameters_file, "v0.1.0", False)
-        dGlobal_Parameters = pd.read_excel(self.data_folder + self.global_parameters_file, skiprows=[0, 1])
+        file_path = self.data_folder + self.global_parameters_file
+        version_spec = "v0.1.0"
+        fail_on_wrong_version = False
+
+        try:
+            xls = pd.ExcelFile(file_path, engine="calamine")
+        except FileNotFoundError:
+            printer.error(f"File not found: {file_path}")
+            raise
+
+        # Check all sheets for version
+        for sheet in xls.sheet_names:
+            if sheet.startswith("~"):
+                continue
+            ExcelReader.check_LEGOExcel_version(xls, sheet, version_spec, file_path, fail_on_wrong_version)
+
+        # Read global parameters from Excel
+        dGlobal_Parameters = pd.read_excel(xls, skiprows=[0, 1])
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
 
@@ -319,8 +415,23 @@ class CaseStudy:
         return dGlobal_Parameters
 
     def get_dPower_Parameters(self):
-        ExcelReader.check_LEGOExcel_version(self.data_folder + self.power_parameters_file, "v0.1.0", False)
-        dPower_Parameters = pd.read_excel(self.data_folder + self.power_parameters_file, skiprows=[0, 1])
+        file_path = self.data_folder + self.power_parameters_file
+        version_spec = "v0.2.0"
+        fail_on_wrong_version = False
+
+        try:
+            xls = pd.ExcelFile(file_path, engine="calamine")
+        except FileNotFoundError:
+            printer.error(f"File not found: {file_path}")
+            raise
+
+        # Check all sheets for version
+        for sheet in xls.sheet_names:
+            if sheet.startswith("~"):
+                continue
+            ExcelReader.check_LEGOExcel_version(xls, sheet, version_spec, file_path, fail_on_wrong_version)
+
+        dPower_Parameters = pd.read_excel(xls, skiprows=[0, 1])
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[0], axis=1)
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
@@ -452,22 +563,25 @@ class CaseStudy:
             self.dPower_Network = self.dPower_Network.groupby(['i', 'j']).agg(aggregation_methods_for_columns)
 
             ### Adapt dPower_ThermalGen
-            for i, row in self.dPower_ThermalGen.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_ThermalGen.loc[i] = row
+            if hasattr(self, "dPower_ThermalGen"):
+                for i, row in self.dPower_ThermalGen.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_ThermalGen.loc[i] = row
 
             # Adapt dPower_VRES
-            for i, row in self.dPower_VRES.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_VRES.loc[i] = row
+            if hasattr(self, "dPower_VRES"):
+                for i, row in self.dPower_VRES.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_VRES.loc[i] = row
 
             # Adapt dPower_Storage
-            for i, row in self.dPower_Storage.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_Storage.loc[i] = row
+            if hasattr(self, "dPower_Storage"):
+                for i, row in self.dPower_Storage.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_Storage.loc[i] = row
 
             # Adapt dPower_Demand
             self.dPower_Demand = self.dPower_Demand.reset_index()
@@ -478,17 +592,18 @@ class CaseStudy:
             self.dPower_Demand = self.dPower_Demand.groupby(['rp', 'i', 'k']).sum()
 
             # Adapt dPower_VRESProfiles
-            self.dPower_VRESProfiles = self.dPower_VRESProfiles.reset_index()
-            for i, row in self.dPower_VRESProfiles.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_VRESProfiles.loc[i] = row
+            if hasattr(self, "dPower_VRESProfiles"):
+                self.dPower_VRESProfiles = self.dPower_VRESProfiles.reset_index()
+                for i, row in self.dPower_VRESProfiles.iterrows():
+                    if row['i'] in connected_buses:
+                        row['i'] = new_bus_name
+                        self.dPower_VRESProfiles.loc[i] = row
 
-            self.dPower_VRESProfiles = self.dPower_VRESProfiles.groupby(['rp', 'i', 'k', 'tec']).mean()  # TODO: Aggregate using more complex method (capacity * productionCapacity * ... * / Total Production Capacity)
-            self.dPower_VRESProfiles.sort_index(inplace=True)
+                self.dPower_VRESProfiles = self.dPower_VRESProfiles.groupby(['rp', 'i', 'k', 'tec']).mean()  # TODO: Aggregate using more complex method (capacity * productionCapacity * ... * / Total Production Capacity)
+                self.dPower_VRESProfiles.sort_index(inplace=True)
 
     # Create transition matrix from Hindex
-    def get_rpTransitionMatrices(self):
+    def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         rps = sorted(self.dPower_Hindex.index.get_level_values('rp').unique().tolist())
         ks = sorted(self.dPower_Hindex.index.get_level_values('k').unique().tolist())
         rpTransitionMatrixAbsolute = pd.DataFrame(0, index=rps, columns=rps)  # Initialize with zeros
@@ -501,6 +616,27 @@ class CaseStudy:
         for rp in hindex_rps:
             rpTransitionMatrixAbsolute.at[previous_rp, rp] += 1
             previous_rp = rp
+
+        # Clip according to selected method
+        match clip_method:
+            case "none":
+                pass
+            case "absolute_count":  # Get 'clip_value' highest values of each row of the transition matrix, set all others to 0
+                if int(clip_value) != clip_value or clip_value < 0:
+                    raise ValueError(f"For 'absolute_count', clip_value must be a non-negative integer, not {clip_value}.")
+                for rp in rps:
+                    threshold = rpTransitionMatrixAbsolute.loc[rp].nlargest(int(clip_value)).min()
+                    if (rpTransitionMatrixAbsolute.loc[rp] == threshold).sum() > 1:
+                        printer.warning(f"For rp {rp}, there are multiple values with the same value as the threshold ({threshold}). This means that more than {clip_value} values are kept.")
+                    rpTransitionMatrixAbsolute.loc[rp, rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
+            case "relative_to_highest":  # Get all values that are at least 'clip_value' * 100 % of the highest value of each row of the transition matrix, set all others to 0
+                if clip_value < 0 or clip_value > 1:
+                    raise ValueError(f"For 'relative_to_highest', clip_value must be between 0 and 1, not {clip_value}.")
+                for rp in rps:
+                    threshold = rpTransitionMatrixAbsolute.loc[rp].max() * clip_value
+                    rpTransitionMatrixAbsolute.loc[rp][rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
+            case _:
+                raise ValueError(f"clip_method must be either 'none', 'absolute_count' or 'relative_to_highest', not {clip_method}.")
 
         # Calculate relative transition matrix (nerd info: for the sum, the axis is irrelevant, as there are the same number of transitions to an rp as there are transitions from an rp away. For the division however, the axis matters)
         rpTransitionMatrixRelativeTo = rpTransitionMatrixAbsolute.div(rpTransitionMatrixAbsolute.sum(axis=1), axis=0)  # Sum of probabilities is 1 for r -> all others
@@ -519,13 +655,19 @@ class CaseStudy:
         """
         caseStudy = self.copy() if not inplace else self
 
+        # First Adjustment of Hindex (important if the case study was filtered before, to get a coherent p-index)
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
+        for i in caseStudy.dPower_Hindex.index:
+            caseStudy.dPower_Hindex.loc[i, "p"] = f"h{i + 1:0>4}"
+        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+
         # Adjust Demand
         adjusted_demand = []
-        for i, _ in caseStudy.dPower_BusInfo.iterrows():
-            for h, row in caseStudy.dPower_Hindex.iterrows():
-                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "Demand"]])
+        for i in caseStudy.dPower_BusInfo.index:
+            for h in caseStudy.dPower_Hindex.index:
+                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"], "ScenarioA", None, None, None])
 
-        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "Demand"])
+        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value", "scenario", "id", "dataPackage", "dataSource"])
         caseStudy.dPower_Demand = caseStudy.dPower_Demand.set_index(["rp", "k", "i"])
 
         # Adjust VRESProfiles
@@ -533,29 +675,38 @@ class CaseStudy:
             adjusted_vresprofiles = []
             caseStudy.dPower_VRESProfiles.sort_index(inplace=True)
             for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
-                if len(caseStudy.dPower_VRESProfiles.loc[:, :, g]) > 0:  # Check if VRESProfiles has entries for g
-                    for h, row in caseStudy.dPower_Hindex.iterrows():
-                        adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "Capacity"]])
+                for h in caseStudy.dPower_Hindex.index:
+                    adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
 
-            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "Capacity"])
+            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
             caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
+
+        # Adjust Inflows
+        if hasattr(caseStudy, "dPower_Inflows"):
+            adjusted_inflows = []
+            caseStudy.dPower_Inflows.sort_index(inplace=True)
+            for g in caseStudy.dPower_Inflows.index.get_level_values('g').unique().tolist():
+                for h in caseStudy.dPower_Hindex.index:
+                    adjusted_inflows.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_Inflows.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
+            caseStudy.dPower_Inflows = pd.DataFrame(adjusted_inflows, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
+            caseStudy.dPower_Inflows = caseStudy.dPower_Inflows.set_index(["rp", "k", "g"])
 
         # Adjust Hindex
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
-        for i, row in caseStudy.dPower_Hindex.iterrows():
-            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None
+        for i in caseStudy.dPower_Hindex.index:
+            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None, "ScenarioA"
         caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
 
         # Adjust WeightsK
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.reset_index()
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.drop(caseStudy.dPower_WeightsK.index)
         for i in range(len(caseStudy.dPower_Hindex)):
-            caseStudy.dPower_WeightsK.loc[i] = f"k{i + 1:0>4}", None, 1, None, None
+            caseStudy.dPower_WeightsK.loc[i] = f"{caseStudy.dPower_Hindex.index[i][2]}", None, 1, None, None, "ScenarioA"
         caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.set_index("k")
 
         # Adjust WeightsRP
         caseStudy.dPower_WeightsRP = caseStudy.dPower_WeightsRP.drop(caseStudy.dPower_WeightsRP.index)
-        caseStudy.dPower_WeightsRP.loc["rp01"] = 1
+        caseStudy.dPower_WeightsRP.loc["rp01"] = None, 1, None, None, "ScenarioA"
 
         if not inplace:
             return caseStudy
@@ -597,7 +748,7 @@ class CaseStudy:
         case_study = self if inplace else self.copy()
 
         for df_name in CaseStudy.k_dependent_dataframes:
-            if hasattr(case_study, df_name):
+            if hasattr(case_study, df_name) and getattr(case_study, df_name) is not None:
                 df = getattr(case_study, df_name)
                 if df is None:
                     continue
@@ -634,5 +785,45 @@ class CaseStudy:
                 filtered_df = filtered_df_reset.set_index(index)
 
                 setattr(case_study, df_name, filtered_df)
+
+        return None if inplace else case_study
+
+    def shift_ks(self, shift: int, inplace: bool = False) -> Optional[Self]:
+        """
+        Shifts all k indices by the given amount, i.e., if shift is 4, then the first 4
+        timesteps are moved to the back of the time series.
+
+        :param shift: The amount to shift the k indices by.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
+
+        for df_name in CaseStudy.k_dependent_dataframes:
+            if df_name in ["dPower_WeightsK", "dPower_Hindex"]:
+                continue  # These dataframes are not shifted, as they are not time series
+
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
+                if df is None or df.empty:
+                    continue
+
+                index = df.index.names
+                df = df.reset_index()
+
+                df["k_int"] = df["k"].str.replace("k", "").astype(int)
+                k_int_max = df["k_int"].max()
+                k_int_min = df["k_int"].min()
+
+                df["k_int_new"] = ((df["k_int"] - k_int_min + shift) % (k_int_max - k_int_min + 1)) + k_int_min
+
+                df["k"] = "k" + df["k_int_new"].astype(str).str.zfill(4)
+                df = df.drop(columns=["k_int", "k_int_new"])
+                df = df.set_index(index)
+
+                # Sort by index to ensure that the order of the indices is correct after shifting
+                df = df.sort_index()
+
+                setattr(case_study, df_name, df)
 
         return None if inplace else case_study

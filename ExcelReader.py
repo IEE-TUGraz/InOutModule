@@ -10,24 +10,32 @@ from printer import Printer
 printer = Printer.getInstance()
 
 
-def check_LEGOExcel_version(excel_file_path: str, version_specifier: str, fail_on_wrong_version: bool = False):
+def check_LEGOExcel_version(xls: pd.ExcelFile, sheet_name: str, version_specifier: str, excel_file_path: str, fail_on_wrong_version: bool = False):
     """
-    Check if the Excel file has the correct version specifier.
-    :param excel_file_path: Path to the Excel file
+    Check if a specific sheet in an open Excel file has the correct version specifier.
+    :param xls: The open pandas.ExcelFile object
+    :param sheet_name: The name of the sheet to check
     :param version_specifier: Expected version specifier (e.g., "v0.1.0")
-    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
-    :return: None
-    :raises ValueError: If the version specifier does not match and fail_on_wrong_version
+    :param excel_file_path: Path to the Excel file (for error logging)
+    :param fail_on_wrong_version: If True, raise an error if the version does not match
     """
-    # Check if the file has the correct version specifier
-    wb = openpyxl.load_workbook(excel_file_path)
-    for sheet in wb.sheetnames:
-        if wb[sheet].cell(row=2, column=3).value != version_specifier:
-            if fail_on_wrong_version:
-                raise ValueError(f"Excel file '{excel_file_path}' does not have the correct version specifier. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
-            else:
-                printer.error(f"Excel file '{excel_file_path}' does not have the correct version specifier in sheet '{sheet}'. Expected '{version_specifier}' but got '{wb[sheet].cell(row=2, column=3).value}'.")
-                printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
+    try:
+        # Read only cell C2 (row=2, col=3) from the specified sheet
+        version_cell = pd.read_excel(xls, sheet_name=sheet_name, usecols="C", skiprows=1, nrows=1, header=None).iloc[0, 0]
+    except Exception as e:
+        printer.error(f"Could not read version cell [C2] from sheet '{sheet_name}' in '{excel_file_path}'. Error: {e}")
+        version_cell = None
+
+    if version_cell != version_specifier:
+        if fail_on_wrong_version:
+            raise ValueError(
+                f"Excel file '{excel_file_path}' (sheet '{sheet_name}') does not have the correct version specifier. "
+                f"Expected '{version_specifier}' but got '{version_cell}'.")
+        else:
+            printer.error(
+                f"Excel file '{excel_file_path}' (sheet '{sheet_name}') does not have the correct version specifier. "
+                f"Expected '{version_specifier}' but got '{version_cell}'.")
+            printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
     pass
 
 
@@ -43,12 +51,17 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: DataFrame containing the data from the Excel file
     """
-    check_LEGOExcel_version(excel_file_path, version_specifier, fail_on_wrong_version)
-    xls = pd.ExcelFile(excel_file_path)
+    xls = pd.ExcelFile(excel_file_path, engine="calamine")
     data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
-        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
+        if scenario.startswith("~"):
+            printer.warning(f"Skipping sheet '{scenario}' from '{excel_file_path}' because it starts with '~'.")
+            continue
+
+        check_LEGOExcel_version(xls, scenario, version_specifier, excel_file_path, fail_on_wrong_version)
+
+        df = pd.read_excel(xls, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         if has_excl_column:
             if not keep_excl_columns:
                 df = df[df["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
@@ -107,7 +120,7 @@ def get_Data_Sources(excel_file_path: str, keep_excluded_entries: bool = False, 
     :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
     :return: dData_Sources
     """
-    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.1.0", ["dataSource"], False, False, fail_on_wrong_version)
+    dData_Sources = __read_non_pivoted_file(excel_file_path, "v0.2.0", ["dataSource"], False, False, fail_on_wrong_version)
 
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_Data_Sources', although nothing is excluded anyway - please check if this is intended.")
@@ -220,16 +233,22 @@ def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = F
     if keep_excluded_entries:
         printer.warning("'keep_excluded_entries' is set for 'get_Power_ImportExport', although nothing is excluded anyway - please check if this is intended.")
 
-    check_LEGOExcel_version(excel_file_path, "v0.0.1", fail_on_wrong_version)
-    xls = pd.ExcelFile(excel_file_path)
+    version_specifier = "v0.0.1"
+    xls = pd.ExcelFile(excel_file_path, engine="calamine")
     data = pd.DataFrame()
 
     for scenario in xls.sheet_names:  # Iterate through all sheets, i.e., through all scenarios
+        if scenario.startswith("~"):
+            printer.warning(f"Skipping sheet '{scenario}' from '{excel_file_path}' because it starts with '~'.")
+            continue
+
+        check_LEGOExcel_version(xls, scenario, version_specifier, excel_file_path, fail_on_wrong_version)
+
         # Read row 3 (information about hubs and nodes)
-        hub_i_df = pd.read_excel(excel_file_path, skiprows=[0, 1, 3], nrows=2, sheet_name=scenario)
+        hub_i_df = pd.read_excel(xls, skiprows=[0, 1, 3], nrows=2, sheet_name=scenario)
         hub_i = []
         hubs = []
-        i = 6  # Start checking from column 6 (index 5)
+        i = 6  # Start checking from column 7 (index 6, zero-based)
         while i < hub_i_df.shape[1]:
             hubs.append(hub_i_df.columns[i])
             hub_i.append((hub_i_df.columns[i], hub_i_df.columns[i + 1]))
@@ -240,7 +259,7 @@ def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = F
         if len(hubs) != len(set(hubs)):
             raise ValueError(f"Power_ImportExport: Found duplicate hub names in the header row. Hubs must be unique. Please check the Excel file.")
 
-        df = pd.read_excel(excel_file_path, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
+        df = pd.read_excel(xls, skiprows=[0, 1, 2, 4, 5, 6], sheet_name=scenario)
         df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
 
         for i, col in enumerate(df.columns):
@@ -448,12 +467,13 @@ def get_Power_Wind_TechnicalDetails(excel_file_path: str, keep_excluded_entries:
     return dPower_Wind_TechnicalDetails
 
 
-def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False) -> bool:
+def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bool = False, precision: float = 1e-6) -> bool:
     """
     Compare two Excel files for differences in formatting and values.
     :param source_path: Path to the source Excel file
     :param target_path: Path to the target Excel file
     :param dont_check_formatting: If True, skip formatting checks
+    :param precision: Precision for floating point comparison
     :return: True if the files are equal, False otherwise
     """
     start_time = time.time()
@@ -470,22 +490,29 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
             continue
         target_sheet = target[sheet]
 
-        for row in range(1, source_sheet.max_row + 1):
+        for row in range(1, min(source_sheet.max_row, target_sheet.max_row) + 1):
             if not dont_check_formatting:
                 if source_sheet.row_dimensions[row].height != target_sheet.row_dimensions[row].height:
                     printer.error(f"Mismatch in row height at {sheet}/row {row}: {source_sheet.row_dimensions[row].height} != {target_sheet.row_dimensions[row].height}")
                     equal = False
 
-            for col in range(1, source_sheet.max_column + 1):
+            for col in range(1, min(source_sheet.max_column, target_sheet.max_column) + 1):
                 source_cell = source_sheet.cell(row=row, column=col)
                 target_cell = target_sheet.cell(row=row, column=col)
 
                 # Value
                 if source_cell.value != target_cell.value:
-                    source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
-                    target_value = str(target_cell.value).replace("[", r"\[")
-                    printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
-                    equal = False
+                    if (isinstance(source_cell.value, float) or isinstance(source_cell.value, int)) and (isinstance(target_cell.value, float) or isinstance(target_cell.value, int)):
+                        if abs(source_cell.value - target_cell.value) / (source_cell.value if source_cell.value != 0 else 1) >= precision:
+                            source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
+                            target_value = str(target_cell.value).replace("[", r"\[")
+                            printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
+                            equal = False
+                    else:
+                        source_value = str(source_cell.value).replace("[", r"\[")  # Required to prevent rich from interpreting brackets as style definitions
+                        target_value = str(target_cell.value).replace("[", r"\[")
+                        printer.error(f"Mismatch in value at {sheet}/{source_cell.coordinate}: {source_value} != {target_value}")
+                        equal = False
 
                 if not dont_check_formatting:
                     # Font
@@ -522,15 +549,40 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                             equal = False
 
                     # Comment
-                    if source_cell.comment != target_cell.comment:
+                    if ((source_cell.comment is None and target_cell.comment is not None) or
+                            (source_cell.comment is not None and target_cell.comment is None) or
+                            (source_cell.comment != target_cell.comment)):
                         printer.error(f"Mismatch in comment at {sheet}/{source_cell.coordinate}: {source_cell.comment} != {target_cell.comment}")
                         equal = False
 
                     # Column width
                     if row == 1:  # Only need to check column width for the first row
-                        if source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width != target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width:
-                            printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width} != {target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width}")
+                        source_columnwidth = source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width
+                        for group in source_sheet.column_groups:
+                            start, end = group.split(":")
+                            start = openpyxl.utils.column_index_from_string(start)
+                            end = openpyxl.utils.column_index_from_string(end)
+                            if start < col <= end:
+                                source_columnwidth = source_sheet.column_dimensions[openpyxl.utils.get_column_letter(start)].width
+                                break
+
+                        target_columnwidth = target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width
+                        for group in target_sheet.column_groups:
+                            start, end = group.split(":")
+                            start = openpyxl.utils.column_index_from_string(start)
+                            end = openpyxl.utils.column_index_from_string(end)
+                            if start < col <= end:
+                                target_columnwidth = target_sheet.column_dimensions[openpyxl.utils.get_column_letter(start)].width
+                                break
+                        if source_columnwidth != target_columnwidth:
+                            printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_columnwidth} != {target_columnwidth}")
                             equal = False
+        if source_sheet.max_column != target_sheet.max_column:
+            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_column - target_sheet.max_column)} {"more" if source_sheet.max_column > target_sheet.max_column else "less"} columns ({target_sheet.max_column} in total) than source sheet ({source_sheet.max_column} in total)")
+            equal = False
+        if source_sheet.max_row != target_sheet.max_row:
+            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_row - target_sheet.max_row)} {"more" if source_sheet.max_row > target_sheet.max_row else "less"} rows ({target_sheet.max_row} in total) than source sheet ({source_sheet.max_row} in total)")
+            equal = False
 
     printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")
     return equal
