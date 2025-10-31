@@ -545,8 +545,13 @@ if __name__ == "__main__":
         ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
     ]
 
+    files_different = []
     for excel_definition_id, file_path, read, write in combinations:
         printer.information(f"Writing '{excel_definition_id}', read from '{file_path}'")
+        if not os.path.exists(file_path):
+            printer.error(f"Input file '{file_path}' does not exist - skipping")
+            printer.separator()
+            continue
         data = read(file_path, True, not args.dontFailOnWrongVersion)
         write(data, f"{args.caseStudyFolder}output")
 
@@ -559,5 +564,14 @@ if __name__ == "__main__":
                 printer.success(f"Excel files are equal")
             else:
                 printer.error(f"Excel files are NOT equal - see above for details")
+                files_different.append((excel_definition_id, file_path))
 
         printer.separator()
+    if len(files_different) > 0:
+        printer.error(f"Some Excel files were different:")
+        for excel_definition_id, file_path in files_different:
+            printer.error(f"'{excel_definition_id}' (file: '{file_path}')")
+        exit(1)
+    else:
+        printer.success("All Excel files were equal")
+        exit(0)

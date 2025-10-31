@@ -11,6 +11,7 @@ dependencies:
   - pyomo=6.9.3
   - pytest=8.4.1
   - python=3.12.2
+  - python-calamine=0.5.3
   - rich=13.9.4
   - rich-argparse=1.7.1
   - tsam=2.3.9
