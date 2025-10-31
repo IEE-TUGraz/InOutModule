@@ -36,7 +36,6 @@ def check_LEGOExcel_version(xls: pd.ExcelFile, sheet_name: str, version_specifie
                 f"Excel file '{excel_file_path}' (sheet '{sheet_name}') does not have the correct version specifier. "
                 f"Expected '{version_specifier}' but got '{version_cell}'.")
             printer.error(f"Trying to work with it any way, but this can have unintended consequences!")
-    pass
 
 
 def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indices: list[str], has_excl_column: bool,

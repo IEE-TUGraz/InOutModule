@@ -572,3 +572,6 @@ if __name__ == "__main__":
         for excel_definition_id, file_path in files_different:
             printer.error(f"'{excel_definition_id}' (file: '{file_path}')")
         exit(1)
+    else:
+        printer.success("All Excel files were equal")
+        exit(0)
