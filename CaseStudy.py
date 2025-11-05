@@ -99,6 +99,7 @@ class CaseStudy:
         # Define file paths
         self.power_businfo_file = power_businfo_file
         self.power_network_file = power_network_file
+        self.powerQ_demand_file = powerQ_demand_file
         self.power_demand_file = power_demand_file
         self.power_hindex_file = power_hindex_file
         self.power_weightsk_file = power_weightsk_file
@@ -114,8 +115,13 @@ class CaseStudy:
         else:
             self.dPower_Network = dPower_Network
 
+        if dPowerQ_Demand is None:
+            tasks.append(("dPowerQ_Demand", ExcelReader.get_PowerQ_Demand_KInRows, (self.data_folder + self.powerQ_demand_file,)))
+        else:
+            self.dPowerQ_Demand = dPowerQ_Demand
+
         if dPower_Demand is None:
-            tasks.append(("dPower_Demand", ExcelReader.get_Power_Demand, (self.data_folder + self.power_demand_file,)))
+            tasks.append(("dPower_Demand", ExcelReader.get_Power_Demand_KInRows, (self.data_folder + self.power_demand_file,)))
         else:
             self.dPower_Demand = dPower_Demand
 
@@ -146,7 +152,7 @@ class CaseStudy:
 
             if dPower_VRESProfiles is None and os.path.isfile(self.data_folder + power_vresprofiles_file):
                 self.power_vresprofiles_file = power_vresprofiles_file
-                tasks.append(("dPower_VRESProfiles", ExcelReader.get_Power_VRESProfiles, (self.data_folder + self.power_vresprofiles_file,)))
+                tasks.append(("dPower_VRESProfiles", ExcelReader.get_Power_VRESProfiles_KInRows, (self.data_folder + self.power_vresprofiles_file,)))
             else:
                 self.dPower_VRESProfiles = dPower_VRESProfiles
 
@@ -160,7 +166,7 @@ class CaseStudy:
         if self.dPower_Parameters["pEnableVRES"] or self.dPower_Parameters["pEnableStorage"]:
             if dPower_Inflows is None and os.path.isfile(self.data_folder + power_inflows_file):
                 self.power_inflows_file = power_inflows_file
-                tasks.append(("dPower_Inflows", ExcelReader.get_Power_Inflows, (self.data_folder + self.power_inflows_file,)))
+                tasks.append(("dPower_Inflows", ExcelReader.get_Power_Inflows_KInRows, (self.data_folder + self.power_inflows_file,)))
             else:
                 self.dPower_Inflows = dPower_Inflows
 
