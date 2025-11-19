@@ -15,5 +15,6 @@ dependencies:
   - rich=13.9.4
   - rich-argparse=1.7.1
   - tsam=2.3.9
+  - xlrd=2.0.2
   - pip:
       - pulp==2.9.0
