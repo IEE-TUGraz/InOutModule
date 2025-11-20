@@ -9,7 +9,7 @@ def prepare_ac_lines(net):
     lines["x"] = lines.apply(
         lambda row: row["x"] if row["x"] != 0 else types.loc[row["type"]].x_per_length * row["length"], axis=1)
     lines["b"] = lines.apply(
-        lambda row: row["b"] if row["b"] != 0 else types.loc[row["type"]].x_per_length * row["length"], axis=1)
+        lambda row: row["b"] if row["b"] != 0 else types.loc[row["type"]].c_per_length * row["length"], axis=1)
 
     lines["pmax"] = lines["s_nom"] * lines["s_max_pu"]
     lines["id"] = lines.index
