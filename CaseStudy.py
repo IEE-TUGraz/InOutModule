@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 import ExcelReader
-import Utilities
+from InOutModule import Utilities
 from printer import Printer
 
 printer = Printer.getInstance()
