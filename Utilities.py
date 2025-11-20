@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import tsam.timeseriesaggregation as tsam
 
+from InOutModule.CaseStudy import CaseStudy
 from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
@@ -96,7 +97,7 @@ def apply_kmedoids_aggregation(
         cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
         capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
         sum_production: bool = False
-):
+) -> 'CaseStudy':
     """
     Apply k-medoids temporal aggregation to a CaseStudy object.
     Each scenario from dGlobal_Scenarios is processed independently.
@@ -490,7 +491,7 @@ def _update_casestudy_with_scenarios(case_study, all_processed_data: Dict):
 
     if all_demand_data:
         demand_df = pd.DataFrame(all_demand_data)
-        case_study.dPower_Demand = demand_df.set_index(['rp', 'i', 'k'])
+        case_study.dPower_Demand = demand_df.set_index(['rp', 'k', 'i'])
         print(f"  - Updated demand: {len(all_demand_data)} entries")
 
     if all_vres_data:

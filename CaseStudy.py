@@ -3,12 +3,13 @@ import copy
 import os
 import warnings
 from pathlib import Path
-from typing import Optional, Self
+from typing import Optional, Self, Literal
 
 import numpy as np
 import pandas as pd
 
 import ExcelReader
+import Utilities
 from printer import Printer
 
 printer = Printer.getInstance()
@@ -821,3 +822,27 @@ class CaseStudy:
                 setattr(case_study, df_name, df)
 
         return None if inplace else case_study
+
+    def apply_kmedoids_aggregation(self, number_rps: int, rp_length: int = 24,
+                                   cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
+                                   capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
+                                   sum_production: bool = False, inplace: bool = True) -> Optional[Self]:
+        """
+        Apply k-medoids temporal aggregation to a CaseStudy object.
+        Each scenario from dGlobal_Scenarios is processed independently.
+
+        Args:
+            number_rps: Number of representative periods to create
+            rp_length: Hours per representative period (e.g., 24, 48)
+            cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+            capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+            sum_production: If True, sum all technologies into single production column
+            inplace: If True, modifies the current instance. If False, returns a new instance.
+
+        Returns:
+            CaseStudy: New clustered CaseStudy object if inplace is False, otherwise None.
+        """
+
+        cs = self if inplace else self.copy()
+        cs = Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production)
+        return None if inplace else cs
