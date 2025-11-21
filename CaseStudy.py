@@ -485,7 +485,7 @@ class CaseStudy:
 
         for index, entry in self.dPower_Network.iterrows():
             if entry["pTecRepr"] == "SN":
-                connectionMatrix.loc[index] = True
+                connectionMatrix.loc[index[0], index[1]] = True
                 connectionMatrix.loc[index[1], index[0]] = True
 
         merged_buses = set()  # Set of buses that have been merged already
@@ -512,14 +512,10 @@ class CaseStudy:
                 # 'Bs': 'mean',
                 # 'Gs': 'mean',
                 # 'PowerFactor': 'mean',
-                'YearCom': 'mean',
-                'YearDecom': 'mean',
-                'lat': 'mean',
-                'long': 'mean'
             }
-            dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
+            #dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
             dPower_BusInfo_entry['zoi'] = zoneOfInterest
-            dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
+            #dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
             dPower_BusInfo_entry.index = [new_bus_name]
 
             self.dPower_BusInfo = self.dPower_BusInfo.drop(connected_buses)
@@ -719,6 +715,7 @@ class CaseStudy:
         else:
             return None
 
+
     def filter_scenario(self, scenario_name, inplace: bool = False) -> Optional[Self]:
         """
         Filters each (relevant) dataframe in the case study to only include the scenario with the given name.
@@ -767,6 +764,31 @@ class CaseStudy:
                 filtered_df = filtered_df_reset.set_index(index)
 
                 setattr(case_study, df_name, filtered_df)
+
+        return None if inplace else case_study
+
+    def aggregate_parameters(self, frame: int, inplace: bool = False) -> Optional[Self]:
+        """
+        Aggregates the parameters of the case study to the requested timeframe by averaging over capacity factors and summing over Demand
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
+
+        for df_name in CaseStudy.scenario_dependent_dataframes:
+            if hasattr(case_study, df_name):
+                df = getattr(case_study, df_name)
+                if df is None:
+                    continue
+
+                index = df.index.names
+                df_reset = df.reset_index()
+
+                aggregated_df_reset = df_reset.groupby(index).mean('frame').reset_index()
+
+                aggregated_df = aggregated_df_reset.set_index(index)
+
+                setattr(case_study, df_name, aggregated_df)
 
         return None if inplace else case_study
 
