@@ -95,7 +95,8 @@ def apply_kmedoids_aggregation(
         rp_length: int = 24,
         cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
         capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
-        sum_production: bool = False):
+        sum_production: bool = False,
+        inplace: bool = False):
     """
     Apply k-medoids temporal aggregation to a CaseStudy object.
     Each scenario from dGlobal_Scenarios is processed independently.
@@ -107,13 +108,14 @@ def apply_kmedoids_aggregation(
         cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
         capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
         sum_production: If True, sum all technologies into single production column
+        inplace: If True, modify the original CaseStudy; otherwise, return a new one
 
     Returns:
-        CaseStudy: New clustered CaseStudy object
+        CaseStudy: New clustered CaseStudy object if inplace is False; otherwise, None
     """
 
     # Create a deep copy to avoid modifying the original
-    aggregated_case_study = case_study.copy()
+    aggregated_case_study = case_study.copy() if not inplace else case_study
 
     # Get scenario names
     scenario_names = aggregated_case_study.dGlobal_Scenarios.index.values
@@ -166,7 +168,10 @@ def apply_kmedoids_aggregation(
     _update_casestudy_with_scenarios(aggregated_case_study, all_processed_data)
 
     print(f"\nAll scenarios have been processed and combined successfully!")
-    return aggregated_case_study
+    if not inplace:
+        return aggregated_case_study
+    else:
+        return None
 
 
 def _extract_scenario_data(case_study, scenario: str, capacity_normalization_strategy: str) -> pd.DataFrame:

@@ -844,5 +844,8 @@ class CaseStudy:
         """
 
         cs = self if inplace else self.copy()
-        cs = Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production)
-        return None if inplace else cs
+        Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production, inplace=True)
+        if inplace:
+            return None
+        else:
+            return cs
