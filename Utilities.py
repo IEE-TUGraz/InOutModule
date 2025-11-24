@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import tsam.timeseriesaggregation as tsam
 
-from InOutModule.CaseStudy import CaseStudy
 from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
@@ -96,8 +95,7 @@ def apply_kmedoids_aggregation(
         rp_length: int = 24,
         cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
         capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
-        sum_production: bool = False
-) -> 'CaseStudy':
+        sum_production: bool = False):
     """
     Apply k-medoids temporal aggregation to a CaseStudy object.
     Each scenario from dGlobal_Scenarios is processed independently.
