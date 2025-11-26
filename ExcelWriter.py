@@ -311,6 +311,16 @@ class ExcelWriter:
 
         self._write_Excel_from_definition(dPower_Demand, folder_path, "Power_Demand")
 
+    def write_PowerQ_Demand(self, dPowerQ_Demand: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dPowerQ_Demand DataFrame to an Excel file in LEGO format.
+        :param dPowerQ_Demand: DataFrame containing the dPower_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dPowerQ_Demand, folder_path, "PowerQ_Demand")
+
     def write_Power_Demand_KInRows(self, dPower_Demand_KInRows: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_Demand_KInRows DataFrame to an Excel file in LEGO format.
@@ -448,7 +458,9 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dPower_Wind_TechnicalDetails, folder_path, "Power_Wind_TechnicalDetails")
 
-    #'@staticmethod
+    # '@staticmethod
+
+
 def model_to_excel(model: pyomo.core.Model, target_path: str) -> None:
     """
     Write all variables of the given Pyomo model to an Excel file.
