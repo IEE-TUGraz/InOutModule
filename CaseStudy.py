@@ -251,7 +251,7 @@ class CaseStudy:
 
         self.power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"]
         self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
-        self.reactive_power_scaling_factor = 1e-3  # MVar to kVar conversion factor
+        self.reactive_power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"] 
         self.angle_to_rad_scaling_factor = np.pi / 180
 
         if not do_not_scale_units:
