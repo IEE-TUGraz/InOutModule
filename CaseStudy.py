@@ -249,9 +249,9 @@ class CaseStudy:
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
 
-        self.power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"]
+        self.power_scaling_factor = 1/self.dPower_Parameters["pSBase"]
         self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
-        self.reactive_power_scaling_factor = self.dGlobal_Parameters["pPowerScalingFactor"] 
+        self.reactive_power_scaling_factor = 1/self.dPower_Parameters["pSBase"]
         self.angle_to_rad_scaling_factor = np.pi / 180
 
         if not do_not_scale_units:
