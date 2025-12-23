@@ -40,6 +40,12 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
                 df = pd.DataFrame([pyo.value(o)], columns=['values'])
             case pyomo.core.base.constraint.ConstraintList | pyomo.core.base.constraint.IndexedConstraint | pyomo.core.base.expression.IndexedExpression:  # Those will not be saved on purpose
                 continue
+            case pyomo.core.base.suffix.Suffix:
+                if str(o) == "_relaxed_integer_vars":
+                    continue  # Not saved on purpose
+                else:
+                    printer.warning(f"Pyomo-Type {type(o)} not implemented, {o.name} will not be saved to SQLite")
+                    continue
             case _:
                 printer.warning(f"Pyomo-Type {type(o)} not implemented, {o.name} will not be saved to SQLite")
                 continue
