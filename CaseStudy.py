@@ -865,25 +865,68 @@ class CaseStudy:
     def apply_kmedoids_aggregation(self, number_rps: int, rp_length: int = 24,
                                    cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
                                    capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
-                                   sum_production: bool = False, inplace: bool = True) -> Optional[Self]:
+                                   sum_production: bool = False, inplace: bool = True, verbose: bool = False) -> Optional[Self]:
         """
         Apply k-medoids temporal aggregation to a CaseStudy object.
         Each scenario from dGlobal_Scenarios is processed independently.
 
-        Args:
-            number_rps: Number of representative periods to create
-            rp_length: Hours per representative period (e.g., 24, 48)
-            cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
-            capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
-            sum_production: If True, sum all technologies into single production column
-            inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param self: The CaseStudy object to aggregate
+        :param number_rps: Number of representative periods to create
+        :param rp_length: Hours per representative period (e.g., 24, 48)
+        :param cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+        :param capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+        :param sum_production: If True, sum all technologies into single production column
+        :param inplace: If True, modify the original CaseStudy; otherwise, return a new one
+        :param verbose: If True, print detailed processing information
 
-        Returns:
-            CaseStudy: New clustered CaseStudy object if inplace is False, otherwise None.
+        :return:
+            CaseStudy: New clustered CaseStudy object if inplace is False; otherwise, None
         """
 
         cs = self if inplace else self.copy()
         Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production, inplace=True)
+        if inplace:
+            return None
+        else:
+            return cs
+
+    def get_kmedoids_representative_periods(self, number_rps: int, rp_length: int = 24,
+                                            cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
+                                            capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
+                                            sum_production: bool = False, verbose: bool = False) -> dict[str, tsam.TimeSeriesAggregation]:
+        """
+        Get the representative periods using k-medoids temporal aggregation. Does not modify the original CaseStudy.
+        Each scenario from dGlobal_Scenarios is processed independently.
+
+        :param self: The CaseStudy object to aggregate
+        :param number_rps: Number of representative periods to create
+        :param rp_length: Hours per representative period (e.g., 24, 48)
+        :param cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+        :param capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+        :param sum_production: If True, sum all technologies into single production column
+        :param verbose: If True, print detailed processing information
+
+        :return: TSAM TimeSeriesAggregation object with representative periods for each scenario
+        """
+
+        return Utilities.get_kmedoids_representative_periods(self, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production=sum_production, verbose=verbose)
+
+    def apply_representative_periods(self, representative_periods: dict[str, tsam.TimeSeriesAggregation], rp_length: int = 24,
+                                     inplace: bool = True, verbose: bool = False) -> Optional[Self]:
+        """
+        Apply precomputed representative periods to a CaseStudy object.
+        Each scenario from dGlobal_Scenarios is processed independently.
+
+        :param self: The CaseStudy object to aggregate
+        :param representative_periods: Precomputed TimeSeriesAggregation object
+        :param rp_length: Hours per representative period (e.g., 24, 48)
+        :param inplace: If True, modify the original CaseStudy; otherwise, return a new one
+        :param verbose: If True, print detailed processing information
+        :returns: New clustered CaseStudy object if inplace is False; otherwise, None
+        """
+
+        cs = self if inplace else self.copy()
+        Utilities.apply_representative_periods(cs, representative_periods, rp_length, inplace=True, verbose=verbose)
         if inplace:
             return None
         else:
