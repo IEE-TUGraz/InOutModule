@@ -1,12 +1,14 @@
 import concurrent.futures
 import copy
 import os
+import typing
 import warnings
 from pathlib import Path
 from typing import Optional, Self, Literal
 
 import numpy as np
 import pandas as pd
+import tsam.timeseriesaggregation as tsam
 
 import ExcelReader
 from InOutModule import Utilities
@@ -251,7 +253,44 @@ class CaseStudy:
             self.scale_CaseStudy()
 
     def copy(self):
-        return copy.deepcopy(self)
+        new_self = copy.deepcopy(self)
+
+        # Copy each dataframe individually to ensure no shared references
+        for df in (new_self.rpk_dependent_dataframes + new_self.rp_only_dependent_dataframes + new_self.k_only_dependent_dataframes + new_self.non_time_dependent_dataframes + new_self.non_dependent_dataframes):
+            if hasattr(new_self, df) and getattr(new_self, df) is not None:
+                original = getattr(new_self, df)
+                if type(original) is pd.DataFrame:
+                    setattr(new_self, df, original.copy(deep=True))
+                else:
+                    setattr(new_self, df, copy.deepcopy(original))
+
+        return new_self
+
+    def equal_to(self, cs: typing.Self) -> bool:
+        """
+        Check if this CaseStudy is equal to another CaseStudy, checking all dataframes for equality.
+        :param cs: Other CaseStudy to compare to
+        :return: True if equal, False otherwise
+        """
+        all_equal = True
+        for df in (self.rpk_dependent_dataframes + self.rp_only_dependent_dataframes + self.k_only_dependent_dataframes + self.non_time_dependent_dataframes + self.non_dependent_dataframes):
+            if hasattr(self, df) and hasattr(cs, df):
+                self_df = getattr(self, df)
+                cs_df = getattr(cs, df)
+
+                if type(self_df) is pd.DataFrame and type(cs_df) is pd.DataFrame:
+                    if not self_df.equals(cs_df):
+                        printer.error(f"DataFrame '{df}' is not equal.")
+                        all_equal = False
+                else:
+                    if self_df != cs_df:
+                        printer.error(f"Attribute '{df}' is not equal.")
+                        all_equal = False
+            else:
+                printer.error(f"Attribute '{df}' is missing in one of the CaseStudies.")
+                all_equal = False
+
+        return all_equal
 
     def scale_CaseStudy(self):
         self.scale_dPower_Parameters()
