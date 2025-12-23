@@ -3,7 +3,7 @@ import copy
 import os
 import warnings
 from pathlib import Path
-from typing import Optional, Self, List
+from typing import Optional, Self
 
 import numpy as np
 import pandas as pd
@@ -52,7 +52,7 @@ class CaseStudy:
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
                  power_demand_file: str = "Power_Demand_KInRows.xlsx", dPower_Demand: pd.DataFrame = None,
-                 powerQ_demand_file: str = "PowerQ_Demand_KInRows.xlsx", dPowerQ_Demand: pd.DataFrame =None,
+                 powerQ_demand_file: str = "PowerQ_Demand_KInRows.xlsx", dPowerQ_Demand: pd.DataFrame = None,
                  power_inflows_file: str = "Power_Inflows_KInRows.xlsx", dPower_Inflows: pd.DataFrame = None,
                  power_vresprofiles_file: str = "Power_VRESProfiles_KInRows.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
                  power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
@@ -201,6 +201,13 @@ class CaseStudy:
                     printer.error(f"Error reading for '{attr_name}': {exc}")
                     raise exc
 
+        # Check correctness of input data
+        if not (self.dPower_Network['pEnableInvest'].isin([0, 1])).all():
+            raise ValueError("Column 'pEnableInvest' in 'Power_Network' contains NaN values. Please fill all entries with either 0 or 1.")
+
+        if self.dPower_Parameters["pEnablePowerImportExport"] and (self.dPower_ImportExport["ImpExpPrice"] == 0).any():
+            raise ValueError("Column 'ImpExpPrice' in 'Power_ImportExport' contains 0 values. Please fill all entries with non-zero prices.")
+
         # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -249,9 +256,9 @@ class CaseStudy:
         if not do_not_merge_single_node_buses:
             self.merge_single_node_buses()
 
-        self.power_scaling_factor = 1/self.dPower_Parameters["pSBase"]
+        self.power_scaling_factor = 1 / self.dPower_Parameters["pSBase"]
         self.cost_scaling_factor = self.dGlobal_Parameters["pCostScalingFactor"]
-        self.reactive_power_scaling_factor = 1/self.dPower_Parameters["pSBase"]
+        self.reactive_power_scaling_factor = 1 / self.dPower_Parameters["pSBase"]
         self.angle_to_rad_scaling_factor = np.pi / 180
 
         if not do_not_scale_units:
@@ -513,9 +520,9 @@ class CaseStudy:
                 # 'Gs': 'mean',
                 # 'PowerFactor': 'mean',
             }
-            #dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
+            # dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
             dPower_BusInfo_entry['zoi'] = zoneOfInterest
-            #dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
+            # dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
             dPower_BusInfo_entry.index = [new_bus_name]
 
             self.dPower_BusInfo = self.dPower_BusInfo.drop(connected_buses)
@@ -714,7 +721,6 @@ class CaseStudy:
             return caseStudy
         else:
             return None
-
 
     def filter_scenario(self, scenario_name, inplace: bool = False) -> Optional[Self]:
         """
