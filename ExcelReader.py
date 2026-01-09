@@ -206,6 +206,32 @@ def get_Power_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, 
     return dPower_Hindex
 
 
+def get_Power_HydroAssets(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_HydroAssets data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_HydroAssets
+    """
+    dPower_HydroAssets = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["g"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dPower_HydroAssets
+
+
+def get_Power_HydroNetwork(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_HydroNetwork data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_HydroNetwork
+    """
+    dPower_HydroNetwork = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["i", "j"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dPower_HydroNetwork
+
+
 def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
     Read the dPower_ImportExport data from the Excel file.
@@ -320,6 +346,30 @@ def get_Power_Inflows_KInRows(excel_file_path: str, keep_excluded_entries: bool 
         printer.warning("'keep_excluded_entries' is set for 'get_Power_Inflows_KInRows', although nothing is excluded anyway - please check if this is intended.")
 
     return dPower_Inflows_KInRows
+
+
+def get_Power_Inflows_WaterAmount(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Inflows_WaterAmount data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Inflows_WaterAmount
+    """
+    dPower_Inflows_WaterAmount = __read_pivoted_file(excel_file_path, "v0.0.1", ['rp', 'k', 'g'], 'k', ['rp', 'g', 'dataPackage', 'dataSource', 'id', 'gaugeID'], False, False, fail_on_wrong_version)
+
+    dPower_Inflows_WaterAmount["gaugeID"] = dPower_Inflows_WaterAmount["gaugeID"].astype(str)
+
+    if dPower_Inflows_WaterAmount.index.has_duplicates:
+        printer.warning("Duplicates found in the index of 'dPower_Inflows_WaterAmount'. Summing up the inflows for each timestep to remove them.")
+        dPower_Inflows_WaterAmount = dPower_Inflows_WaterAmount.reset_index().set_index(['rp', 'k', 'g', 'scenario'])
+        dPower_Inflows_WaterAmount = dPower_Inflows_WaterAmount.groupby(level=dPower_Inflows_WaterAmount.index.names).agg({"gaugeID": ','.join, "dataPackage": 'first', "dataSource": 'first', "value": 'sum'})
+        dPower_Inflows_WaterAmount = dPower_Inflows_WaterAmount.reset_index().set_index(['rp', 'k', 'g'])
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_Inflows_WaterAmount', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_Inflows_WaterAmount
 
 
 def get_Power_Network(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
