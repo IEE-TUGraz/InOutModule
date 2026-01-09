@@ -20,10 +20,13 @@ class CaseStudy:
                                            "dPower_Hindex",
                                            "dPower_ImportExport",
                                            "dPower_Inflows",
+                                           "dPower_Inflows_WaterAmount",
                                            "dPower_VRESProfiles"]
     rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
     k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
     non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
+                                                "dPower_HydroAssets",
+                                                "dPower_HydroNetwork",
                                                 "dPower_Network",
                                                 "dPower_Storage",
                                                 "dPower_ThermalGen",
@@ -45,19 +48,22 @@ class CaseStudy:
                  n_jobs: int = 4,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
-                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
+                 power_demand_file: str = "Power_Demand.xlsx", dPower_Demand: pd.DataFrame = None,
+                 power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
+                 power_hydroassets_file: str = "Power_HydroAssets.xlsx", dPower_HydroAssets: pd.DataFrame = None,
+                 power_hydronetwork_file: str = "Power_HydroNetwork.xlsx", dPower_HydroNetwork: pd.DataFrame = None,
+                 power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None,
+                 power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
+                 power_inflows_wateramount_file: str = "Power_Inflows_WaterAmount.xlsx", dPower_Inflows_WaterAmount: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
+                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
+                 power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
-                 power_demand_file: str = "Power_Demand.xlsx", dPower_Demand: pd.DataFrame = None,
-                 power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
                  power_vresprofiles_file: str = "Power_VRESProfiles.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
-                 power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
-                 power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
                  power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
-                 power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
-                 power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None,
+                 power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
                  clip_method: str = "none", clip_value: float = 0):
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
@@ -134,6 +140,25 @@ class CaseStudy:
                 tasks.append(("dPower_ThermalGen", ExcelReader.get_Power_ThermalGen, (self.data_folder + self.power_thermalgen_file,)))
             else:
                 self.dPower_ThermalGen = dPower_ThermalGen
+
+        if self.dPower_Parameters["pEnableAdvancedHydro"]:
+            self.power_hydroassets_file = power_hydroassets_file
+            if dPower_HydroAssets is None:
+                tasks.append(("dPower_HydroAssets", ExcelReader.get_Power_HydroAssets, (self.data_folder + self.power_hydroassets_file,)))
+            else:
+                self.dPower_HydroAssets = dPower_HydroAssets
+
+            self.power_hydronetwork_file = power_hydronetwork_file
+            if dPower_HydroNetwork is None:
+                tasks.append(("dPower_HydroNetwork", ExcelReader.get_Power_HydroNetwork, (self.data_folder + self.power_hydronetwork_file,)))
+            else:
+                self.dPower_HydroNetwork = dPower_HydroNetwork
+
+            self.power_inflows_wateramount_file = power_inflows_wateramount_file
+            if dPower_Inflows_WaterAmount is None:
+                tasks.append(("dPower_Inflows_WaterAmount", ExcelReader.get_Power_Inflows_WaterAmount, (self.data_folder + self.power_inflows_wateramount_file,)))
+            else:
+                self.dPower_Inflows_WaterAmount = dPower_Inflows_WaterAmount
 
         if self.dPower_Parameters["pEnableVRES"]:
             self.power_vres_file = power_vres_file
@@ -269,6 +294,9 @@ class CaseStudy:
         if self.dPower_Parameters["pEnableVRES"]:
             self.scale_dPower_VRES()
 
+        if self.dPower_Parameters["pEnableAdvancedHydro"]:
+            self.scale_dPower_HydroAssets()
+
         if self.dPower_Parameters["pEnableStorage"]:
             self.scale_dPower_Storage()
 
@@ -331,6 +359,16 @@ class CaseStudy:
 
         self.dPower_ThermalGen['Qmin'] = self.dPower_ThermalGen['Qmin'].fillna(0) * self.reactive_power_scaling_factor
         self.dPower_ThermalGen['Qmax'] = self.dPower_ThermalGen['Qmax'].fillna(0) * self.reactive_power_scaling_factor
+
+    def scale_dPower_HydroAssets(self):
+        self.dPower_HydroAssets['PowerFactorTurbine'] *= self.power_scaling_factor
+        self.dPower_HydroAssets['PowerFactorPump'] *= self.power_scaling_factor
+
+        self.dPower_HydroAssets['OMVarCostTurbine'] *= self.cost_scaling_factor
+        self.dPower_HydroAssets['OMVarCostPump'] *= self.cost_scaling_factor
+
+        self.dPower_HydroAssets['InvestCostPerMW'] *= (self.cost_scaling_factor / self.power_scaling_factor)
+        self.dPower_HydroAssets['InvestCostPerMWh'] *= (self.cost_scaling_factor / self.power_scaling_factor)
 
     def scale_dPower_Inflows(self):
         # Allow only positive inflows
@@ -410,7 +448,7 @@ class CaseStudy:
 
     def get_dPower_Parameters(self):
         file_path = self.data_folder + self.power_parameters_file
-        version_spec = "v0.2.0"
+        version_spec = "v0.3.0"
         fail_on_wrong_version = False
 
         try:
@@ -430,7 +468,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pEnableSOCP'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableVRES', 'pEnableAdvancedHydro', 'pEnableStorage', 'pEnablePowerImportExport', 'pEnableSOCP'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
