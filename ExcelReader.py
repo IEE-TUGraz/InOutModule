@@ -144,6 +144,61 @@ def get_Global_Scenarios(excel_file_path: str, keep_excluded_entries: bool = Fal
 
     return dGlobal_Scenarios
 
+def get_Heat_P2H_Conversion_Factors(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dHeat_P2H_Conversion_Factors data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dHeat_P2H_Conversion_Factors
+    """
+    dHeat_P2H_Conversion_Factors = __read_pivoted_file(excel_file_path, "v0.0.1", ['rp', 'k', 'hn', 'dt', 'htec'], 'k', ['rp', 'hn', 'dt', 'htec', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'dHeat_P2H_Conversion_Factors', although nothing is excluded anyway - please check if this is intended.")
+
+    return dHeat_P2H_Conversion_Factors
+
+
+def get_Heat_Demand(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dHeat_Demand data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dHeat_Demand
+    """
+    dHeat_Demand = __read_pivoted_file(excel_file_path, "v0.0.1", ['rp', 'k', 'hn', 'dt'], 'k', ['rp', 'hn', 'dt', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_Heat_Demand', although nothing is excluded anyway - please check if this is intended.")
+
+    return dHeat_Demand
+
+def get_Heat_Nodes(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dHeat_Node_Links data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dHeat_Node_Links
+    """
+    dHeat_Node_Links = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["i","hn"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dHeat_Node_Links
+
+
+def get_Heat_P2H_Technologies(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dHeat_P2H_Technologies data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dHeat_P2H_Technologies
+    """
+    dHeat_P2H_Technologies = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["hn","dt","htec"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dHeat_P2H_Technologies
 
 def get_Power_BusInfo(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """

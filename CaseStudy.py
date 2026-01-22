@@ -16,7 +16,8 @@ printer = Printer.getInstance()
 
 class CaseStudy:
     # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
-    rpk_dependent_dataframes: list[str] = ["dPower_Demand",
+    rpk_dependent_dataframes: list[str] = ["dHeat_Demand",
+        "dPower_Demand",
                                            "dPower_Hindex",
                                            "dPower_ImportExport",
                                            "dPower_Inflows",
@@ -45,6 +46,7 @@ class CaseStudy:
                  n_jobs: int = 4,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
+                 heat_demand_file: str = "Heat_Demand.xlsx", dHeat_Demand: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
@@ -128,6 +130,13 @@ class CaseStudy:
             self.dPower_WeightsK = dPower_WeightsK
 
         # Add conditional tasks (dependent on dPower_Parameters)
+        if self.dGlobal_Parameters["pEnableHeat"]:
+            self.heat_demand_file = heat_demand_file
+            if dHeat_Demand is None:
+                tasks.append(("dHeat_Demand", ExcelReader.get_Heat_Demand, (self.data_folder + self.heat_demand_file,)))
+            else:
+                self.dHeat_Demand = dHeat_Demand
+
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.power_thermalgen_file = power_thermalgen_file
             if dPower_ThermalGen is None:
@@ -275,6 +284,9 @@ class CaseStudy:
         if self.dPower_Parameters["pEnablePowerImportExport"]:
             self.scale_dPower_ImportExport()
 
+        if self.dGlobal_Parameters["pEnableHeat"]:
+            self.scale_dHeat_Demand()
+
     def remove_scaling(self):
         self.power_scaling_factor = 1 / self.power_scaling_factor
         self.cost_scaling_factor = 1 / self.cost_scaling_factor
@@ -285,6 +297,9 @@ class CaseStudy:
         self.power_scaling_factor = 1 / self.power_scaling_factor
         self.cost_scaling_factor = 1 / self.cost_scaling_factor
         self.angle_to_rad_scaling_factor = 1 / self.angle_to_rad_scaling_factor
+
+    def scale_dHeat_Demand(self):
+        self.dHeat_Demand["value"] *= self.power_scaling_factor
 
     def scale_dPower_Parameters(self):
         self.dPower_Parameters["pSBase"] *= self.power_scaling_factor

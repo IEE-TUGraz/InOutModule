@@ -39,6 +39,53 @@
                 <Column id="comments" scenarioDependent="False"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Heat_Demand">
+            <Version>v0.0.1</Version>
+            <TableHeader>Heat - Demand</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="hn" scenarioDependent="False"/>
+                <Column id="dt" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="heat_demand_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+                <TableDefinition id="Heat_Nodes">
+            <Version>v0.0.1</Version>
+            <TableHeader>Heat - Node Links</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="i" scenarioDependent="False"/>
+                <Column id="hn" scenarioDependent="False"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="P2H_Technologies">
+            <Version>v0.0.1</Version>
+            <TableHeader>Heat - P2H Technologies</TableHeader>
+            <DescriptionRowHeight>60.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="hn" scenarioDependent="False"/>
+                <Column id="dt" scenarioDependent="False"/>
+                <Column id="htec" scenarioDependent="False"/>
+                <Column id="InstCap" scenarioDependent="True" />
+                <Column id="TecShare" scenarioDependent="True"/>
+                <Column id="ImpStoCap" scenarioDependent="True"/>
+                <Column id="ChEffic" scenarioDependent="True"/>
+                <Column id="DisEffic" scenarioDependent="True"/>
+                <Column id="SelfDisch" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Power_BusInfo">
             <Version>v0.1.2</Version>
             <TableHeader>Power - Bus information</TableHeader>
@@ -426,6 +473,13 @@
             <ColumnWidth>21.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </Column>
+        <Column id="dt">
+            <ReadableName>Heat Demand Type</ReadableName>
+            <Description>Type of Heat Demand</Description>
+            <Unit>[residential, industry, ...]</Unit>
+            <ColumnWidth>22.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="Efficiency">
             <ReadableName>Efficiency</ReadableName>
             <Description>Efficiency calculated as 1/input for 1 MWh, i.e. 0.5 (or 50%) if 2 MWh fuel are required for 1 MWh electricity</Description>
@@ -489,6 +543,20 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="hn">
+            <ReadableName>Heat Node</ReadableName>
+            <Description>Name of heat node</Description>
+            <Unit>[hn]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="htec">
+            <ReadableName>Heat Conversion Technology</ReadableName>
+            <Description>Type of Conversion Technology</Description>
+            <Unit>[ASHP, WSHP, electric, …]</Unit>
+            <ColumnWidth>27.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="HubHeight">
             <ReadableName>Hub Height</ReadableName>
             <Description>Heigth of the turbine</Description>
@@ -510,6 +578,13 @@
             <ColumnWidth>19.00</ColumnWidth>
             <CellStyle>dbKey</CellStyle>
         </Column>
+        <Column id="ImpStoCap">
+            <ReadableName>Implicit Thermal Storage Capacity</ReadableName>
+            <Description>Implicit thermal storage capacity</Description>
+            <Unit>[MWh_thermal]</Unit>
+            <ColumnWidth>30.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="InertiaConst">
             <ReadableName>InertiaConst</ReadableName>
             <Description>Inertia constant H of the unit</Description>
@@ -521,6 +596,13 @@
             <ReadableName>Initial Reserve</ReadableName>
             <Description>Initial reserve of the storage unit</Description>
             <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="InstCap">
+            <ReadableName>Installed Capacity</ReadableName>
+            <Description>Installed Capacity termal</Description>
+            <Unit>[MW_thermal]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </Column>
@@ -853,6 +935,13 @@
             <ColumnWidth>41.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="SelfDisch">
+            <ReadableName>Self Discharge Thermal</ReadableName>
+            <Description>Self-discharge rate of thermal storage unit</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="SelfDischarge">
             <ReadableName>Self Discharge</ReadableName>
             <Description>Self discharge of the storage unit</Description>
@@ -879,6 +968,13 @@
             <Description>Corresponding technology</Description>
             <Unit>[tec]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="TecShare">
+            <ReadableName>Heating technology share</ReadableName>
+            <Description>Share of conversion technology at hn for dt</Description>
+            <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>20.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
         <Column id="Vmax">
@@ -1006,6 +1102,22 @@
             <Unit>[MW]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="heat_demand_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Heat Demand at this representative time step k</Description>
+            <Unit>[MW]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="heat_conversion_factors_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Heat Conversion Efficiency at this representative time step k</Description>
+            <Unit>[-]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
         <PivotColumn id="inflow_by_g">
             <ReadableName/>
