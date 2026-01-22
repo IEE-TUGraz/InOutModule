@@ -631,7 +631,7 @@ class CaseStudy:
                 'dataSource': lambda v: f"merged-{'-'.join(v.unique())}",
                 'scenario': lambda v: '-'.join(v.unique())  # If there are multiple scenarios, this would probably fail later (which is good - then we know, something isn't right!)
             }
-            cs.dPower_Demand = cs.dPower_Demand.groupby(['rp', 'i', 'k']).agg(aggregation_methods_power_demand)
+            cs.dPower_Demand = cs.dPower_Demand.groupby(['rp', 'k', 'i']).agg(aggregation_methods_power_demand)
 
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
