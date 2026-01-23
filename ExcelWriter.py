@@ -564,29 +564,29 @@ if __name__ == "__main__":
     printer.separator()
 
     combinations = [
-        #conda env("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_Data_Packages, ew.write_Data_Packages),
-        #("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_Data_Sources, ew.write_Data_Sources),
-        #("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_Global_Scenarios),
+        ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_Data_Packages, ew.write_Data_Packages),
+        ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_Data_Sources, ew.write_Data_Sources),
+        ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_Global_Scenarios),
         ("Heat_Demand", f"{args.caseStudyFolder}Heat_Demand.xlsx", ExcelReader.get_Heat_Demand, ew.write_Heat_Demand),
         ("Heat_Nodes", f"{args.caseStudyFolder}Heat_Nodes.xlsx", ExcelReader.get_Heat_Nodes, ew.write_Heat_Nodes),
         ("Heat_P2H_Technologies", f"{args.caseStudyFolder}Heat_P2H_Technologies.xlsx", ExcelReader.get_Heat_P2H_Technologies, ew.write_Heat_P2H_Technologies),
         ("Heat_P2H_Conversion_Factors", f"{args.caseStudyFolder}Heat_P2H_Conversion_Factors.xlsx", ExcelReader.get_Heat_P2H_Conversion_Factors, ew.write_Heat_P2H_Conversion_Factors),
-        # ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
-        # ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
-        # ("Power_Demand_KInRows", f"{args.caseStudyFolder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
-        # ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
-        # ("Power_ImportExport", f"{args.caseStudyFolder}Power_ImportExport.xlsx", ExcelReader.get_Power_ImportExport, ew.write_Power_ImportExport),
-        # ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
-        # ("Power_Inflows_KInRows", f"{args.caseStudyFolder}Power_Inflows_KInRows.xlsx", ExcelReader.get_Power_Inflows_KInRows, ew.write_Power_Inflows_KInRows),
-        # ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
-        # ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_Power_Storage),
-        # ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
-        # ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_Power_VRES),
-        # ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_Power_VRESProfiles),
-        # ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_Power_VRESProfiles_KInRows),
-        # ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
-        # ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
-        # ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
+        ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
+        ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
+        ("Power_Demand_KInRows", f"{args.caseStudyFolder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
+        ("Power_Hindex", f"{args.caseStudyFolder}Power_Hindex.xlsx", ExcelReader.get_Power_Hindex, ew.write_Power_Hindex),
+        ("Power_ImportExport", f"{args.caseStudyFolder}Power_ImportExport.xlsx", ExcelReader.get_Power_ImportExport, ew.write_Power_ImportExport),
+        ("Power_Inflows", f"{args.caseStudyFolder}Power_Inflows.xlsx", ExcelReader.get_Power_Inflows, ew.write_Power_Inflows),
+        ("Power_Inflows_KInRows", f"{args.caseStudyFolder}Power_Inflows_KInRows.xlsx", ExcelReader.get_Power_Inflows_KInRows, ew.write_Power_Inflows_KInRows),
+        ("Power_Network", f"{args.caseStudyFolder}Power_Network.xlsx", ExcelReader.get_Power_Network, ew.write_Power_Network),
+        ("Power_Storage", f"{args.caseStudyFolder}Power_Storage.xlsx", ExcelReader.get_Power_Storage, ew.write_Power_Storage),
+        ("Power_ThermalGen", f"{args.caseStudyFolder}Power_ThermalGen.xlsx", ExcelReader.get_Power_ThermalGen, ew.write_Power_ThermalGen),
+        ("Power_VRES", f"{args.caseStudyFolder}Power_VRES.xlsx", ExcelReader.get_Power_VRES, ew.write_Power_VRES),
+        ("Power_VRESProfiles", f"{args.caseStudyFolder}Power_VRESProfiles.xlsx", ExcelReader.get_Power_VRESProfiles, ew.write_Power_VRESProfiles),
+        ("Power_VRESProfiles_KInRows", f"{args.caseStudyFolder}Power_VRESProfiles_KInRows.xlsx", ExcelReader.get_Power_VRESProfiles_KInRows, ew.write_Power_VRESProfiles_KInRows),
+        ("Power_WeightsK", f"{args.caseStudyFolder}Power_WeightsK.xlsx", ExcelReader.get_Power_WeightsK, ew.write_Power_WeightsK),
+        ("Power_WeightsRP", f"{args.caseStudyFolder}Power_WeightsRP.xlsx", ExcelReader.get_Power_WeightsRP, ew.write_Power_WeightsRP),
+        ("Power_Wind_TechnicalDetails", f"{args.caseStudyFolder}Power_Wind_TechnicalDetails.xlsx", ExcelReader.get_Power_Wind_TechnicalDetails, ew.write_Power_Wind_TechnicalDetails)
     ]
 
     files_different = []

@@ -16,15 +16,18 @@ printer = Printer.getInstance()
 
 class CaseStudy:
     # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
-    rpk_dependent_dataframes: list[str] = ["dHeat_Demand",
-        "dPower_Demand",
+    rpk_dependent_dataframes: list[str] = ["dHeat_P2H_Conversion_Factors"
+                                           "dHeat_Demand",
+                                           "dPower_Demand",
                                            "dPower_Hindex",
                                            "dPower_ImportExport",
                                            "dPower_Inflows",
                                            "dPower_VRESProfiles"]
     rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
     k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
-    non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
+    non_time_dependent_dataframes: list[str] = ["dHeat_Nodes",
+                                                "dHeat_P2H_Technologies",
+                                                "dPower_BusInfo",
                                                 "dPower_Network",
                                                 "dPower_Storage",
                                                 "dPower_ThermalGen",
@@ -47,19 +50,22 @@ class CaseStudy:
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  heat_demand_file: str = "Heat_Demand.xlsx", dHeat_Demand: pd.DataFrame = None,
-                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
+                 heat_nodes_file: str = "Heat_Nodes.xlsx", dHeat_Nodes: pd.DataFrame = None,
+                 heat_p2h_conversion_factors_file: str = "Heat_P2H_Conversion_Factors.xlsx", dHeat_P2H_Conversion_Factors: pd.DataFrame = None,
+                 heat_p2h_technologies_file: str = "Heat_P2H_Technologies.xlsx", dHeat_P2H_Technologies: pd.DataFrame = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
-                 power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
-                 power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
-                 power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
                  power_demand_file: str = "Power_Demand.xlsx", dPower_Demand: pd.DataFrame = None,
-                 power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
-                 power_vresprofiles_file: str = "Power_VRESProfiles.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
-                 power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
-                 power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
-                 power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
                  power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None,
+                 power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
+                 power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
+                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
+                 power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
+                 power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
+                 power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
+                 power_vresprofiles_file: str = "Power_VRESProfiles.xlsx", dPower_VRESProfiles: pd.DataFrame = None,
+                 power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
+                 power_weightsrp_file: str = "Power_WeightsRP.xlsx", dPower_WeightsRP: pd.DataFrame = None,
                  clip_method: str = "none", clip_value: float = 0):
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
@@ -136,6 +142,27 @@ class CaseStudy:
                 tasks.append(("dHeat_Demand", ExcelReader.get_Heat_Demand, (self.data_folder + self.heat_demand_file,)))
             else:
                 self.dHeat_Demand = dHeat_Demand
+
+        if self.dGlobal_Parameters["pEnableHeat"]:
+            self.heat_p2h_conversion_factors_file = heat_p2h_conversion_factors_file
+            if dHeat_P2H_Conversion_Factors is None:
+                tasks.append(("dHeat_P2H_Conversion_Factors", ExcelReader.get_Heat_P2H_Conversion_Factors, (self.data_folder + self.heat_p2h_conversion_factors_file,)))
+            else:
+                self.dHeat_P2H_Conversion_Factors = dHeat_P2H_Conversion_Factors
+
+        if self.dGlobal_Parameters["pEnableHeat"]:
+            self.heat_nodes_file = heat_nodes_file
+            if dHeat_Nodes is None:
+                tasks.append(("dHeat_Nodes", ExcelReader.get_Heat_Nodes, (self.data_folder + self.heat_nodes_file,)))
+            else:
+                self.dHeat_Nodes = dHeat_Nodes
+
+        if self.dGlobal_Parameters["pEnableHeat"]:
+            self.heat_p2h_technologies_file = heat_p2h_technologies_file
+            if dHeat_P2H_Technologies is None:
+                tasks.append(("dHeat_P2H_Technologies", ExcelReader.get_Heat_P2H_Technologies, (self.data_folder + self.heat_p2h_technologies_file,)))
+            else:
+                self.dHeat_P2H_Technologies = dHeat_P2H_Technologies
 
         if self.dPower_Parameters["pEnableThermalGen"]:
             self.power_thermalgen_file = power_thermalgen_file
@@ -301,6 +328,10 @@ class CaseStudy:
     def scale_dHeat_Demand(self):
         self.dHeat_Demand["value"] *= self.power_scaling_factor
 
+    def scale_dHeat_P2H_Technologies(self):
+        self.dHeat_P2H_Technologies["InstCap"] *= self.power_scaling_factor
+        self.dHeat_P2H_Technologies["ImpStoCap"] *= self.power_scaling_factor
+
     def scale_dPower_Parameters(self):
         self.dPower_Parameters["pSBase"] *= self.power_scaling_factor
         self.dPower_Parameters["pENSCost"] *= self.cost_scaling_factor / self.power_scaling_factor
@@ -395,7 +426,7 @@ class CaseStudy:
 
     def get_dGlobal_Parameters(self):
         file_path = self.data_folder + self.global_parameters_file
-        version_spec = "v0.1.0"
+        version_spec = "v0.1.1"
         fail_on_wrong_version = False
 
         try:

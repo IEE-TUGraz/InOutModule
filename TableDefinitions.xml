@@ -54,7 +54,7 @@
                 <PivotColumn id="heat_demand_by_k" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-                <TableDefinition id="Heat_Nodes">
+        <TableDefinition id="Heat_Nodes">
             <Version>v0.0.1</Version>
             <TableHeader>Heat - Node Links</TableHeader>
             <DescriptionRowHeight>45.0</DescriptionRowHeight>
@@ -69,7 +69,7 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-         <TableDefinition id="Heat_P2H_Conversion_Factors">
+        <TableDefinition id="Heat_P2H_Conversion_Factors">
             <Version>v0.0.1</Version>
             <TableHeader>Heat - P2H Conversion Factors</TableHeader>
             <DescriptionRowHeight>30.0</DescriptionRowHeight>
@@ -95,7 +95,7 @@
                 <Column id="hn" scenarioDependent="False"/>
                 <Column id="dt" scenarioDependent="False"/>
                 <Column id="htec" scenarioDependent="False"/>
-                <Column id="InstCap" scenarioDependent="True" />
+                <Column id="InstCap" scenarioDependent="True"/>
                 <Column id="TecShare" scenarioDependent="True"/>
                 <Column id="ImpStoCap" scenarioDependent="True"/>
                 <Column id="ChEffic" scenarioDependent="True"/>
