@@ -319,7 +319,7 @@ class ExcelWriter:
         :return: None
         """
 
-        self._write_Excel_from_definition(dHeat_P2H_Technologies, folder_path, "P2H_Technologies")
+        self._write_Excel_from_definition(dHeat_P2H_Technologies, folder_path, "Heat_P2H_Technologies")
 
     def write_Heat_P2H_Conversion_Factors(self, dHeat_P2H_Conversion_Factors: pd.DataFrame, folder_path: str) -> None:
         """
@@ -329,7 +329,7 @@ class ExcelWriter:
         :return: None
         """
 
-        self._write_Excel_from_definition(dHeat_P2H_Conversion_Factors, folder_path, "P2H_Conversion_Factors")
+        self._write_Excel_from_definition(dHeat_P2H_Conversion_Factors, folder_path, "Heat_P2H_Conversion_Factors")
 
     def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
         """

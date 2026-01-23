@@ -69,11 +69,28 @@
                 <Column id="dataSource" scenarioDependent="True"/>
             </Columns>
         </TableDefinition>
-        <TableDefinition id="P2H_Technologies">
+         <TableDefinition id="Heat_P2H_Conversion_Factors">
+            <Version>v0.0.1</Version>
+            <TableHeader>Heat - P2H Conversion Factors</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="hn" scenarioDependent="False"/>
+                <Column id="dt" scenarioDependent="False"/>
+                <Column id="htec" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="conversion_efficiency_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Heat_P2H_Technologies">
             <Version>v0.0.1</Version>
             <TableHeader>Heat - P2H Technologies</TableHeader>
             <DescriptionRowHeight>60.0</DescriptionRowHeight>
             <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
                 <Column id="id" scenarioDependent="True"/>
                 <Column id="hn" scenarioDependent="False"/>
                 <Column id="dt" scenarioDependent="False"/>
@@ -603,7 +620,7 @@
             <ReadableName>Installed Capacity</ReadableName>
             <Description>Installed Capacity termal</Description>
             <Unit>[MW_thermal]</Unit>
-            <ColumnWidth>15.0</ColumnWidth>
+            <ColumnWidth>17.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </Column>
         <Column id="InvestCost">
@@ -974,8 +991,8 @@
             <ReadableName>Heating technology share</ReadableName>
             <Description>Share of conversion technology at hn for dt</Description>
             <Unit>[%, 0-1]</Unit>
-            <ColumnWidth>20.0</ColumnWidth>
-            <CellStyle>general</CellStyle>
+            <ColumnWidth>24.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
         </Column>
         <Column id="Vmax">
             <ReadableName>Vmax</ReadableName>
@@ -1084,6 +1101,14 @@
             <DatabaseName>k</DatabaseName>
             <Description>Capacity factor at this representative time step k</Description>
             <Unit>[%, 0-1]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </PivotColumn>
+        <PivotColumn id="conversion_efficiency_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Conversion Efficiency at this representative time step k</Description>
+            <Unit>[-]</Unit>
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </PivotColumn>
