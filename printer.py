@@ -1,6 +1,8 @@
 import datetime
 
+import pyomo
 from rich.console import Console
+from rich.markup import escape
 
 
 class Printer:
@@ -181,6 +183,19 @@ class Printer:
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
         self.console.print(f"{prefix}{text}")
         self._log(f"{prefix}{text}")
+        return None
+
+    def linear_expression(self, expr: pyomo.core.expr.numeric_expr.LinearExpression) -> None:
+        """
+        Pretty-prints a linear expression to the console and logs it to the logfile if one is set.
+
+        :param expr: The linear expression to be printed
+        :return: None
+        """
+
+        expr_str = " ".join([f"{"+" if coef >= 0 else ""}{coef:.1f}*{var}" for coef, var in zip(expr.linear_coefs, expr.linear_vars)])
+        self.console.print(escape(expr_str))
+        self._log(expr_str)
         return None
 
     def _log(self, text: str) -> None:
