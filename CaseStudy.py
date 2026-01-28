@@ -598,13 +598,12 @@ class CaseStudy:
                 # 'FixedCost': 'mean',
                 # 'FxChargeRate': 'mean',
                 'pTecRepr': 'first',
-                'c': 'first',
                 'YearCom': 'mean',
                 'YearDecom': 'mean'
             }
             # Add aggregation for any missing columns
             for column in cs.dPower_Network.columns:
-                if column not in aggregation_methods_for_columns and column not in ['i', 'j']:
+                if column not in aggregation_methods_for_columns and column not in ['i', 'j', 'c']:
                     aggregation_methods_for_columns[column] = 'first'
 
             cs.dPower_Network = cs.dPower_Network.groupby(['i', 'j', 'c']).agg(aggregation_methods_for_columns)
