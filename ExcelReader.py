@@ -332,6 +332,11 @@ def get_Power_Network(excel_file_path: str, keep_excluded_entries: bool = False,
     """
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i", "j", "c"], True, keep_excluded_entries, fail_on_wrong_version)
 
+    # Check that all values in column pEnableInvest are either 0 or 1
+    if not dPower_Network['pEnableInvest'].isin([0, 1]).all():
+        invalid_values = dPower_Network.loc[~dPower_Network['pEnableInvest'].isin([0, 1]), 'pEnableInvest']
+        raise ValueError(f"dPower_Network: Found invalid values in 'EnableInvest' column. Only 0 and 1 are allowed, but found: {invalid_values}")
+
     return dPower_Network
 
 
