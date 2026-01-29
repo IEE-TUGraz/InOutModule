@@ -920,13 +920,22 @@ class CaseStudy:
         df_energy["k"] = (df_energy["k"] + 1).astype(str).str.zfill(4).radd("k")
         df_energy["dataPackage"] = "TO BE FILLED"
         df_energy["dataSource"] = "TO BE FILLED"
+        df_energy = df_energy.set_index(["rp", "k", "g"])
 
-        self.dPower_Inflows = df_energy.set_index(["rp", "k", "g"])
+        if hasattr(self, "dPower_Inflows") and self.dPower_Inflows is not None:
+            self.dPower_Inflows = pd.concat([self.dPower_Inflows, df_energy])
+        else:
+            self.dPower_Inflows = df_energy.set_index(["rp", "k", "g"])
 
         # Calculate MaxProd and MinProd in MWh by multiplying water amounts with PowerFactors
         self.dPower_HydroAssets['MaxProd'] = self.dPower_HydroAssets['MaxProdWater'] * self.dPower_HydroAssets['PowerFactorTurbine']
         self.dPower_HydroAssets['MinProd'] = 0.0  # MinProdWater not available in HydroAssets
         self.dPower_HydroAssets['MaxCons'] = self.dPower_HydroAssets['MaxPumpWater'] * self.dPower_HydroAssets['PowerFactorPump']
+        self.dPower_HydroAssets["pOMVarCostEUR"] = self.dPower_HydroAssets["OMVarCostTurbine"] / self.dPower_HydroAssets['PowerFactorTurbine']
+        self.dPower_HydroAssets["OMVarCost"] = self.dPower_HydroAssets["OMVarCostTurbine"] / self.dPower_HydroAssets['PowerFactorTurbine']
+        self.dPower_HydroAssets['InvestCostEUR'] = self.dPower_HydroAssets['InvestCostPerMW'] * self.dPower_HydroAssets['MaxProd']  # TODO: Check if this is correct
+        self.dPower_HydroAssets['Qmax'] = 0
+        self.dPower_HydroAssets['Qmin'] = 0
 
         # Split hydro assets: those with pump connections go to Storage, others to VRES
         df_hydro_for_storage = self.dPower_HydroAssets[self.dPower_HydroAssets.index.isin(pump_assets)]
