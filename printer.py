@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 
 import pyomo
@@ -119,9 +121,9 @@ class Printer:
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
         if len(prefix) > 0:
-            self.console.print(f"[red]{prefix}[/red]{text}")  # Only have prefix in color if it is set
+            self.console.print(f"[red]{escape(prefix)}[/red]{escape(text)}")  # Only have prefix in color if it is set
         else:
-            self.console.print(f"[red]{text}[/red]")
+            self.console.print(f"[red]{escape(text)}[/red]")
         self._log(f"{prefix}{text}")
         return None
 
@@ -140,9 +142,9 @@ class Printer:
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
         if len(prefix) > 0:
-            self.console.print(f"[yellow]{prefix}[/yellow]{text}")  # Only have prefix in color if it is set
+            self.console.print(f"[yellow]{escape(prefix)}[/yellow]{escape(text)}")  # Only have prefix in color if it is set
         else:
-            self.console.print(f"[yellow]{text}[/yellow]")
+            self.console.print(f"[yellow]{escape(text)}[/yellow]")
         self._log(f"{prefix}{text}")
         return None
 
@@ -161,9 +163,9 @@ class Printer:
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
         if len(prefix) > 0:
-            self.console.print(f"[green]{prefix}[/green]{text}")  # Only have prefix in color if it is set
+            self.console.print(f"[green]{escape(prefix)}[/green]{escape(text)}")  # Only have prefix in color if it is set
         else:
-            self.console.print(f"[green]{text}[/green]")
+            self.console.print(f"[green]{escape(text)}[/green]")
         self._log(f"{prefix}{text}")
         return None
 
@@ -181,7 +183,7 @@ class Printer:
         """
 
         text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
-        self.console.print(f"{prefix}{text}")
+        self.console.print(escape(f"{prefix}{text}"))
         self._log(f"{prefix}{text}")
         return None
 
