@@ -859,3 +859,87 @@ class CaseStudy:
                 setattr(case_study, df_name, df)
 
         return None if inplace else case_study
+
+    def add_input_for_old_hydro_formulation(self, scenario_main, scenario_spin, spinup_hours, total_hours):
+        # Identify hydro assets with outbound pump connections (TurbineOrPump == 1)
+        pump_assets = set(self.dPower_HydroNetwork[self.dPower_HydroNetwork["TurbineOrPump"] == 1].reset_index()["i"].unique())
+
+        # Build network dictionaries
+        pp_pre = {}
+        pp_follow = {}
+        for i, j in self.dPower_HydroNetwork.index:
+            pp_follow.setdefault(i, []).append(j)
+            pp_pre.setdefault(j, []).append(i)
+            pp_pre.setdefault(i, [])
+
+        plants = list(pp_pre.keys())
+        edges = list(self.dPower_HydroNetwork[self.dPower_HydroNetwork["TurbineOrPump"] == 0].index)  # Only consider turbine connections for water flow
+
+        inflow_main = self.dPower_Inflows_WaterAmount[self.dPower_Inflows_WaterAmount["scenario"] == scenario_main]
+        inflow_spin = self.dPower_Inflows_WaterAmount[self.dPower_Inflows_WaterAmount["scenario"] == scenario_spin]
+
+        # Add missing plants with zero inflow
+        rp = inflow_main.index.get_level_values('rp').unique()
+        k = inflow_main.index.get_level_values('k').unique()
+        full_idx = pd.MultiIndex.from_product([rp, k, plants], names=['rp', 'k', 'g'])
+        inflow_main = inflow_main.reindex(full_idx, fill_value=0)
+        inflow_spin = inflow_spin.reindex(full_idx, fill_value=0)
+
+        # =========================
+        # SIMULATION
+        # =========================
+        prod = {p: np.zeros(total_hours) for p in plants}
+
+        # Water amount that flowed through p in the PREVIOUS HOUR
+        inflow_prev = {p: 0.0 for p in plants}
+
+        # Spin-up
+        for t in range(spinup_hours):
+            inflow_curr = {p: float(inflow_spin.loc[("rp01", f"k{t + 1 + total_hours - spinup_hours:04}", p), "value"]) for p in plants}
+            for u, v in edges:
+                inflow_curr[v] += inflow_prev[u]
+            inflow_prev = inflow_curr
+
+        # Main calculation
+        for t in range(total_hours):
+            inflow_curr = {p: float(inflow_main.loc[("rp01", f"k{t + 1:04}", p), "value"]) for p in plants}
+            for u, v in edges:
+                inflow_curr[v] += inflow_prev[u]
+
+            for p in plants:
+                prod[p][t] = inflow_curr[p] * self.dPower_HydroAssets.loc[p, "PowerFactorTurbine"]
+
+            inflow_prev = inflow_curr
+
+        # Save Excel file with production per plant
+        df_energy = pd.DataFrame(prod)
+        df_energy = df_energy.reset_index(names="k").melt(id_vars="k", var_name="g", value_name="value")
+        df_energy["scenario"] = scenario_main
+        df_energy["id"] = None
+        df_energy["rp"] = "rp01"
+        df_energy["k"] = (df_energy["k"] + 1).astype(str).str.zfill(4).radd("k")
+        df_energy["dataPackage"] = "TO BE FILLED"
+        df_energy["dataSource"] = "TO BE FILLED"
+
+        self.dPower_Inflows = df_energy.set_index(["rp", "k", "g"])
+
+        # Calculate MaxProd and MinProd in MWh by multiplying water amounts with PowerFactors
+        self.dPower_HydroAssets['MaxProd'] = self.dPower_HydroAssets['MaxProdWater'] * self.dPower_HydroAssets['PowerFactorTurbine']
+        self.dPower_HydroAssets['MinProd'] = 0.0  # MinProdWater not available in HydroAssets
+        self.dPower_HydroAssets['MaxCons'] = self.dPower_HydroAssets['MaxPumpWater'] * self.dPower_HydroAssets['PowerFactorPump']
+
+        # Split hydro assets: those with pump connections go to Storage, others to VRES
+        df_hydro_for_storage = self.dPower_HydroAssets[self.dPower_HydroAssets.index.isin(pump_assets)]
+        df_hydro_for_vres = self.dPower_HydroAssets[~self.dPower_HydroAssets.index.isin(pump_assets)]
+
+        # Add hydro assets to Power_VRES
+        if hasattr(self, "dPower_VRES") and self.dPower_VRES is not None:
+            self.dPower_VRES = pd.concat([self.dPower_VRES, df_hydro_for_vres])
+        else:
+            self.dPower_VRES = df_hydro_for_vres
+
+        # Add hydro assets to Power_Storage
+        if hasattr(self, "dPower_Storage") and self.dPower_Storage is not None:
+            self.dPower_Storage = pd.concat([self.dPower_Storage, df_hydro_for_storage])
+        else:
+            self.dPower_Storage = df_hydro_for_storage
