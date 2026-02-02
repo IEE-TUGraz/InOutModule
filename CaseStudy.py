@@ -907,7 +907,7 @@ class CaseStudy:
                 inflow_curr[v] += inflow_prev[u]
 
             for p in plants:
-                prod[p][t] = inflow_curr[p] * self.dPower_HydroAssets.loc[p, "PowerFactorTurbine"]
+                prod[p][t] = inflow_curr[p] * self.dPower_HydroAssets.loc[p, "PowerFactorTurbine"] / self.power_scaling_factor
 
             inflow_prev = inflow_curr
 
