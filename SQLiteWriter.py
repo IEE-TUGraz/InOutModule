@@ -116,3 +116,50 @@ def add_solver_statistics_to_sqlite(filename: str, results, work_units=None) -> 
         traceback.print_exc()
     finally:
         cnx.close()
+
+
+def add_run_parameters_to_sqlite(filename: str, **parameters) -> None:
+    """
+    Add run parameters to an existing SQLite database.
+    Creates a table 'run_parameters' with parameter names and values.
+
+    :param filename: Path to the SQLite database file
+    :param parameters: Keyword arguments containing parameter names and values
+    :return: None
+
+    Example:
+        add_run_parameters_to_sqlite('model.sqlite',
+                                     zoi='R1',
+                                     dc_buffer=2,
+                                     tp_buffer=1,
+                                     scale_demand=1.3,
+                                     scale_pmax=1.0)
+    """
+    cnx = sqlite3.connect(filename)
+
+    try:
+        # Convert parameters to DataFrame
+        params = {}
+        for key, value in parameters.items():
+            # Convert None to string 'None' for storage
+            if value is None:
+                params[key] = 'None'
+            elif isinstance(value, (int, float)):
+                params[key] = float(value)
+            else:
+                params[key] = str(value)
+
+        if params:
+            df = pd.DataFrame([params])
+            df.to_sql('run_parameters', cnx, if_exists='replace', index=False)
+            cnx.commit()
+            printer.information(f"Added run parameters to SQLite database: {', '.join([f'{k}={v}' for k, v in params.items()])}")
+        else:
+            printer.warning("No run parameters provided")
+
+    except Exception as e:
+        printer.error(f"Failed to add run parameters: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        cnx.close()
