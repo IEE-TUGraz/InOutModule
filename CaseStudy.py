@@ -936,6 +936,8 @@ class CaseStudy:
         self.dPower_HydroAssets['InvestCostEUR'] = self.dPower_HydroAssets['InvestCostPerMW'] * self.dPower_HydroAssets['MaxProd']  # TODO: Check if this is correct
         self.dPower_HydroAssets['Qmax'] = 0
         self.dPower_HydroAssets['Qmin'] = 0
+        self.dPower_HydroAssets["DisEffic"] = 1
+        self.dPower_HydroAssets["ChEffic"] = 1
 
         # Split hydro assets: those with pump connections go to Storage, others to VRES
         df_hydro_for_storage = self.dPower_HydroAssets[self.dPower_HydroAssets.index.isin(pump_assets)]
