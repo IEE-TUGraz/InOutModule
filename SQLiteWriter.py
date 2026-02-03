@@ -163,3 +163,46 @@ def add_run_parameters_to_sqlite(filename: str, **parameters) -> None:
         traceback.print_exc()
     finally:
         cnx.close()
+
+
+def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteModel) -> None:
+    """
+    Add objective function decomposition to SQLite database.
+    This enables recalculation of ZOI objectives without the full model.
+
+    The objective is decomposed into:
+    - objective_constant: Single row with the constant term
+    - objective_terms: Variable indices and their coefficients
+
+    :param filename: Path to the SQLite database file
+    :param model: Pyomo model with objective
+    :return: None
+    """
+    from pyomo.repn import generate_standard_repn
+
+    cnx = sqlite3.connect(filename)
+
+    try:
+        # Decompose objective into linear representation
+        repn = generate_standard_repn(model.objective.expr, quadratic=False)
+
+        # Store objective decomposition as separate tables
+        # 1. Constant term
+        df_constant = pd.DataFrame([{'constant': repn.constant if repn.constant else 0.0}])
+        df_constant.to_sql('objective_constant', cnx, if_exists='replace', index=False)
+
+        # 2. Variable indices and coefficients
+        var_indices = [str(var.index()) for var in repn.linear_vars]
+        coefs = list(repn.linear_coefs)
+        df_terms = pd.DataFrame({'var_index': var_indices, 'coefficient': coefs})
+        df_terms.to_sql('objective_terms', cnx, if_exists='replace', index=False)
+
+        cnx.commit()
+        printer.information(f"Added objective decomposition to SQLite ({len(var_indices)} terms)")
+
+    except Exception as e:
+        printer.error(f"Failed to add objective decomposition: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        cnx.close()
