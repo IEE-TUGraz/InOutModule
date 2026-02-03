@@ -13,6 +13,8 @@ printer = Printer.getInstance()
 def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
     """
     Save the model to a SQLite database.
+    Automatically includes objective decomposition and dual values.
+
     :param model: Pyomo model to save
     :param filename: Path to the SQLite database file
     :return: None
@@ -52,6 +54,10 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
         df.to_sql(o.name, cnx, if_exists='replace')
         cnx.commit()
     cnx.close()
+
+    # Automatically add objective decomposition and dual values
+    add_objective_decomposition_to_sqlite(filename, model)
+    add_dual_values_to_sqlite(filename, model)
     pass
 
 
@@ -172,7 +178,7 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
 
     The objective is decomposed into:
     - objective_constant: Single row with the constant term
-    - objective_terms: Variable indices and their coefficients
+    - objective_terms: Variable names, indices, and their coefficients
 
     :param filename: Path to the SQLite database file
     :param model: Pyomo model with objective
@@ -191,10 +197,15 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
         df_constant = pd.DataFrame([{'constant': repn.constant if repn.constant else 0.0}])
         df_constant.to_sql('objective_constant', cnx, if_exists='replace', index=False)
 
-        # 2. Variable indices and coefficients
+        # 2. Variable names, indices, and coefficients
+        var_names = [var.parent_component().name for var in repn.linear_vars]
         var_indices = [str(var.index()) for var in repn.linear_vars]
         coefs = list(repn.linear_coefs)
-        df_terms = pd.DataFrame({'var_index': var_indices, 'coefficient': coefs})
+        df_terms = pd.DataFrame({
+            'var_name': var_names,
+            'var_index': var_indices,
+            'coefficient': coefs
+        })
         df_terms.to_sql('objective_terms', cnx, if_exists='replace', index=False)
 
         cnx.commit()
@@ -202,6 +213,75 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
 
     except Exception as e:
         printer.error(f"Failed to add objective decomposition: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        cnx.close()
+
+
+def add_dual_values_to_sqlite(filename: str, model: pyo.ConcreteModel) -> None:
+    """
+    Add dual values (shadow prices) from model constraints to SQLite database.
+
+    Dual values are stored in tables named 'dual_<constraint_name>' with:
+    - Index columns for the constraint
+    - 'dual_value' column containing the dual/shadow price
+
+    :param filename: Path to the SQLite database file
+    :param model: Solved Pyomo model with dual suffix
+    :return: None
+    """
+    cnx = sqlite3.connect(filename)
+
+    try:
+        if not hasattr(model, 'dual'):
+            printer.warning("Model does not have dual suffix - no dual values to save")
+            return
+
+        total_duals = 0
+        total_constraints = 0
+
+        # Iterate through all constraints and save their dual values
+        for constraint in model.component_objects(pyo.Constraint, active=True):
+            constraint_name = constraint.name
+            dual_data = []
+
+            # Get dual values for this constraint
+            for index in constraint:
+                try:
+                    dual_value = model.dual[constraint[index]]
+                    if dual_value is not None:
+                        # Store index and dual value
+                        if isinstance(index, tuple):
+                            # Multi-indexed constraint
+                            row_data = {str(i): val for i, val in enumerate(index)}
+                            row_data['dual_value'] = float(dual_value)
+                        else:
+                            # Single-indexed or scalar constraint
+                            row_data = {'0': index, 'dual_value': float(dual_value)}
+                        dual_data.append(row_data)
+                        total_duals += 1
+                except (KeyError, AttributeError):
+                    # Dual value not available for this constraint
+                    pass
+
+            total_constraints += 1
+
+            # Save to database if we have dual values for this constraint
+            if dual_data:
+                df = pd.DataFrame(dual_data)
+                table_name = f'dual_{constraint_name}'
+                df.to_sql(table_name, cnx, if_exists='replace', index=False)
+
+        cnx.commit()
+
+        if total_duals > 0:
+            printer.information(f"Added dual values to SQLite ({total_duals} duals from {total_constraints} constraints)")
+        else:
+            printer.warning(f"No dual values found in model (checked {total_constraints} constraints)")
+
+    except Exception as e:
+        printer.error(f"Failed to add dual values: {e}")
         import traceback
         traceback.print_exc()
     finally:
