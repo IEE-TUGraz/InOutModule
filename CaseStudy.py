@@ -767,15 +767,20 @@ class CaseStudy:
 
         return None if inplace else caseStudy
 
-    def filter_timesteps(self, start: str, end: str, inplace: bool = False) -> Optional[Self]:
+    def filter_timesteps(self, start: str, end: str, inplace: bool = False, no_weight_k_adjustment: bool = False) -> Optional[Self]:
         """
         Filters each (relevant) dataframe in the case study to only include the timesteps between start and end (both inclusive).
         :param start: Start timestep (inclusive).
         :param end: End timestep (inclusive).
         :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param no_weight_k_adjustment: If True, does not adjust the weights in dPower_WeightsK after filtering. Adjustment is done by default.
         :return: None if inplace is True, otherwise a new CaseStudy instance.
         """
         case_study = self if inplace else self.copy()
+
+        # Calculate total weight before filtering
+        if not no_weight_k_adjustment and hasattr(case_study, "dPower_WeightsK") and case_study.dPower_WeightsK is not None:
+            total_weight = case_study.dPower_WeightsK['pWeight_k'].sum()
 
         for df_name in CaseStudy.k_dependent_dataframes:
             if hasattr(case_study, df_name) and getattr(case_study, df_name) is not None:
@@ -791,6 +796,19 @@ class CaseStudy:
                 filtered_df = filtered_df_reset.set_index(index)
 
                 setattr(case_study, df_name, filtered_df)
+
+        if no_weight_k_adjustment:
+            printer.information("Skipped adjustment of weights in 'dPower_WeightsK' after filtering timesteps as per user request.")
+        elif (not hasattr(case_study, "dPower_WeightsK")) or (case_study.dPower_WeightsK is None):
+            printer.information("Skipped adjustment of weights in 'dPower_WeightsK' after filtering timesteps because 'dPower_WeightsK' does not exist.")
+        else:
+            # Adjust weights after filtering
+            filtered_total_weight = case_study.dPower_WeightsK['pWeight_k'].sum()
+            if filtered_total_weight == 0:
+                raise ValueError("After filtering timesteps, the total weight in 'dPower_WeightsK' is zero. Cannot adjust weights.")
+            adjustment_factor = total_weight / filtered_total_weight
+            case_study.dPower_WeightsK['pWeight_k'] *= adjustment_factor
+            printer.information(f"Adjusted weights in 'dPower_WeightsK' by a factor of {adjustment_factor} after filtering timesteps.")
 
         return None if inplace else case_study
 
