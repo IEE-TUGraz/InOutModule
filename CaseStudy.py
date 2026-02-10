@@ -934,6 +934,7 @@ class CaseStudy:
         self.dPower_HydroAssets["pOMVarCostEUR"] = self.dPower_HydroAssets["OMVarCostTurbine"] / self.dPower_HydroAssets['PowerFactorTurbine']
         self.dPower_HydroAssets["OMVarCost"] = self.dPower_HydroAssets["OMVarCostTurbine"] / self.dPower_HydroAssets['PowerFactorTurbine']
         self.dPower_HydroAssets['InvestCostEUR'] = self.dPower_HydroAssets['InvestCostPerMW'] * self.dPower_HydroAssets['MaxProd']  # TODO: Check if this is correct
+        self.dPower_HydroAssets["Ene2PowRatio"] = self.dPower_HydroAssets["StorageCapacity"] / self.dPower_HydroAssets["MaxProdWater"]
         self.dPower_HydroAssets['Qmax'] = 0
         self.dPower_HydroAssets['Qmin'] = 0
         self.dPower_HydroAssets["DisEffic"] = 1
