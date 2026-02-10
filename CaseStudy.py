@@ -540,6 +540,8 @@ class CaseStudy:
             ### Adapt dPower_BusInfo
             dPower_BusInfo_entry = cs.dPower_BusInfo.loc[connected_buses]  # Entry for the new bus
             zoneOfInterest = 1 if any(dPower_BusInfo_entry['zoi'] == 1) else 0
+            zone_values = sorted(set(dPower_BusInfo_entry['z'].dropna().unique()))
+            zone_name = '_'.join(str(v) for v in zone_values)
             aggregation_methods_for_columns = {
                 # 'System': 'max',
                 # 'BaseVolt': 'mean',
@@ -555,6 +557,7 @@ class CaseStudy:
             }
             dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
             dPower_BusInfo_entry['zoi'] = zoneOfInterest
+            dPower_BusInfo_entry['z'] = zone_name
             dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
             dPower_BusInfo_entry.index = [new_bus_name]
 
