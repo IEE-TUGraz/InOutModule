@@ -206,7 +206,7 @@ class CaseStudy:
             raise ValueError("Column 'pEnableInvest' in 'Power_Network' contains NaN values. Please fill all entries with either 0 or 1.")
 
         if self.dPower_Parameters["pEnablePowerImportExport"] and (self.dPower_ImportExport["ImpExpPrice"] == 0).any():
-            raise ValueError("Column 'ImpExpPrice' in 'Power_ImportExport' contains 0 values. Please fill all entries with non-zero prices.")
+            raise ValueError("Column 'ImpExpPrice' in 'Power_ImportExport' contains 0 values. Please fill all entries with non-zero prices (can be very small).")
 
         # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
@@ -449,7 +449,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pForcePrimitiveStorageUsage', 'pEnableSOCP'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableSoftVoltageLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pForcePrimitiveStorageUsage', 'pEnableSOCP'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
