@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import os
 import time
 import xml.etree.ElementTree as ET
 from copy import copy, deepcopy
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import openpyxl
@@ -12,7 +15,9 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 import ExcelReader
 import TableDefinition
-from CaseStudy import CaseStudy
+
+if TYPE_CHECKING:
+    from CaseStudy import CaseStudy
 from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
 from printer import Printer
 
