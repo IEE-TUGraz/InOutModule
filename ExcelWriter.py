@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import os
 import time
 import xml.etree.ElementTree as ET
 from copy import copy, deepcopy
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import openpyxl
@@ -12,7 +15,9 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 import ExcelReader
 import TableDefinition
-from CaseStudy import CaseStudy
+
+if TYPE_CHECKING:
+    from CaseStudy import CaseStudy
 from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
 from printer import Printer
 
@@ -261,6 +266,8 @@ class ExcelWriter:
             self.write_Power_VRES(cs.dPower_VRES, folder_path)
         if hasattr(cs, "dPower_VRESProfiles"):
             self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        if hasattr(cs, "dPower_ImportExport") and cs.dPower_ImportExport is not None:
+            self.write_Power_ImportExport(cs.dPower_ImportExport, folder_path)
         self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
         self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)
 
