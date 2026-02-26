@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import typing
-from typing import Literal, Dict
+from typing import TYPE_CHECKING, Literal, Dict
 
 import numpy as np
 import pandas as pd
@@ -7,7 +9,8 @@ import tsam.timeseriesaggregation as tsam
 
 from InOutModule.printer import Printer
 
-from InOutModule.CaseStudy import CaseStudy
+if TYPE_CHECKING:
+    from InOutModule.CaseStudy import CaseStudy
 
 printer = Printer.getInstance()
 
