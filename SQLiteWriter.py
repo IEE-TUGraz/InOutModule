@@ -93,7 +93,7 @@ def add_solver_statistics_to_sqlite(filename: str, results, work_units=None) -> 
                     time_val = solver_info.time
                     if time_val is not None and str(type(time_val)) != "<class 'pyomo.opt.results.container.UndefinedData'>":
                         stats['solver_time'] = float(time_val)
-                except:
+                except Exception:
                     pass
 
         # Get problem statistics

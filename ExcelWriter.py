@@ -266,6 +266,8 @@ class ExcelWriter:
             self.write_Power_VRES(cs.dPower_VRES, folder_path)
         if hasattr(cs, "dPower_VRESProfiles"):
             self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
+        if hasattr(cs, "dPower_ImportExport") and cs.dPower_ImportExport is not None:
+            self.write_Power_ImportExport(cs.dPower_ImportExport, folder_path)
         self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
         self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)
 

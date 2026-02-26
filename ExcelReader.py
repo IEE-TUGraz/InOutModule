@@ -335,7 +335,7 @@ def get_Power_Network(excel_file_path: str, keep_excluded_entries: bool = False,
     # Check that all values in column pEnableInvest are either 0 or 1
     if not dPower_Network['pEnableInvest'].isin([0, 1]).all():
         invalid_values = dPower_Network.loc[~dPower_Network['pEnableInvest'].isin([0, 1]), 'pEnableInvest']
-        raise ValueError(f"dPower_Network: Found invalid values in 'EnableInvest' column. Only 0 and 1 are allowed, but found: {invalid_values}")
+        raise ValueError(f"dPower_Network: Found invalid values in 'pEnableInvest' column. Only 0 and 1 are allowed, but found: {invalid_values}")
 
     return dPower_Network
 

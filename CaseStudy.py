@@ -254,16 +254,6 @@ class CaseStudy:
 
     def copy(self):
         new_self = copy.deepcopy(self)
-
-        # Copy each dataframe individually to ensure no shared references
-        for df in (new_self.rpk_dependent_dataframes + new_self.rp_only_dependent_dataframes + new_self.k_only_dependent_dataframes + new_self.non_time_dependent_dataframes + new_self.non_dependent_dataframes):
-            if hasattr(new_self, df) and getattr(new_self, df) is not None:
-                original = getattr(new_self, df)
-                if type(original) is pd.DataFrame:
-                    setattr(new_self, df, original.copy(deep=True))
-                else:
-                    setattr(new_self, df, copy.deepcopy(original))
-
         return new_self
 
     def equal_to(self, cs: typing.Self) -> bool:
@@ -612,15 +602,15 @@ class CaseStudy:
             cs.dPower_Network = cs.dPower_Network.groupby(['i', 'j', 'c']).agg(aggregation_methods_for_columns)
 
             ### Adapt dPower_ThermalGen
-            if hasattr(self, "dPower_ThermalGen"):
+            if hasattr(cs, "dPower_ThermalGen"):
                 cs.dPower_ThermalGen.loc[cs.dPower_ThermalGen['i'].isin(connected_buses), 'i'] = new_bus_name
 
             # Adapt dPower_VRES
-            if hasattr(self, "dPower_VRES"):
+            if hasattr(cs, "dPower_VRES"):
                 cs.dPower_VRES.loc[cs.dPower_VRES['i'].isin(connected_buses), 'i'] = new_bus_name
 
             # Adapt dPower_Storage
-            if hasattr(self, "dPower_Storage"):
+            if hasattr(cs, "dPower_Storage"):
                 cs.dPower_Storage.loc[cs.dPower_Storage['i'].isin(connected_buses), 'i'] = new_bus_name
 
             # Adapt dPower_Demand
@@ -634,6 +624,8 @@ class CaseStudy:
                 'scenario': lambda v: '-'.join(v.unique())  # If there are multiple scenarios, this would probably fail later (which is good - then we know, something isn't right!)
             }
             cs.dPower_Demand = cs.dPower_Demand.groupby(['rp', 'k', 'i']).agg(aggregation_methods_power_demand)
+
+        return cs if not inplace else None
 
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -667,7 +659,7 @@ class CaseStudy:
                     raise ValueError(f"For 'relative_to_highest', clip_value must be between 0 and 1, not {clip_value}.")
                 for rp in rps:
                     threshold = rpTransitionMatrixAbsolute.loc[rp].max() * clip_value
-                    rpTransitionMatrixAbsolute.loc[rp][rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
+                    rpTransitionMatrixAbsolute.loc[rp, rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
             case _:
                 raise ValueError(f"clip_method must be either 'none', 'absolute_count' or 'relative_to_highest', not {clip_method}.")
 
@@ -901,7 +893,7 @@ class CaseStudy:
         """
 
         cs = self if inplace else self.copy()
-        Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production, inplace=True)
+        Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production, inplace=True, verbose=verbose)
         if inplace:
             return None
         else:

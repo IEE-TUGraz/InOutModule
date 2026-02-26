@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 
-import pyomo
 from rich.console import Console
 from rich.markup import escape
 
@@ -187,7 +186,7 @@ class Printer:
         self._log(f"{prefix}{text}")
         return None
 
-    def linear_expression(self, expr: pyomo.core.expr.numeric_expr.LinearExpression) -> None:
+    def linear_expression(self, expr) -> None:
         """
         Pretty-prints a linear expression to the console and logs it to the logfile if one is set.
 
