@@ -298,7 +298,7 @@ def model_to_sqlite(model: pyo.base.Model, filename: str, use_moving_window: boo
                 case _:
                     printer.warning(f"Pyomo-Type {type(o)} not implemented, {o.name} will not be saved to SQLite")
                     continue
-        df.to_sql(o.name, cnx, if_exists='replace')
+            df.to_sql(o.name, cnx, if_exists='replace')
         cnx.commit()
     cnx.close()
 
