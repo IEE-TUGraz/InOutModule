@@ -217,6 +217,37 @@ class Printer:
                         f.write(line + "\n")
         return None
 
+    def note(self, text: str, prefix: str = "Note: ", hard_wrap_chars: str = None) -> None:
+        """
+        Handles a note message. Printed in yellow (same as warning but semantically different).
+
+        :param text: Text to be printed
+        :param prefix: Prefix (default: "Note: ")
+        :param hard_wrap_chars: Chars to be added at the end of the text if it exceeds the console width,
+        None if text should not be truncated
+        :return: None
+        """
+        text = self.handle_hard_wrap_chars(text, prefix, hard_wrap_chars)
+        if len(prefix) > 0:
+            self.console.print(f"[yellow]{escape(prefix)}[/yellow]{escape(text)}")
+        else:
+            self.console.print(f"[yellow]{escape(text)}[/yellow]")
+        self._log(f"{prefix}{text}")
+        return None
+
+    def rule(self, title: str = "", style: str = "white") -> None:
+        """
+        Prints a horizontal rule (line) to the console, optionally with a centered title.
+        Delegates to rich.console.Console.rule().
+
+        :param title: Optional title to display in the center of the rule
+        :param style: Rich style string for the rule (default: "white")
+        :return: None
+        """
+        self.console.rule(title, style=style)
+        self._log(f"--- {title} ---" if title else "-" * self.console.width)
+        return None
+
     def separator(self) -> None:
         """
         Prints a separator line to the console. The line is made up of dashes and
@@ -280,3 +311,8 @@ def pprint_zoi_var(var, zoi, index_positions: list = None, decimals: int = 2):
     # Iterate over all lists and print the values
     for i in range(len(value_list)):
         print(f"    {key_list[i]:>{key_spacer}} : {lower_list[i]:>{lower_spacer}} : {value_list[i]:>{value_spacer}} : {upper_list[i]:>{upper_spacer}} : {fixed_list[i]:>{fixed_spacer}} : {stale_list[i]:>{stale_spacer}} : {domain_list[i]:>{domain_spacer}}")
+
+
+def timestamp() -> str:
+    """Returns a timestamp string in the format 'YYYYMMDD_HHMMSS'."""
+    return datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
