@@ -31,6 +31,11 @@ class Conversions:
         return val * capacity * 1e-6
 
     @staticmethod
+    def pu_to_absolute(val, df):
+        """Converts per-unit values to absolute values using the base value from the DataFrame."""
+        return val * df.p_nom
+
+    @staticmethod
     def bool_to_binary(val):
         """Converts boolean values to binary (0/1) integers."""
         return val.astype(int)
@@ -207,7 +212,7 @@ class NetworkDataExtractor:
                         source_df[["bus0", "bus1", "name"]].rename(columns={"bus0": "i", "bus1": "j", "name": "c"})
                     ).set_names(["i", "j", "c"])
                 elif table_name == "dPower_ThermalGen":
-                    df.index = source_df["id"].rename("g")
+                    df.index = source_df.index.rename("g")
                 elif table_name == "dPower_VRESProfiles":
                     df.index = pd.MultiIndex.from_frame(
                         source_df[["generator_id", "k"]].rename(columns={"generator_id": "g"})
