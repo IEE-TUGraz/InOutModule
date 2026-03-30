@@ -11,11 +11,10 @@ def prepare_ac_lines(net):
     lines["b"] = lines.apply(
         lambda row: row["b"] if row["b"] != 0 else types.loc[row["type"]].x_per_length * row["length"], axis=1)
 
-    lines["pmax"] = lines["s_nom"] * lines["s_max_pu"]
-    lines["id"] = lines.index
-    lines["name"] = [f"Line_{i}" for i in range(len(lines))]
+    if "name" not in lines.columns or lines["name"].isnull().all():
+        lines["name"] = "c1"
 
-    return lines[["bus0", "bus1", "r", "x", "b", "pmax", "id", "name"]]
+    return lines
 
 def prepare_dc_links(net):
     links = net.links[net.links["carrier"] == "DC"].copy()
@@ -27,6 +26,11 @@ def prepare_dc_links(net):
     links["name"] = [f"DC_Link_{i}" for i in range(len(links))]
 
     return links[["bus0", "bus1", "r", "x", "b", "pmax", "id", "name"]]
+
+def prepare_ac_lines_and_dc_links(net):
+    ac_lines = prepare_ac_lines(net)
+    dc_links = prepare_dc_links(net)
+    return pd.concat([ac_lines, dc_links], ignore_index=True)
 
 def prepare_thermal_generators(net):
     thermal_types = ['OCGT', 'biomass', 'CCGT', 'nuclear', 'oil', 'coal', 'lignite']
@@ -53,10 +57,10 @@ def prepare_renewable_profiles(net):
     vres_ids = vres_gens.index.to_list()
 
     profiles = net.generators_t.p_max_pu[vres_ids].copy()
-    profiles = profiles.reset_index().melt(
-        id_vars="snapshot", var_name="generator_id", value_name="Capacity"
+    # Ensure the index (snapshots) has a known name before resetting
+    profiles = profiles.rename_axis("k").reset_index().melt(
+        id_vars="k", var_name="generator_id", value_name="Capacity"
     )
-    profiles = profiles.rename(columns={"index": "k"})
     profiles["rp"] = "rp01"  # add a dummy column for compatibility
 
     return profiles  # flat, column-based, no index set yet
@@ -126,11 +130,10 @@ def prepare_inflow_profiles(net):
     combined = pd.concat([inflow_storage, inflow_ror], axis=1)
     combined = combined.T  # index: generator_id, columns: time
 
-    # Convert to long format
-    inflow_long = combined.reset_index().melt(
-        id_vars="index", var_name="k", value_name="Inflow"
+    # Convert to long format by renaming index to 'g' before resetting
+    inflow_long = combined.rename_axis('g').reset_index().melt(
+        id_vars="g", var_name="k", value_name="Inflow"
     )
-    inflow_long = inflow_long.rename(columns={"index": "g"})
     inflow_long["rp"] = "rp01"  # add a dummy column for compatibility
 
     return inflow_long[["rp", "g", "k", "Inflow"]]
