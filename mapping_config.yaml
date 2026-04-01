@@ -1,0 +1,194 @@
+Metadata:
+  source:
+    type: "metadata"
+  dataPackage: "PyPSA-Import"
+  dataSource: "scigrid-de"
+
+dPower_BusInfo:
+  source:
+    type: "attribute"
+    name: "buses"
+    filter: "carrier == 'AC'"
+  index: "i"
+  mapping:
+    z: "country"
+    pBusBaseV: "v_nom"
+    pBusMaxV: 1.1 # Fixed value used, since v_mag_pu_max is currently not used in PyPSA
+    pBusMinV: 0.9 # Fixed value used, since v_mag_pu_min is currently not used in PyPSA
+    lat: "y"
+    lon: "x"
+
+dPower_Network:
+  source:
+    type: "helper"
+    name: "prepare_ac_lines_and_dc_links"
+  index: ["i", "j", "c"]
+  mapping:
+    c: "c1"
+    pRline: "r"
+    pXline: "x"
+    pBcline: "b"
+    pPmax: "s_nom"
+    pFOMCost:
+      attr: "fom_cost"
+      conversion: "EUR_per_MVA_to_MEUR"
+    pEnableInvest:
+      attr: "s_nom_extendable"
+      conversion: "bool_to_binary"
+    pInvestCost:
+      attr: "capital_cost"
+      conversion: "EUR_per_MVA_to_MEUR"
+    pTecRepr:
+      attr: "carrier"
+      conversion: "line_carrier_to_tec_repr" # if no carrier is specified, the technical representation is set to DC-OPF
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+    pAngle: 0
+    pRatio: 1
+
+
+dPower_ThermalGen:
+  source:
+    type: "attribute"
+    name: "generators"
+    filter: "carrier in ['Gas', 'Hard Coal', 'Waste', 'Brown Coal', 'Oil', 'Other', 'Nuclear', 'Geothermal']"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    ExisUnits:
+      attr: "active"
+      conversion: "bool_to_binary"
+    MaxProd: "p_nom"
+    MinProd:
+      attr: "p_min_pu"
+      conversion: "pu_to_absolute"
+    RampUp:
+      attr: "ramp_limit_up"
+      conversion: "pu_to_absolute"
+    RampDown:
+      attr: "ramp_limit_down"
+      conversion: "pu_to_absolute"
+    MinUpTime: "min_up_time"
+    MinDownTime: "min_down_time"
+    Efficiency: "efficiency"
+    CommitConsumption:
+      attr: "stand_by_cost"
+      conversion: "EUR_per_hour_to_MWh_per_hour"
+    OMVarCost: "marginal_cost"
+    StartupConsumption:
+      attr: "start_up_consumption"
+      conversion: "EUR_to_MWh"
+    EnableInvest:
+      attr: "p_nom_extendable"
+      conversion: "bool_to_binary"
+    InvestCost: "capital_cost"
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+
+dPower_VRESProfiles:
+  source:
+    type: "helper"
+    name: "prepare_renewable_profiles"
+    filter: "carrier in ['Solar', 'Wind Onshore', 'Wind Offshore']"
+  index: ["rp", "g"]
+  mapping:
+    value: "Capacity"
+
+dPower_VRES:
+  source:
+    type: "attribute"
+    name: "generators"
+    filter: "carrier in ['Solar', 'Wind Onshore', 'Wind Offshore']"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    ExisUnits:
+      attr: "active"
+      conversion: "bool_to_binary"
+    MaxProd: "p_nom"
+    EnableInvest:
+      attr: "p_nom_extendable"
+      conversion: "bool_to_binary"
+    MaxInvest:
+      attr: "p_nom_max"
+      conversion: "total_capacity_to_number_of_units"
+    InvestCost: "capital_cost"
+    OMVarCost: "marginal_cost"
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+
+dPower_RoR:
+  source:
+    type: "helper"
+    name: "prepare_ror_generators"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    MaxProd: "max_prod"
+    MinProd: "min_prod"
+    DisEffic: "discharge"
+    IsHydro: "is_hydro"
+    OMVarCost: "marginal_cost"
+    EnableInvest: "enable_invest"
+    MaxInvest: "p_nom_max"
+    InvestCostPerMW: "capital_cost"
+
+dPower_Storage:
+  source:
+    type: "attribute"
+    name: "storage_units"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    ExisUnits: 1
+    MaxProd:
+      attr: "p_max_pu"
+      conversion: "pu_to_absolute"
+    MinProd: 0
+    MaxCons:
+      attr: "p_max_pu"
+      conversion: "pu_to_absolute"
+    DisEffic: "efficiency_dispatch"
+    ChEffic: "efficiency_store"
+    Self Discharge: "standing_loss"
+    IniReserve: "state_of_charge_initial"
+    OMVarCost: "marginal_cost"
+    EnableInvest:
+      attr: "p_nom_extendable"
+      conversion: "bool_to_binary"
+    MaxInvest:
+      attr: "p_nom_max"
+      conversion: "total_capacity_to_number_of_units"
+    InvestCostPerMW: "capital_cost"
+    Ene2PowRatio: "max_hours"
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+
+dPower_Inflows:
+  source:
+    type: "helper"
+    name: "prepare_inflow_profiles"
+    filter: "carrier in ['Pumped Hydro', 'Run of River']"
+  index: ["rp", "k", "g"]
+  mapping:
+    value: "Inflow"
+
+dPower_Demand:
+  source:
+    type: "helper"
+    name: "prepare_demand_profiles"
+  index: ["rp", "k", "g"]
+  mapping:
+    value: "Demand"
