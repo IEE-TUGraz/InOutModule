@@ -1,13 +1,17 @@
-import pypsa
-import pandas as pd
-import pypsa_helper as h
-import numpy as np
-import os
-import yaml
 import inspect
+import os
+
+import numpy as np
+import pandas as pd
+import pypsa
+import yaml
+
+import pypsa_helper as h
+
 
 class Conversions:
     """Registry of conversion functions for unit transformations."""
+
     @staticmethod
     def EUR_to_MEUR(val, row=None):
         return val * 1e-6
@@ -56,50 +60,59 @@ class Conversions:
         else:
             return df.carrier.map({'AC': 'DC-OPF', 'DC': 'TP'})
 
+    @staticmethod
+    def total_capacity_to_number_of_units(val, df):
+        """Calculates the number of units based on total capacity and nominal capacity per unit."""
+        # Check if the input value is all NaN or all infinite, and return a default of 100 in that case
+        if val.isnull().all() or np.isinf(val).all():
+            return 100
+        else:
+            return (np.ceil(val / df.p_nom)).astype(int)
+
 
 class NetworkDataExtractor:
     def __init__(self, network: pypsa.Network, config_path: str = None):
         self.network = network
         if config_path is None:
             config_path = os.path.join(os.path.dirname(__file__), "mapping_config.yaml")
-        
+
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
         # The expected columns for each table (used for reordering and filling empties)
         self.columns = {
             "dPower_BusInfo": ['excl', 'id', 'z', 'pBusBaseV', 'pBusMaxV', 'pBusMinV', 'pBusB',
-                                'pBusG', 'pBus_pf', 'YearCom', 'YearDecom', 'lat', 'lon', 'zoi',
-                                'dataPackage', 'dataSource'],
+                               'pBusG', 'pBus_pf', 'YearCom', 'YearDecom', 'lat', 'lon', 'zoi',
+                               'dataPackage', 'dataSource'],
             "dPower_Network": ['excl', 'id', 'pRline', 'pXline', 'pBcline', 'pAngle', 'pRatio',
-                                'pPmax', 'pEnableInvest', 'pFOMCost', 'pInvestCost', 'pTecRepr',
-                                'YearCom', 'YearDecom', 'dataPackage', 'dataSource'],
+                               'pPmax', 'pEnableInvest', 'pFOMCost', 'pInvestCost', 'pTecRepr',
+                               'YearCom', 'YearDecom', 'dataPackage', 'dataSource'],
             "dPower_ThermalGen": ['excl', 'id', 'tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'RampUp',
-                                    'RampDw', 'MinUpTime', 'MinDownTime', 'Qmax', 'Qmin', 'InertiaConst',
-                                    'FuelCost', 'Efficiency', 'CommitConsumption', 'OMVarCost',
-                                    'StartupConsumption', 'EFOR', 'EnableInvest', 'InvestCost',
-                                    'FirmCapCoef', 'CO2Emis', 'YearCom', 'YearDecom', 'lat', 'long',
-                                    'dataPackage', 'dataSource', 'pSlopeVarCostEUR', 'pInterVarCostEUR',
-                                    'pStartupCostEUR', 'MaxInvest', 'InvestCostEUR'],
-            "dPower_VRESProfiles": ['Capacity'],
+                                  'RampDw', 'MinUpTime', 'MinDownTime', 'Qmax', 'Qmin', 'InertiaConst',
+                                  'FuelCost', 'Efficiency', 'CommitConsumption', 'OMVarCost',
+                                  'StartupConsumption', 'EFOR', 'EnableInvest', 'InvestCost',
+                                  'FirmCapCoef', 'CO2Emis', 'YearCom', 'YearDecom', 'lat', 'long',
+                                  'dataPackage', 'dataSource', 'pSlopeVarCostEUR', 'pInterVarCostEUR',
+                                  'pStartupCostEUR', 'MaxInvest', 'InvestCostEUR'],
+            "dPower_VRESProfiles": ['value'],
             "dPower_VRES": ['excl', 'id', 'tec', 'i', 'ExisUnits', 'MaxProd', 'EnableInvest',
                             'MaxInvest', 'InvestCost', 'OMVarCost', 'FirmCapCoef', 'Qmax', 'Qmin',
                             'InertiaConst', 'YearCom', 'YearDecom', 'lat', 'lon', 'dataPackage',
                             'dataSource', 'MinProd', 'InvestCostEUR'],
             "dPower_Storage": ['tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'MaxCons', 'DisEffic',
-                                'ChEffic', 'Qmax', 'Qmin', 'InertiaConst', 'MinReserve', 'IniReserve',
-                                'IsHydro', 'OMVarCost', 'EnableInvest', 'MaxInvest', 'InvestCostPerMW',
-                                'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
-                                'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
-                                'YearDecom', 'lat', 'long', 'pOMVarCostEUR', 'InvestCostEUR'], 
-            "dPower_RoR": ['tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'MaxCons', 'DisEffic',
-                            'ChEffic', 'Qmax', 'Qmin', 'InertiaConst', 'MinReserve', 'IniReserve',
-                            'IsHydro', 'OMVarCost', 'EnableInvest', 'MaxInvest', 'InvestCostPerMW',
-                            'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
-                            'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
-                            'YearDecom', 'lat', 'long', 'InvestCostEUR'],             
-            "dPower_Demand": ['Capacity'],
-            "dPower_Inflows": ['Inflow'],
+                               'ChEffic', 'Qmax', 'Qmin', 'InertiaConst', 'MinReserve', 'IniReserve',
+                               'IsHydro', 'OMVarCost', 'EnableInvest', 'MaxInvest', 'InvestCostPerMW',
+                               'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
+                               'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
+                               'YearDecom', 'lat', 'long', 'pOMVarCostEUR', 'InvestCostEUR', 'dataPackage', 'dataSource'],
+            # "dPower_RoR": ['tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'MaxCons', 'DisEffic',
+            #                 'ChEffic', 'Qmax', 'Qmin', 'InertiaConst', 'MinReserve', 'IniReserve',
+            #                 'IsHydro', 'OMVarCost', 'EnableInvest', 'MaxInvest', 'InvestCostPerMW',
+            #                 'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
+            #                 'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
+            #                 'YearDecom', 'lat', 'long', 'InvestCostEUR'],
+            "dPower_Demand": ['value'],
+            "dPower_Inflows": ['value'],
         }
 
         self.dataframes = self._extract_dataframes()
@@ -112,10 +125,10 @@ class NetworkDataExtractor:
         """Calculates conversion factor based on metric prefixes (e.g., MW to kW)."""
         if not pypsa_unit or not lego_unit or pypsa_unit == lego_unit:
             return 1.0
-        
+
         # Power of 10 mapping for metric prefixes
         prefixes = {'T': 12, 'G': 9, 'M': 6, 'k': 3, '': 0, 'm': -3, 'u': -6, 'n': -9}
-        
+
         def split_unit(u):
             if len(u) > 1 and u[0] in prefixes and (u[1:] in ['W', 'V', 'EUR', 'Wh', 'g', 'l']):
                 return u[0], u[1:]
@@ -131,8 +144,8 @@ class NetworkDataExtractor:
         if p_base != l_base:
             return 1.0
 
-        return 10** (prefixes[p_pre] - prefixes[l_pre])
-       
+        return 10 ** (prefixes[p_pre] - prefixes[l_pre])
+
     def _extract_dataframes(self):
         df_dict = {}
 
@@ -144,12 +157,13 @@ class NetworkDataExtractor:
                 if 'filter' in src:
                     source_df = source_df.query(src['filter'])
             elif src['type'] == 'helper':
-                source_df = getattr(h, src['name'])(self.network)
+                source_df = getattr(h, src['name'])(self.network, cfg)
             else:
                 continue
 
             # 2. Process Mapping
             column_data = {}
+            # if 'mapping' in cfg.keys():
             for lego_col, mapping in cfg['mapping'].items():
                 if isinstance(mapping, dict):
                     # Attribute mapping with potential unit conversion or transformation function
@@ -159,7 +173,7 @@ class NetworkDataExtractor:
                     else:
                         # Try to get value as series of NaNs or fixed value
                         val = pd.Series(mapping.get('value', np.nan), index=source_df.index)
-                    
+
                     # Priority 1: Named conversion function
                     if 'conversion' in mapping:
                         conv_name = mapping['conversion'].replace('()', '')
@@ -168,7 +182,7 @@ class NetworkDataExtractor:
                             # Check function signature
                             sig = inspect.signature(conv_func)
                             params = list(sig.parameters.values())
-                            
+
                             if len(params) >= 2:
                                 # Vectorized call: (Series, DataFrame)
                                 val = conv_func(val, source_df)
@@ -177,16 +191,16 @@ class NetworkDataExtractor:
                                 val = conv_func(val)
                         else:
                             print(f"Warning: Conversion function '{conv_name}' not found in Conversions class.")
-                    
+
                     # Priority 2: Explicit unit strings
                     elif 'pypsa_unit' in mapping and 'lego_unit' in mapping:
                         factor = self._get_unit_factor(mapping['pypsa_unit'], mapping['lego_unit'])
                         val = val * factor
-                    
+
                     # Priority 3: Simple multiplier factor
                     elif 'factor' in mapping:
                         val = val * mapping['factor']
-                        
+
                     column_data[lego_col] = val
                 elif isinstance(mapping, (int, float)):
                     # Static value
@@ -215,12 +229,27 @@ class NetworkDataExtractor:
                     df.index = source_df.index.rename("g")
                 elif table_name == "dPower_VRESProfiles":
                     df.index = pd.MultiIndex.from_frame(
-                        source_df[["generator_id", "k"]].rename(columns={"generator_id": "g"})
-                    ).set_names(["g", "k"])
-                elif table_name in ["dPower_VRES", "dPower_RoR", "dPower_Storage"]:
-                    df.index = source_df["id"].rename("g")
-                elif table_name in ["dPower_Inflows", "dPower_Demand"]:
+                        source_df[["rp", "generator_id", "k"]].rename(columns={"generator_id": "g"})
+                    ).set_names(["rp", "g", "k"])
+                elif table_name in ["dPower_VRES", "dPower_Storage"]:
+                    df.index = source_df.index.rename("g")
+                elif table_name == "dPower_Inflows":
                     df.index = pd.MultiIndex.from_frame(source_df[["rp", "k", "g"]])
+                elif table_name == "dPower_Demand":
+                    df.index = pd.MultiIndex.from_frame(
+                        source_df[["rp", "k", "g"]].rename(columns={"g": "i"})
+                    ).set_names(["rp", "k", "i"])
+
+            # Add default dataPackage and dataSource if they are all NaN (from PypsaReader)
+            if "Metadata" in self.config.keys() and "dataPackage" in self.config["Metadata"]:
+                df['dataPackage'] = self.config["Metadata"]["dataPackage"]
+            else:
+                df['dataPackage'] = 'default-package'
+
+            if "Metadata" in self.config.keys() and "dataSource" in self.config["Metadata"]:
+                df['dataSource'] = self.config["Metadata"]["dataSource"]
+            else:
+                df['dataSource'] = 'default-source'
 
             df_dict[table_name] = df
 
@@ -233,7 +262,7 @@ class NetworkDataExtractor:
                     if col not in df.columns:
                         df[col] = np.nan
         return self.dataframes
-    
+
     def _reorder_columns(self):
         for name, df in self.dataframes.items():
             if name in self.columns:
@@ -241,7 +270,7 @@ class NetworkDataExtractor:
                 df = df.reindex(columns=cols)
                 self.dataframes[name] = df
         return self.dataframes
-    
+
     def get_dataframes(self):
         return self.dataframes
 
