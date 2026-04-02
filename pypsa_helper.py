@@ -14,6 +14,10 @@ def prepare_ac_lines(net, config: dict):
     lines["x"] = lines["x"].where(lines["x"] != 0, x_per_len * lines["length"])
     lines["b"] = lines["b"].where(lines["b"] != 0, x_per_len * lines["length"])
 
+    # Add tap ratios and phase shifts with default values (if not already present)
+    lines['tap_ratio'] = 1
+    lines['phase_shift'] = 0
+
     if "name" not in lines.columns or lines["name"].isnull().all():
         lines["name"] = "c1"
 
@@ -25,18 +29,32 @@ def prepare_dc_links(net, config: dict):
     links["r"] = 0.0
     links["x"] = 0.0
     links["b"] = 0.0
-    links["pmax"] = links["p_nom"]
+    links["s_nom"] = links["p_nom"]
+    links["s_nom_extendable"] = links["p_nom_extendable"]
     links["id"] = links.index
     # Vectorized name generation
     links["name"] = "DC_Link_" + pd.Series(range(len(links)), index=links.index).astype(str)
 
-    return links[["bus0", "bus1", "r", "x", "b", "pmax", "id", "name"]]
+    # Add tap ratios and phase shifts with default values (if not already present)
+    links['tap_ratio'] = 1
+    links['phase_shift'] = 0
+
+    return links
+
+
+def prepare_transformers(net, config: dict) -> pd.DataFrame:
+    transformers = net.transformers.copy()
+    if "name" not in transformers.columns or transformers["name"].isnull().all():
+        transformers["name"] = "c1"
+
+    return transformers
 
 
 def prepare_ac_lines_and_dc_links(net, config: dict):
     ac_lines = prepare_ac_lines(net, config)
     dc_links = prepare_dc_links(net, config)
-    return pd.concat([ac_lines, dc_links], ignore_index=True)
+    transformers = prepare_transformers(net, config)
+    return pd.concat([ac_lines, dc_links, transformers], ignore_index=True)
 
 
 def prepare_renewable_profiles(net, config: dict):
@@ -53,23 +71,6 @@ def prepare_renewable_profiles(net, config: dict):
     profiles["rp"] = "rp01"  # add a dummy column for compatibility
 
     return profiles  # flat, column-based, no index set yet
-
-
-
-def prepare_ror_generators(net, config: dict):
-    ror = net.generators[net.generators.carrier == "ror"].copy()
-
-    ror["id"] = ror.index
-    ror["max_prod"] = ror["p_max_pu"] * ror["p_nom"]
-    ror["min_prod"] = ror["p_min_pu"] * ror["p_nom"]
-    ror["discharge"] = ror["efficiency"]
-    ror["is_hydro"] = 1
-    ror["enable_invest"] = ror["p_nom_extendable"].astype(int)
-
-    return ror[[
-        "id", "carrier", "bus", "max_prod", "min_prod", "discharge", "is_hydro",
-        "marginal_cost", "enable_invest", "p_nom_max", "capital_cost"
-    ]]
 
 
 def prepare_inflow_profiles(net, config: dict):

@@ -167,149 +167,169 @@ class NetworkDataExtractor:
 
 
     def _extract_dataframes(self):
+        """Extracts and transforms data from the PyPSA network into LEGO DataFrames."""
         df_dict = {}
 
         for table_name, cfg in self.config.items():
             if table_name == "Metadata":
                 continue
 
-            # Resolve filter from category if defined
-            if 'category' in cfg:
-                category = cfg['category']
-                meta_data = self.config.get('Metadata', {})
-                meta_cat = meta_data.get(category, {})
+            # 1. Resolve Filters from Category
+            self._resolve_category_filters(cfg)
 
-                # Combine filters from listed technologies or use direct filter
-                cat_filter = meta_cat.get('filter', [])
-                if isinstance(cat_filter, (str, int, float)):
-                    cat_filter = [cat_filter]
-                else:
-                    cat_filter = list(cat_filter)
-
-                for tech in meta_cat.get('technologies', []):
-                    tech_filter = meta_data.get(tech, {}).get('filter', [])
-                    if isinstance(tech_filter, list):
-                        cat_filter.extend(tech_filter)
-                    else:
-                        cat_filter.append(tech_filter)
-
-                if cat_filter:
-                    if 'source' not in cfg:
-                        cfg['source'] = {}
-                    # Ensure uniqueness and format as query string
-                    unique_filter = list(set(cat_filter))
-                    cfg['source']['filter'] = f"carrier in {unique_filter}"
-
-            # 1. Get Source Data
-            src = cfg.get('source')
-            if not src:
+            # 2. Get Source Data
+            source_df = self._get_source_df(cfg)
+            if source_df is None:
                 continue
 
-            if src['type'] == 'attribute':
-                source_df = getattr(self.network, src['name'])
-                if 'filter' in src:
-                    source_df = source_df.query(src['filter'])
-            elif src['type'] == 'helper':
-                source_df = getattr(h, src['name'])(self.network, cfg)
-            else:
-                continue
+            # 3. Process Column Mapping
+            df = self._map_columns(source_df, cfg)
 
-            # 2. Process Mapping
-            column_data = {}
-            # if 'mapping' in cfg.keys():
-            for lego_col, mapping in cfg['mapping'].items():
-                if isinstance(mapping, dict):
-                    # Attribute mapping with potential unit conversion or transformation function
-                    attr = mapping.get('attr')
-                    if attr and attr in source_df.columns:
-                        val = source_df[attr]
-                    else:
-                        # Try to get value as series of NaNs or fixed value
-                        val = pd.Series(mapping.get('value', np.nan), index=source_df.index)
-
-                    # Priority 1: Named conversion function
-                    if 'conversion' in mapping:
-                        conv_name = mapping['conversion'].replace('()', '')
-                        if hasattr(Conversions, conv_name):
-                            conv_func = getattr(Conversions, conv_name)
-                            
-                            # Performance Improvement: Cache function parameter counts
-                            if conv_name not in self._conv_params_cache:
-                                sig = inspect.signature(conv_func)
-                                self._conv_params_cache[conv_name] = len(sig.parameters)
-                            
-                            num_params = self._conv_params_cache[conv_name]
-
-                            try:
-                                if num_params == 3:
-                                    # Vectorized call: (Series, DataFrame, config)
-                                    val = conv_func(val, source_df, self.config)
-                                elif num_params == 2:
-                                    # Vectorized call: (Series, DataFrame)
-                                    val = conv_func(val, source_df)
-                                else:
-                                    # Vectorized call: (Series)
-                                    val = conv_func(val)
-                            except Exception as e:
-                                raise ValueError(f"Error applying conversion '{conv_name}' to column '{lego_col}': {e}")
-                        else:
-                            print(f"Warning: Conversion function '{conv_name}' not found in Conversions class.")
-
-                    # Priority 3: Simple multiplier factor
-                    elif 'factor' in mapping:
-                        val = val * mapping['factor']
-
-                    column_data[lego_col] = val
-                elif isinstance(mapping, (int, float)):
-                    # Static value
-                    column_data[lego_col] = mapping
-                else:
-                    # Direct attribute string mapping
-                    if mapping in source_df.columns:
-                        column_data[lego_col] = source_df[mapping]
-                    else:
-                        column_data[lego_col] = np.nan
-
-                # Todo: Add warning if the column defined in mapping is not available in the LEGO columns!!!
-
-            df = pd.DataFrame(column_data)
-
-            # 3. Handle Indexing
+            # 4. Handle Indexing
             if 'index' in cfg:
-                idx_cfg = cfg['index']
-                if isinstance(idx_cfg, dict):
-                    # MultiIndex from specified columns/attributes
-                    index_data = {}
-                    for lego_idx, pypsa_source in idx_cfg.items():
-                        if pypsa_source in source_df.columns:
-                            index_data[lego_idx] = source_df[pypsa_source]
-                        elif pypsa_source == "index":
-                            index_data[lego_idx] = source_df.index
-                        else:
-                            index_data[lego_idx] = np.nan
-                    df.index = pd.MultiIndex.from_frame(pd.DataFrame(index_data, index=source_df.index))
-                elif isinstance(idx_cfg, str):
-                    # Simple index renaming
-                    df.index = source_df.index.rename(idx_cfg)
-                elif isinstance(idx_cfg, list):
-                    # Fallback for current list style: assumes columns match LEGO names
-                    df.index = pd.MultiIndex.from_frame(source_df[idx_cfg]).set_names(idx_cfg)
+                self._apply_indexing(df, source_df, cfg['index'])
 
-
-            # Add default dataPackage and dataSource if they are all NaN (from PypsaReader)
-            if "Metadata" in self.config.keys() and "dataPackage" in self.config["Metadata"]:
-                df['dataPackage'] = self.config["Metadata"]["dataPackage"]
-            else:
-                df['dataPackage'] = 'default-package'
-
-            if "Metadata" in self.config.keys() and "dataSource" in self.config["Metadata"]:
-                df['dataSource'] = self.config["Metadata"]["dataSource"]
-            else:
-                df['dataSource'] = 'default-source'
+            # 5. Normalize for LEGO Format
+            df = self._add_scenario_columns(df)
 
             df_dict[table_name] = df
 
         return df_dict
+
+
+    def _resolve_category_filters(self, cfg):
+        """Resolves technology filters from Metadata if a category is defined."""
+        if 'category' not in cfg:
+            return
+
+        category = cfg['category']
+        meta_data = self.config.get('Metadata', {})
+        meta_cat = meta_data.get(category, {})
+
+        # Combine filters from listed technologies or use direct filter
+        cat_filter = meta_cat.get('filter', [])
+        if isinstance(cat_filter, (str, int, float)):
+            cat_filter = [cat_filter]
+        else:
+            cat_filter = list(cat_filter)
+
+        for tech in meta_cat.get('technologies', []):
+            tech_filter = meta_data.get(tech, {}).get('filter', [])
+            if isinstance(tech_filter, list):
+                cat_filter.extend(tech_filter)
+            else:
+                cat_filter.append(tech_filter)
+
+        if cat_filter:
+            if 'source' not in cfg:
+                cfg['source'] = {}
+            # Ensure uniqueness and format as query string
+            unique_filter = list(set(cat_filter))
+            cfg['source']['filter'] = f"carrier in {unique_filter}"
+
+
+    def _get_source_df(self, cfg):
+        """Retrieves the source DataFrame based on the configuration."""
+        src = cfg.get('source')
+        if not src:
+            return None
+
+        if src['type'] == 'attribute':
+            source_df = getattr(self.network, src['name'])
+            if 'filter' in src:
+                source_df = source_df.query(src['filter'])
+            return source_df
+        elif src['type'] == 'helper':
+            return getattr(h, src['name'])(self.network, cfg)
+        return None
+
+
+    def _map_columns(self, source_df, cfg):
+        """Maps PyPSA attributes to LEGO columns using the mapping configuration."""
+        column_data = {}
+        for lego_col, mapping in cfg.get('mapping', {}).items():
+            if isinstance(mapping, dict):
+                # Attribute mapping with potential unit conversion or transformation function
+                attr = mapping.get('attr')
+                if attr and attr in source_df.columns:
+                    val = source_df[attr]
+                else:
+                    # Try to get value as series of NaNs or fixed value
+                    val = pd.Series(mapping.get('value', np.nan), index=source_df.index)
+
+                # Priority 1: Named conversion function
+                if 'conversion' in mapping:
+                    conv_name = mapping['conversion'].replace('()', '')
+                    if hasattr(Conversions, conv_name):
+                        conv_func = getattr(Conversions, conv_name)
+
+                        # Performance Improvement: Cache function parameter counts
+                        if conv_name not in self._conv_params_cache:
+                            sig = inspect.signature(conv_func)
+                            self._conv_params_cache[conv_name] = len(sig.parameters)
+
+                        num_params = self._conv_params_cache[conv_name]
+
+                        try:
+                            if num_params == 3:
+                                # Vectorized call: (Series, DataFrame, config)
+                                val = conv_func(val, source_df, self.config)
+                            elif num_params == 2:
+                                # Vectorized call: (Series, DataFrame)
+                                val = conv_func(val, source_df)
+                            else:
+                                # Vectorized call: (Series)
+                                val = conv_func(val)
+                        except Exception as e:
+                            raise ValueError(f"Error applying conversion '{conv_name}' to column '{lego_col}': {e}")
+                    else:
+                        print(f"Warning: Conversion function '{conv_name}' not found in Conversions class.")
+
+                # Priority 3: Simple multiplier factor
+                elif 'factor' in mapping:
+                    val = val * mapping['factor']
+
+                column_data[lego_col] = val
+            elif isinstance(mapping, (int, float)):
+                # Static value
+                column_data[lego_col] = mapping
+            else:
+                # Direct attribute string mapping
+                if mapping in source_df.columns:
+                    column_data[lego_col] = source_df[mapping]
+                else:
+                    column_data[lego_col] = np.nan
+        return pd.DataFrame(column_data)
+
+    @staticmethod
+    def _apply_indexing(df, source_df, idx_cfg):
+        """Applies the indexing logic to the DataFrame."""
+        if isinstance(idx_cfg, dict):
+            # MultiIndex from specified columns/attributes
+            index_data = {}
+            for lego_idx, pypsa_source in idx_cfg.items():
+                if pypsa_source in source_df.columns:
+                    index_data[lego_idx] = source_df[pypsa_source]
+                elif pypsa_source == "index":
+                    index_data[lego_idx] = source_df.index
+                else:
+                    index_data[lego_idx] = np.nan
+            df.index = pd.MultiIndex.from_frame(pd.DataFrame(index_data, index=source_df.index))
+        elif isinstance(idx_cfg, str):
+            # Simple index renaming
+            df.index = source_df.index.rename(idx_cfg)
+        elif isinstance(idx_cfg, list):
+            # Fallback for current list style: assumes columns match LEGO names
+            df.index = pd.MultiIndex.from_frame(source_df[idx_cfg]).set_names(idx_cfg)
+
+
+    def _add_scenario_columns(self, df) -> pd.DataFrame:
+        """Adds dataPackage and dataSource columns based on config or defaults."""
+        meta = self.config.get('Metadata', {})
+        df['dataPackage'] = meta.get('dataPackage', 'default-package')
+        df['dataSource'] = meta.get('dataSource', 'default-source')
+        return df
+
 
     def _add_empty_columns(self):
         for name, df in self.dataframes.items():
@@ -327,6 +347,7 @@ class NetworkDataExtractor:
                         df[col] = np.nan
         return self.dataframes
 
+
     def _reorder_columns(self):
         for name, df in self.dataframes.items():
             if name in self.columns:
@@ -334,6 +355,7 @@ class NetworkDataExtractor:
                 df = df.reindex(columns=cols)
                 self.dataframes[name] = df
         return self.dataframes
+
 
     def get_dataframes(self):
         return self.dataframes

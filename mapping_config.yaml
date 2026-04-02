@@ -47,6 +47,7 @@ Metadata:
   phs:
     filter: ['PHS']
 
+
 dPower_BusInfo:
   source:
     type: "attribute"
@@ -60,6 +61,7 @@ dPower_BusInfo:
     pBusMinV: 0.9 # Fixed value used, since v_mag_pu_min is currently not used in PyPSA
     lat: "y"
     lon: "x"
+
 
 dPower_Network:
   source:
@@ -136,17 +138,6 @@ dPower_ThermalGen:
       attr: "decom_year"
       conversion: "year_and_lifetime_to_year_decom"
 
-dPower_VRESProfiles:
-  category: "VRESProfiles"
-  source:
-    type: "helper"
-    name: "prepare_renewable_profiles"
-  index:
-    rp: "rp"
-    g: "generator_id"
-    k: "k"
-  mapping:
-    value: "Capacity"
 
 dPower_VRES: # including ROR
   category: "VRES"
@@ -173,6 +164,7 @@ dPower_VRES: # including ROR
     YearDecom:
       attr: "decom_year"
       conversion: "year_and_lifetime_to_year_decom"
+
 
 dPower_Storage:
   category: "Storage"
@@ -209,6 +201,7 @@ dPower_Storage:
       attr: "decom_year"
       conversion: "year_and_lifetime_to_year_decom"
 
+
 dPower_Inflows:
   category: "Inflows"
   source:
@@ -221,6 +214,7 @@ dPower_Inflows:
   mapping:
     value: "Inflow"
 
+
 dPower_Demand:
   source:
     type: "helper"
@@ -231,3 +225,16 @@ dPower_Demand:
     i: "g"
   mapping:
     value: "Demand"
+
+
+dPower_VRESProfiles:
+  category: "VRESProfiles"
+  source:
+    type: "helper"
+    name: "prepare_renewable_profiles"
+  index:
+    rp: "rp"
+    g: "generator_id"
+    k: "k"
+  mapping:
+    value: "Capacity"
