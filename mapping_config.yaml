@@ -3,49 +3,71 @@ Metadata:
     type: "metadata"
   dataPackage: "PyPSA-Import"
   dataSource: "Eur_2050_1h"
-  ThermalGen:
-    technologies: ['naturalGas', 'coal', 'oil', 'nuclear', 'biomass', 'geothermal', 'waste']
-  VRES:
-    technologies: ['solar', 'onshoreWind', 'offshoreWind',]
-  Storage:
-    technologies: ['phs', 'hydro']
-  VRESProfiles:
-    technologies: ['solar', 'onshoreWind', 'offshoreWind']
-  Inflows:
-    technologies: ['phs', 'hydro', 'ror']
+  LDES_threshold: 3 # hours
+
+  # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
+  # [technology]:
+  #   filter: list of strings to filter the carrier name in the PyPSA network
+  #   cost: fuel cost in EUR/MWh (only for thermal generators, not needed
   naturalGas:
-    filter: ['Gas', 'OCGT', 'CCGT']
+    filter: [ 'Gas', 'gas' ]
+    cost: 100 # EUR/MWh
+  openCycleGasTurbine:
+    filter: [ 'OCGT' ]
+    cost: 100 # EUR/MWh
+  closedCycleGasTurbine:
+    filter: [ 'CCGT' ]
     cost: 100 # EUR/MWh
   coal:
-    filter: ['coal', 'lignite', 'Hard coal', 'Brown coal']
+    filter: [ 'coal' ]
     cost: 50 # EUR/MWh
+  hardCoal:
+    filter: [ 'Hard coal' ]
+    cost: 15 # EUR/MWh
+  brownCoal_lignite:
+    filter: [ 'Brown coal', 'lignite' ]
+    cost: 22 # EUR/MWh
   oil:
-    filter: ['oil', 'Oil']
-    cost: 150 # EUR/MWh
+    filter: [ 'oil', 'Oil' ]
+    cost: 70 # EUR/MWh
   nuclear:
-    filter: ['nuclear']
-    cost: 10 # EUR/MWh
+    filter: [ 'Nuclear', 'nuclear' ]
+    cost: 50 # EUR/MWh
   biomass:
-    filter: ['biomass']
+    filter: [ 'biomass' ]
     cost: 70 # EUR/MWh
   geothermal:
-    filter: ['geothermal']
+    filter: [ 'Geothermal', 'geothermal' ]
     cost: 60 # EUR/MWh
   waste:
-    filter: ['waste', 'Waste']
+    filter: [ 'waste', 'Waste' ]
     cost: 40 # EUR/MWh
   solar:
-    filter: ['solar', 'Solar', 'solar-hsat']
+    filter: [ 'solar', 'Solar', 'solar-hsat' ]
   onshoreWind:
-    filter: ['onwind', 'onshore-wind']
+    filter: [ 'Wind Onshore', 'onwind', 'onshore-wind' ]
   offshoreWind:
-    filter: ['offwind-float', 'offwind-dc', 'offwind-ac']
+    filter: [ 'Wind Offshore', 'offwind-float', 'offwind-dc', 'offwind-ac' ]
   ror:
-    filter: ['ror', 'Run of River']
+    filter: [ 'ror', 'Run of River' ]
   hydro:
-    filter: ['hydro']
+    filter: [ 'Storage Hydro', 'hydro' ]
   phs:
-    filter: ['PHS']
+    filter: [ 'PHS', 'Pumped Hydro' ]
+
+  # Define categories of technologies and their corresponding technologies.
+  # The technologies must have the same name as specified in the mapping above.
+  ThermalGen:
+    technologies: [ 'naturalGas', 'openCycleGasTurbine', 'closedCycleGasTurbine', 'coal', 'hardCoal', 'brownCoal_lignite', 'oil', 'nuclear', 'biomass', 'geothermal', 'waste' ]
+  VRES:
+    technologies: [ 'solar', 'onshoreWind', 'offshoreWind', ]
+  Storage:
+    technologies: [ 'phs', 'hydro' ]
+  VRESProfiles:
+    technologies: [ 'solar', 'onshoreWind', 'offshoreWind' ]
+  Inflows:
+    technologies: [ 'phs', 'hydro', 'ror' ]
+
 
 
 dPower_BusInfo:
@@ -122,6 +144,9 @@ dPower_ThermalGen:
     MinUpTime: "min_up_time"
     MinDownTime: "min_down_time"
     Efficiency: "efficiency"
+    FuelCost:
+      attr: "carrier"
+      conversion: "get_fuel_cost_from_metadata"
     CommitConsumption:
       attr: "stand_by_cost"
       conversion: "EUR_per_hour_to_MWh_per_hour"
@@ -187,6 +212,9 @@ dPower_Storage:
     ChEffic: "efficiency_store"
     Self Discharge: "standing_loss"
     IniReserve: "state_of_charge_initial"
+    IsLDES:
+      attr: "max_hours"
+      conversion: "is_ldes"
     OMVarCost: "marginal_cost"
     EnableInvest:
       attr: "p_nom_extendable"
@@ -222,7 +250,7 @@ dPower_Demand:
   index:
     rp: "rp"
     k: "k"
-    i: "g"
+    i: "n"
   mapping:
     value: "Demand"
 

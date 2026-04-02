@@ -1,11 +1,12 @@
 import pandas as pd
+import numpy as np
 
 
 def prepare_ac_lines(net, config: dict):
     lines = net.lines.copy()
     types = net.line_types
 
-    # Map type attributes to lines for vectorized calculation
+    # Define the line parameters r, x, b if only line type is specified
     r_per_len = lines["type"].map(types["r_per_length"])
     x_per_len = lines["type"].map(types["x_per_length"])
 
@@ -21,19 +22,29 @@ def prepare_ac_lines(net, config: dict):
     if "name" not in lines.columns or lines["name"].isnull().all():
         lines["name"] = "c1"
 
+    # Todo: Add robust checking if carrier of line is defined!
+    # if carrier is not defined, set to AC for all lines to get defined as DC-OPF
+    lines.carrier = lines.carrier.fillna('AC')
+
     return lines
 
 
 def prepare_dc_links(net, config: dict):
     links = net.links[net.links["carrier"] == "DC"].copy()
-    links["r"] = 0.0
-    links["x"] = 0.0
-    links["b"] = 0.0
+
+    # Define line parameters as nan for DC links, as they are not relevant for DC-OPF
+    links["r"] = np.nan
+    links["x"] = np.nan
+    links["b"] = np.nan
+
+    # Define s_nom and s_nom_extendable to be consistent with lines and transformers
     links["s_nom"] = links["p_nom"]
     links["s_nom_extendable"] = links["p_nom_extendable"]
     links["id"] = links.index
     # Vectorized name generation
     links["name"] = "DC_Link_" + pd.Series(range(len(links)), index=links.index).astype(str)
+
+    links.carrier = links.carrier.fillna('DC')
 
     # Add tap ratios and phase shifts with default values (if not already present)
     links['tap_ratio'] = 1
@@ -44,6 +55,21 @@ def prepare_dc_links(net, config: dict):
 
 def prepare_transformers(net, config: dict) -> pd.DataFrame:
     transformers = net.transformers.copy()
+    types = net.transformer_types
+
+    # Calculate r, x, b, based on transformer type if specified
+    vsc = transformers["type"].map(types["vsc"])
+    nlc = transformers["type"].map(types["i0"])
+    pfe = transformers["type"].map(types["pfe"])
+    g = pfe / (1000 * transformers.s_nom)
+
+    transformers["r"] = transformers["r"].where(transformers["r"] != 0, vsc / 100)
+    transformers["x"] = transformers["x"].where(transformers["x"] != 0, np.sqrt((vsc/100) ** 2 - transformers.r ** 2))
+    transformers["b"] = transformers["b"].where(transformers["b"] != 0, - np.sqrt((nlc / 100) ** 2 - g ** 2))
+
+    # Set carrier to AC for all transformers to get defined as DC-OPF
+    transformers["carrier"] = "AC"
+
     if "name" not in transformers.columns or transformers["name"].isnull().all():
         transformers["name"] = "c1"
 
@@ -127,6 +153,6 @@ def prepare_demand_profiles(net, config: dict):
     df = net.loads_t.p_set.copy()  # shape: [time, load_id]
     df = df.rename_axis("k").reset_index()  # 'k' = time
 
-    demand_long = df.melt(id_vars="k", var_name="g", value_name="Demand")
+    demand_long = df.melt(id_vars="k", var_name="n", value_name="Demand")
     demand_long["rp"] = "rp01"
-    return demand_long[["rp", "g", "k", "Demand"]]
+    return demand_long[["rp", "n", "k", "Demand"]]

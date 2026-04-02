@@ -54,11 +54,17 @@ class Conversions:
     @staticmethod
     def year_and_lifetime_to_year_decom(val, df: pd.DataFrame) -> pd.Series:
         """Calculates decommissioning year based on commissioning year and lifetime."""
-        # Only return a decom year if build_year and lifetime is available; otherwise return NaN
-        if df.build_year.isnull().all() and df.lifetime.isnull().all():
-            return np.nan
-        else:
-            return df.build_year + df.lifetime
+        # Only return a decom year if build_year and lifetime is available and build_year is not 0; otherwise return NaN
+        mask = df.build_year.notnull() & (df.build_year != 0) & df.lifetime.notnull()
+        res = pd.Series(np.nan, index=df.index)
+        res[mask] = df.loc[mask, 'build_year'] + df.loc[mask, 'lifetime']
+        return res
+
+    @staticmethod
+    def is_ldes(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Sets binary to 1 if energy-to-power ratio (max_hours) is greater than the threshold in metadata."""
+        threshold = metadata.get('Metadata', {}).get('LDES_threshold', 2160)
+        return (val > threshold).astype(int)
 
     @staticmethod
     def line_carrier_to_tec_repr(val, df: pd.DataFrame) -> pd.Series:
@@ -100,6 +106,11 @@ class Conversions:
         return fuel_costs
 
     @staticmethod
+    def get_fuel_cost_from_metadata(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Retrieves fuel costs based on the carrier and Metadata configuration."""
+        return Conversions._get_fuel_costs(df, metadata)
+
+    @staticmethod
     def EUR_per_hour_to_MWh_per_hour(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
         """Converts costs per hour of thermal generation (e.g. stand_by_cost) to costs per MWh based on the fuel cost specified in the metadata."""
         fuel_costs = Conversions._get_fuel_costs(df, metadata)
@@ -120,50 +131,55 @@ class Conversions:
 
 
 class NetworkDataExtractor:
-    def __init__(self, network: pypsa.Network, config_path: str = None):
+    def __init__(self, network: pypsa.Network, config_path: str = None, table_definitions_path: str = None):
         self.network = network
         self._conv_params_cache = {}  # Performance: Cache function signatures
+        
         if config_path is None:
             config_path = os.path.join(os.path.dirname(__file__), "mapping_config.yaml")
+        
+        if table_definitions_path is None:
+            table_definitions_path = os.path.join(os.path.dirname(__file__), "TableDefinitions.xml")
 
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
-        # The expected columns for each table (used for reordering and filling empties)
-        self.columns = {
-            "dPower_BusInfo": ['excl', 'id', 'z', 'pBusBaseV', 'pBusMaxV', 'pBusMinV', 'pBusB',
-                               'pBusG', 'pBus_pf', 'YearCom', 'YearDecom', 'lat', 'lon', 'zoi',
-                               'dataPackage', 'dataSource'],
-            "dPower_Network": ['excl', 'id', 'pRline', 'pXline', 'pBcline', 'pAngle', 'pRatio',
-                               'pPmax', 'pEnableInvest', 'pFOMCost', 'pInvestCost', 'pTecRepr',
-                               'YearCom', 'YearDecom', 'dataPackage', 'dataSource'],
-            "dPower_ThermalGen": ['excl', 'id', 'tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'RampUp',
-                                  'RampDw', 'MinUpTime', 'MinDownTime', 'Qmax', 'Qmin', 'InertiaConst',
-                                  'FuelCost', 'Efficiency', 'CommitConsumption', 'OMVarCost',
-                                  'StartupConsumption', 'EFOR', 'EnableInvest', 'InvestCost',
-                                  'FirmCapCoef', 'CO2Emis', 'YearCom', 'YearDecom', 'lat', 'long',
-                                  'dataPackage', 'dataSource', 'pSlopeVarCostEUR', 'pInterVarCostEUR',
-                                  'pStartupCostEUR', 'MaxInvest', 'InvestCostEUR'],
-            "dPower_VRESProfiles": ['value'],
-            "dPower_VRES": ['excl', 'id', 'tec', 'i', 'ExisUnits', 'MaxProd', 'EnableInvest',
-                            'MaxInvest', 'InvestCost', 'OMVarCost', 'FirmCapCoef', 'Qmax', 'Qmin',
-                            'InertiaConst', 'YearCom', 'YearDecom', 'lat', 'lon', 'dataPackage',
-                            'dataSource', 'MinProd', 'InvestCostEUR'],
-            "dPower_Storage": ['tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'MaxCons', 'DisEffic',
-                               'ChEffic', 'Qmax', 'Qmin', 'InertiaConst', 'MinReserve', 'IniReserve',
-                               'IsHydro', 'OMVarCost', 'EnableInvest', 'MaxInvest', 'InvestCostPerMW',
-                               'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
-                               'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
-                               'YearDecom', 'lat', 'long', 'pOMVarCostEUR', 'InvestCostEUR', 'dataPackage', 'dataSource'],
-            "dPower_Demand": ['value'],
-            "dPower_Inflows": ['value'],
-        }
+        # Automatically load expected columns from TableDefinitions.xml
+        self.columns = self._load_table_definitions(table_definitions_path)
 
         self.dataframes = self._extract_dataframes()
         # add empty columns
         self.dataframes = self._add_empty_columns()
         # reorder columns
-        self.dataframes = self._reorder_columns()
+        # self.dataframes = self._reorder_columns()
+
+    @staticmethod
+    def _load_table_definitions(xml_path):
+        """Parses TableDefinitions.xml to determine expected LEGO columns for each table."""
+        if not os.path.exists(xml_path):
+            print(f"Warning: Table definitions file not found at {xml_path}. Using fallback column lists.")
+            return {}
+
+        import xml.etree.ElementTree as ET
+        try:
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+            table_cols = {}
+            for table in root.findall(".//TableDefinition"):
+                # Map XML ID (Power_BusInfo) to internal ID (dPower_BusInfo)
+                table_id = "d" + table.get("id")
+                cols = []
+                columns_node = table.find("Columns")
+                if columns_node is not None:
+                    for col in columns_node:
+                        col_id = col.get("id")
+                        if col_id:
+                            cols.append(col_id)
+                table_cols[table_id] = cols
+            return table_cols
+        except Exception as e:
+            print(f"Error parsing TableDefinitions.xml: {e}")
+            return {}
 
 
     def _extract_dataframes(self):
@@ -190,6 +206,12 @@ class NetworkDataExtractor:
                 self._apply_indexing(df, source_df, cfg['index'])
 
             # 5. Normalize for LEGO Format
+            # Drop columns that are now in the index to avoid "already exists" error on reset_index
+            for idx_name in df.index.names:
+                if idx_name in df.columns:
+                    df = df.drop(columns=[idx_name])
+
+            df = df.reset_index()
             df = self._add_scenario_columns(df)
 
             df_dict[table_name] = df
