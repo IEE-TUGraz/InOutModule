@@ -5,12 +5,14 @@ def prepare_ac_lines(net, config: dict):
     lines = net.lines.copy()
     types = net.line_types
 
-    lines["r"] = lines.apply(
-        lambda row: row["r"] if row["r"] != 0 else types.loc[row["type"]].r_per_length * row["length"], axis=1)
-    lines["x"] = lines.apply(
-        lambda row: row["x"] if row["x"] != 0 else types.loc[row["type"]].x_per_length * row["length"], axis=1)
-    lines["b"] = lines.apply(
-        lambda row: row["b"] if row["b"] != 0 else types.loc[row["type"]].x_per_length * row["length"], axis=1)
+    # Map type attributes to lines for vectorized calculation
+    r_per_len = lines["type"].map(types["r_per_length"])
+    x_per_len = lines["type"].map(types["x_per_length"])
+
+    # Vectorized calculation: replace 0 values with type-based defaults
+    lines["r"] = lines["r"].where(lines["r"] != 0, r_per_len * lines["length"])
+    lines["x"] = lines["x"].where(lines["x"] != 0, x_per_len * lines["length"])
+    lines["b"] = lines["b"].where(lines["b"] != 0, x_per_len * lines["length"])
 
     if "name" not in lines.columns or lines["name"].isnull().all():
         lines["name"] = "c1"
@@ -25,7 +27,8 @@ def prepare_dc_links(net, config: dict):
     links["b"] = 0.0
     links["pmax"] = links["p_nom"]
     links["id"] = links.index
-    links["name"] = [f"DC_Link_{i}" for i in range(len(links))]
+    # Vectorized name generation
+    links["name"] = "DC_Link_" + pd.Series(range(len(links)), index=links.index).astype(str)
 
     return links[["bus0", "bus1", "r", "x", "b", "pmax", "id", "name"]]
 
@@ -34,25 +37,6 @@ def prepare_ac_lines_and_dc_links(net, config: dict):
     ac_lines = prepare_ac_lines(net, config)
     dc_links = prepare_dc_links(net, config)
     return pd.concat([ac_lines, dc_links], ignore_index=True)
-
-
-def prepare_thermal_generators(net, config: dict):
-    thermal_types = ['OCGT', 'biomass', 'CCGT', 'nuclear', 'oil', 'coal', 'lignite']
-    gens = net.generators.copy()
-    gens = gens[gens.carrier.isin(thermal_types)]
-
-    gens["max_prod"] = gens["p_max_pu"] * gens["p_nom"]
-    gens["min_prod"] = gens["p_min_pu"] * gens["p_nom"]
-    gens["ramp_up"] = gens["ramp_limit_up"] * gens["p_nom"]
-    gens["ramp_down"] = gens["ramp_limit_down"] * gens["p_nom"]
-    gens["enable_invest"] = gens["p_nom_extendable"].astype(int)
-
-    gens["id"] = gens.index
-    return gens[[
-        "id", "carrier", "bus", "max_prod", "min_prod",
-        "ramp_up", "ramp_down", "start_up_cost",
-        "enable_invest", "capital_cost", "marginal_cost"
-    ]]
 
 
 def prepare_renewable_profiles(net, config: dict):
@@ -70,20 +54,6 @@ def prepare_renewable_profiles(net, config: dict):
 
     return profiles  # flat, column-based, no index set yet
 
-
-def prepare_renewable_generators(net, config: dict):
-    renewable_types = ['solar-hsat', 'onwind', 'solar']
-    gens = net.generators.copy()
-    vres = gens[gens.carrier.isin(renewable_types)].copy()
-
-    vres["max_prod"] = vres["p_max_pu"] * vres["p_nom"]
-    vres["enable_invest"] = vres["p_nom_extendable"].astype(int)
-
-    vres["id"] = vres.index.values
-    return vres[[
-        "id", "carrier", "bus", "max_prod",
-        "enable_invest", "p_nom_max", "capital_cost", "marginal_cost"
-    ]]
 
 
 def prepare_ror_generators(net, config: dict):

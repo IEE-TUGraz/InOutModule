@@ -47,7 +47,8 @@ class Conversions:
         if val.isnull().all():
             return 0
         else:
-            val = val.fillna(False)  # Treat NaN as False for binary conversion
+            # Use infer_objects to explicitly handle the type conversion from object to bool
+            val = val.fillna(False).infer_objects(copy=False)
             return val.astype(int)
 
     @staticmethod
@@ -88,7 +89,15 @@ class Conversions:
                     fuel_mapping[carrier] = fuel_info['cost']
 
         # Map carriers to costs; default to NaN if not found
-        return df['carrier'].map(fuel_mapping)
+        fuel_costs = df['carrier'].map(fuel_mapping)
+
+        # Performance check: only check for missing carriers if DataFrame isn't empty
+        if not fuel_costs.empty:
+            missing_carriers = df.loc[fuel_costs.isnull(), 'carrier'].unique()
+            if len(missing_carriers) > 0:
+                print(f"Warning: No fuel cost defined in Metadata for carrier(s): {missing_carriers.tolist()}")
+
+        return fuel_costs
 
     @staticmethod
     def EUR_per_hour_to_MWh_per_hour(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
@@ -113,6 +122,7 @@ class Conversions:
 class NetworkDataExtractor:
     def __init__(self, network: pypsa.Network, config_path: str = None):
         self.network = network
+        self._conv_params_cache = {}  # Performance: Cache function signatures
         if config_path is None:
             config_path = os.path.join(os.path.dirname(__file__), "mapping_config.yaml")
 
@@ -222,15 +232,19 @@ class NetworkDataExtractor:
                         conv_name = mapping['conversion'].replace('()', '')
                         if hasattr(Conversions, conv_name):
                             conv_func = getattr(Conversions, conv_name)
-                            # Check function signature
-                            sig = inspect.signature(conv_func)
-                            params = list(sig.parameters.values())
+                            
+                            # Performance Improvement: Cache function parameter counts
+                            if conv_name not in self._conv_params_cache:
+                                sig = inspect.signature(conv_func)
+                                self._conv_params_cache[conv_name] = len(sig.parameters)
+                            
+                            num_params = self._conv_params_cache[conv_name]
 
                             try:
-                                if len(params) == 3:
+                                if num_params == 3:
                                     # Vectorized call: (Series, DataFrame, config)
                                     val = conv_func(val, source_df, self.config)
-                                elif len(params) == 2:
+                                elif num_params == 2:
                                     # Vectorized call: (Series, DataFrame)
                                     val = conv_func(val, source_df)
                                 else:
@@ -299,6 +313,14 @@ class NetworkDataExtractor:
 
     def _add_empty_columns(self):
         for name, df in self.dataframes.items():
+            # Add scenario column
+            if 'scenario' not in df.columns:
+                df['scenario'] = 'ScenarioA'
+
+            # Add id column if missing
+            if 'id' not in df.columns:
+                df['id'] = np.nan
+
             if name in self.columns:
                 for col in self.columns[name]:
                     if col not in df.columns:
@@ -318,7 +340,7 @@ class NetworkDataExtractor:
 
 
 if __name__ == "__main__":
-    filepath = os.path.join(os.path.dirname(__file__), "..", "pypsa-eur/resources/test/networks/base_s_39_elec_1year.nc")
+    filepath = os.path.join(r"C:\BeSt\PyPSA-LEGO-Translator\scigrid-de.nc")
     if os.path.exists(filepath):
         net = pypsa.Network(filepath)
         extractor = NetworkDataExtractor(net)
