@@ -2,7 +2,50 @@ Metadata:
   source:
     type: "metadata"
   dataPackage: "PyPSA-Import"
-  dataSource: "scigrid-de"
+  dataSource: "Eur_2050_1h"
+  ThermalGen:
+    technologies: ['naturalGas', 'coal', 'oil', 'nuclear', 'biomass', 'geothermal', 'waste']
+  VRES:
+    technologies: ['solar', 'onshoreWind', 'offshoreWind',]
+  Storage:
+    technologies: ['phs', 'hydro']
+  VRESProfiles:
+    technologies: ['solar', 'onshoreWind', 'offshoreWind']
+  Inflows:
+    technologies: ['phs', 'hydro', 'ror']
+  naturalGas:
+    filter: ['Gas', 'OCGT', 'CCGT']
+    cost: 100 # EUR/MWh
+  coal:
+    filter: ['coal', 'lignite', 'Hard coal', 'Brown coal']
+    cost: 50 # EUR/MWh
+  oil:
+    filter: ['oil', 'Oil']
+    cost: 150 # EUR/MWh
+  nuclear:
+    filter: ['nuclear']
+    cost: 10 # EUR/MWh
+  biomass:
+    filter: ['biomass']
+    cost: 70 # EUR/MWh
+  geothermal:
+    filter: ['geothermal']
+    cost: 60 # EUR/MWh
+  waste:
+    filter: ['waste', 'Waste']
+    cost: 40 # EUR/MWh
+  solar:
+    filter: ['solar', 'Solar', 'solar-hsat']
+  onshoreWind:
+    filter: ['onwind', 'onshore-wind']
+  offshoreWind:
+    filter: ['offwind-float', 'offwind-dc', 'offwind-ac']
+  ror:
+    filter: ['ror', 'Run of River']
+  hydro:
+    filter: ['hydro']
+  phs:
+    filter: ['PHS']
 
 dPower_BusInfo:
   source:
@@ -22,7 +65,10 @@ dPower_Network:
   source:
     type: "helper"
     name: "prepare_ac_lines_and_dc_links"
-  index: ["i", "j", "c"]
+  index:
+    i: "bus0"
+    j: "bus1"
+    c: "name"
   mapping:
     c: "c1"
     pRline: "r"
@@ -50,10 +96,10 @@ dPower_Network:
 
 
 dPower_ThermalGen:
+  category: "ThermalGen"
   source:
     type: "attribute"
     name: "generators"
-    filter: "carrier in ['Gas', 'Hard Coal', 'Waste', 'Brown Coal', 'Oil', 'Other', 'Nuclear', 'Geothermal']"
   index: "g"
   mapping:
     tec: "carrier"
@@ -91,19 +137,22 @@ dPower_ThermalGen:
       conversion: "year_and_lifetime_to_year_decom"
 
 dPower_VRESProfiles:
+  category: "VRESProfiles"
   source:
     type: "helper"
     name: "prepare_renewable_profiles"
-    filter: "carrier in ['Solar', 'Wind Onshore', 'Wind Offshore']"
-  index: ["rp", "g"]
+  index:
+    rp: "rp"
+    g: "generator_id"
+    k: "k"
   mapping:
     value: "Capacity"
 
-dPower_VRES:
+dPower_VRES: # including ROR
+  category: "VRES"
   source:
     type: "attribute"
     name: "generators"
-    filter: "carrier in ['Solar', 'Wind Onshore', 'Wind Offshore']"
   index: "g"
   mapping:
     tec: "carrier"
@@ -125,24 +174,8 @@ dPower_VRES:
       attr: "decom_year"
       conversion: "year_and_lifetime_to_year_decom"
 
-dPower_RoR:
-  source:
-    type: "helper"
-    name: "prepare_ror_generators"
-  index: "g"
-  mapping:
-    tec: "carrier"
-    i: "bus"
-    MaxProd: "max_prod"
-    MinProd: "min_prod"
-    DisEffic: "discharge"
-    IsHydro: "is_hydro"
-    OMVarCost: "marginal_cost"
-    EnableInvest: "enable_invest"
-    MaxInvest: "p_nom_max"
-    InvestCostPerMW: "capital_cost"
-
 dPower_Storage:
+  category: "Storage"
   source:
     type: "attribute"
     name: "storage_units"
@@ -177,11 +210,14 @@ dPower_Storage:
       conversion: "year_and_lifetime_to_year_decom"
 
 dPower_Inflows:
+  category: "Inflows"
   source:
     type: "helper"
     name: "prepare_inflow_profiles"
-    filter: "carrier in ['Pumped Hydro', 'Run of River']"
-  index: ["rp", "k", "g"]
+  index:
+    rp: "rp"
+    k: "k"
+    g: "g"
   mapping:
     value: "Inflow"
 
@@ -189,6 +225,9 @@ dPower_Demand:
   source:
     type: "helper"
     name: "prepare_demand_profiles"
-  index: ["rp", "k", "g"]
+  index:
+    rp: "rp"
+    k: "k"
+    i: "g"
   mapping:
     value: "Demand"

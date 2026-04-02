@@ -116,9 +116,9 @@ def prepare_inflow_profiles(net, config: dict):
         print("Warning: No hydro storage units have inflow data. Storage inflow profiles will be empty.")
         inflow_storage = net.storage_units_t.inflow.copy()
     else:
-        inflow_storage = net.storage_units_t.inflow[hydro_ids].copy()
+        inflow_storage = net.storage_units_t.inflow[existing_inflows].copy()
         if len(missing_inflows) > 0:
-            print(f"Warning: The following hydro storage units are missing inflow data and will be skipped: {missing_inflows}")
+            print(f"Warning: The following hydro storage units are missing inflow data and will not be defined: {missing_inflows}")
 
     # Get RoR generator inflows
     ror_ids = net.generators.query(config["source"]["filter"]).index.to_list()
@@ -133,11 +133,11 @@ def prepare_inflow_profiles(net, config: dict):
         print("Warning: No RoR generators have inflow data. RoR inflow profiles will be empty.")
         inflow_ror = pd.DataFrame()
     else:
-        ror = net.generators[ror_ids].copy()
-        inflow_ror = net.generators_t.p_max_pu[ror_ids].copy()
+        ror = net.generators.loc[existing_ror_inflows].copy()
+        inflow_ror = net.generators_t.p_max_pu[existing_ror_inflows].copy()
         inflow_ror = inflow_ror.mul(ror["p_nom"], axis=1)
         if len(missing_ror_inflows) > 0:
-            print(f"Warning: The following RoR generators are missing inflow data and will be skipped: {missing_ror_inflows}")
+            print(f"Warning: The following RoR generators are missing inflow data and will not be defined: {missing_ror_inflows}")
 
     # Concatenate both: hydro + RoR inflows → [time, generator]
     combined = pd.concat([inflow_storage, inflow_ror], axis=1)

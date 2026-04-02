@@ -13,61 +13,101 @@ class Conversions:
     """Registry of conversion functions for unit transformations."""
 
     @staticmethod
-    def EUR_to_MEUR(val, row=None):
+    def EUR_to_MEUR(val: pd.Series, df: pd.DataFrame = None) -> pd.Series:
+        """Converts € to Mio.€"""
         return val * 1e-6
 
     @staticmethod
-    def MEUR_to_EUR(val, row=None):
+    def MEUR_to_EUR(val: pd.Series, df: pd.DataFrame = None) -> pd.Series:
+        """Converts Mio.€ to € """
         return val * 1e6
 
     @staticmethod
-    def MW_to_kW(val, row=None):
+    def MW_to_kW(val: pd.Series, df: pd.DataFrame = None) -> pd.Series:
         return val * 1e3
 
     @staticmethod
-    def V_to_kV(val, row=None):
+    def V_to_kV(val, df: pd.DataFrame = None) -> pd.Series:
         return val * 1e-3
 
     @staticmethod
-    def EUR_per_MVA_to_MEUR(val, df):
+    def EUR_per_MVA_to_MEUR(val, df: pd.DataFrame = None) -> pd.Series:
         """Calculates total cost in MEUR: (EUR/unit) * capacity * 1e-6."""
         capacity = df.s_nom
         return val * capacity * 1e-6
 
     @staticmethod
-    def pu_to_absolute(val, df):
+    def pu_to_absolute(val, df: pd.DataFrame) -> pd.Series:
         """Converts per-unit values to absolute values using the base value from the DataFrame."""
         return val * df.p_nom
 
     @staticmethod
-    def bool_to_binary(val):
+    def bool_to_binary(val, df: pd.DataFrame = None) -> pd.Series:
         """Converts boolean values to binary (0/1) integers."""
-        return val.astype(int)
+        if val.isnull().all():
+            return 0
+        else:
+            val = val.fillna(False)  # Treat NaN as False for binary conversion
+            return val.astype(int)
 
     @staticmethod
-    def year_and_lifetime_to_year_decom(val, df):
+    def year_and_lifetime_to_year_decom(val, df: pd.DataFrame) -> pd.Series:
         """Calculates decommissioning year based on commissioning year and lifetime."""
         # Only return a decom year if build_year and lifetime is available; otherwise return NaN
-        if df.build_year.isnull().all() and df.lifetiem.isnull().all():
+        if df.build_year.isnull().all() and df.lifetime.isnull().all():
             return np.nan
         else:
             return df.build_year + df.lifetime
 
     @staticmethod
-    def line_carrier_to_tec_repr(val, df):
+    def line_carrier_to_tec_repr(val, df: pd.DataFrame) -> pd.Series:
         if df.carrier.isnull().all():
             return 'DC-OPF'
         else:
             return df.carrier.map({'AC': 'DC-OPF', 'DC': 'TP'})
 
     @staticmethod
-    def total_capacity_to_number_of_units(val, df):
+    def total_capacity_to_number_of_units(val, df: pd.DataFrame) -> pd.Series:
         """Calculates the number of units based on total capacity and nominal capacity per unit."""
         # Check if the input value is all NaN or all infinite, and return a default of 100 in that case
         if val.isnull().all() or np.isinf(val).all():
             return 100
         else:
-            return (np.ceil(val / df.p_nom)).astype(int)
+            val = val.fillna(0).replace(np.inf, 1000)  # Treat NaN as 0 for investment calculation
+            p_nom = df.p_nom.fillna(1).replace(np.inf, 100).replace(0, 1)  # Avoid division by zero and treat NaN as 1 for unit calculation
+            return (np.ceil(val / p_nom)).astype(int)
+
+    @staticmethod
+    def _get_fuel_costs(df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Helper to get fuel costs for each row in the DataFrame based on carrier."""
+        fuel_mapping = {}
+        meta_config = metadata.get('Metadata', {})
+        for key, fuel_info in meta_config.items():
+            if isinstance(fuel_info, dict) and 'filter' in fuel_info and 'cost' in fuel_info:
+                for carrier in fuel_info['filter']:
+                    fuel_mapping[carrier] = fuel_info['cost']
+
+        # Map carriers to costs; default to NaN if not found
+        return df['carrier'].map(fuel_mapping)
+
+    @staticmethod
+    def EUR_per_hour_to_MWh_per_hour(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Converts costs per hour of thermal generation (e.g. stand_by_cost) to costs per MWh based on the fuel cost specified in the metadata."""
+        fuel_costs = Conversions._get_fuel_costs(df, metadata)
+        # Result is MWh/h = (EUR/h) / (EUR/MWh)
+        # Avoid division by zero, handle NaN/Inf
+        with np.errstate(divide='ignore', invalid='ignore'):
+            res = val / fuel_costs
+        return res.replace([np.inf, -np.inf], 0).fillna(0)
+
+    @staticmethod
+    def EUR_to_MWh(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Converts costs to costs per MWh based on the fuel cost specified in the metadata."""
+        fuel_costs = Conversions._get_fuel_costs(df, metadata)
+        # Result is MWh = EUR / (EUR/MWh)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            res = val / fuel_costs
+        return res.replace([np.inf, -np.inf], 0).fillna(0)
 
 
 class NetworkDataExtractor:
@@ -105,12 +145,6 @@ class NetworkDataExtractor:
                                'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
                                'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
                                'YearDecom', 'lat', 'long', 'pOMVarCostEUR', 'InvestCostEUR', 'dataPackage', 'dataSource'],
-            # "dPower_RoR": ['tec', 'i', 'ExisUnits', 'MaxProd', 'MinProd', 'MaxCons', 'DisEffic',
-            #                 'ChEffic', 'Qmax', 'Qmin', 'InertiaConst', 'MinReserve', 'IniReserve',
-            #                 'IsHydro', 'OMVarCost', 'EnableInvest', 'MaxInvest', 'InvestCostPerMW',
-            #                 'InvestCostPerMWh', 'Ene2PowRatio', 'ReplaceCost', 'ShelfLife',
-            #                 'FirmCapCoef', 'CDSF_alpha', 'CDSF_beta', 'PPName', 'YearCom',
-            #                 'YearDecom', 'lat', 'long', 'InvestCostEUR'],
             "dPower_Demand": ['value'],
             "dPower_Inflows": ['value'],
         }
@@ -121,37 +155,46 @@ class NetworkDataExtractor:
         # reorder columns
         self.dataframes = self._reorder_columns()
 
-    def _get_unit_factor(self, pypsa_unit: str, lego_unit: str) -> float:
-        """Calculates conversion factor based on metric prefixes (e.g., MW to kW)."""
-        if not pypsa_unit or not lego_unit or pypsa_unit == lego_unit:
-            return 1.0
-
-        # Power of 10 mapping for metric prefixes
-        prefixes = {'T': 12, 'G': 9, 'M': 6, 'k': 3, '': 0, 'm': -3, 'u': -6, 'n': -9}
-
-        def split_unit(u):
-            if len(u) > 1 and u[0] in prefixes and (u[1:] in ['W', 'V', 'EUR', 'Wh', 'g', 'l']):
-                return u[0], u[1:]
-            return '', u
-
-        p_pre, p_base = split_unit(pypsa_unit)
-        l_pre, l_base = split_unit(lego_unit)
-
-        # Specific handling for EUR/MEUR if they are treated as base units
-        if pypsa_unit == "MEUR" and lego_unit == "EUR": return 1e6
-        if pypsa_unit == "EUR" and lego_unit == "MEUR": return 1e-6
-
-        if p_base != l_base:
-            return 1.0
-
-        return 10 ** (prefixes[p_pre] - prefixes[l_pre])
 
     def _extract_dataframes(self):
         df_dict = {}
 
         for table_name, cfg in self.config.items():
+            if table_name == "Metadata":
+                continue
+
+            # Resolve filter from category if defined
+            if 'category' in cfg:
+                category = cfg['category']
+                meta_data = self.config.get('Metadata', {})
+                meta_cat = meta_data.get(category, {})
+
+                # Combine filters from listed technologies or use direct filter
+                cat_filter = meta_cat.get('filter', [])
+                if isinstance(cat_filter, (str, int, float)):
+                    cat_filter = [cat_filter]
+                else:
+                    cat_filter = list(cat_filter)
+
+                for tech in meta_cat.get('technologies', []):
+                    tech_filter = meta_data.get(tech, {}).get('filter', [])
+                    if isinstance(tech_filter, list):
+                        cat_filter.extend(tech_filter)
+                    else:
+                        cat_filter.append(tech_filter)
+
+                if cat_filter:
+                    if 'source' not in cfg:
+                        cfg['source'] = {}
+                    # Ensure uniqueness and format as query string
+                    unique_filter = list(set(cat_filter))
+                    cfg['source']['filter'] = f"carrier in {unique_filter}"
+
             # 1. Get Source Data
-            src = cfg['source']
+            src = cfg.get('source')
+            if not src:
+                continue
+
             if src['type'] == 'attribute':
                 source_df = getattr(self.network, src['name'])
                 if 'filter' in src:
@@ -183,19 +226,20 @@ class NetworkDataExtractor:
                             sig = inspect.signature(conv_func)
                             params = list(sig.parameters.values())
 
-                            if len(params) >= 2:
-                                # Vectorized call: (Series, DataFrame)
-                                val = conv_func(val, source_df)
-                            else:
-                                # Vectorized call: (Series)
-                                val = conv_func(val)
+                            try:
+                                if len(params) == 3:
+                                    # Vectorized call: (Series, DataFrame, config)
+                                    val = conv_func(val, source_df, self.config)
+                                elif len(params) == 2:
+                                    # Vectorized call: (Series, DataFrame)
+                                    val = conv_func(val, source_df)
+                                else:
+                                    # Vectorized call: (Series)
+                                    val = conv_func(val)
+                            except Exception as e:
+                                raise ValueError(f"Error applying conversion '{conv_name}' to column '{lego_col}': {e}")
                         else:
                             print(f"Warning: Conversion function '{conv_name}' not found in Conversions class.")
-
-                    # Priority 2: Explicit unit strings
-                    elif 'pypsa_unit' in mapping and 'lego_unit' in mapping:
-                        factor = self._get_unit_factor(mapping['pypsa_unit'], mapping['lego_unit'])
-                        val = val * factor
 
                     # Priority 3: Simple multiplier factor
                     elif 'factor' in mapping:
@@ -218,27 +262,25 @@ class NetworkDataExtractor:
 
             # 3. Handle Indexing
             if 'index' in cfg:
-                # Logic from original PypsaReader for indexing
-                if table_name == "dPower_BusInfo":
-                    df.index = source_df.index.rename("i")
-                elif table_name == "dPower_Network":
-                    df.index = pd.MultiIndex.from_frame(
-                        source_df[["bus0", "bus1", "name"]].rename(columns={"bus0": "i", "bus1": "j", "name": "c"})
-                    ).set_names(["i", "j", "c"])
-                elif table_name == "dPower_ThermalGen":
-                    df.index = source_df.index.rename("g")
-                elif table_name == "dPower_VRESProfiles":
-                    df.index = pd.MultiIndex.from_frame(
-                        source_df[["rp", "generator_id", "k"]].rename(columns={"generator_id": "g"})
-                    ).set_names(["rp", "g", "k"])
-                elif table_name in ["dPower_VRES", "dPower_Storage"]:
-                    df.index = source_df.index.rename("g")
-                elif table_name == "dPower_Inflows":
-                    df.index = pd.MultiIndex.from_frame(source_df[["rp", "k", "g"]])
-                elif table_name == "dPower_Demand":
-                    df.index = pd.MultiIndex.from_frame(
-                        source_df[["rp", "k", "g"]].rename(columns={"g": "i"})
-                    ).set_names(["rp", "k", "i"])
+                idx_cfg = cfg['index']
+                if isinstance(idx_cfg, dict):
+                    # MultiIndex from specified columns/attributes
+                    index_data = {}
+                    for lego_idx, pypsa_source in idx_cfg.items():
+                        if pypsa_source in source_df.columns:
+                            index_data[lego_idx] = source_df[pypsa_source]
+                        elif pypsa_source == "index":
+                            index_data[lego_idx] = source_df.index
+                        else:
+                            index_data[lego_idx] = np.nan
+                    df.index = pd.MultiIndex.from_frame(pd.DataFrame(index_data, index=source_df.index))
+                elif isinstance(idx_cfg, str):
+                    # Simple index renaming
+                    df.index = source_df.index.rename(idx_cfg)
+                elif isinstance(idx_cfg, list):
+                    # Fallback for current list style: assumes columns match LEGO names
+                    df.index = pd.MultiIndex.from_frame(source_df[idx_cfg]).set_names(idx_cfg)
+
 
             # Add default dataPackage and dataSource if they are all NaN (from PypsaReader)
             if "Metadata" in self.config.keys() and "dataPackage" in self.config["Metadata"]:
