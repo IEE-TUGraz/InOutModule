@@ -3,6 +3,10 @@ import numpy as np
 
 
 def prepare_ac_lines(net, config: dict):
+    """
+    Prepares AC line data by calculating missing parameters (r, x, b) from line types 
+    and ensuring consistent naming and carrier definitions.
+    """
     lines = net.lines.copy()
     types = net.line_types
 
@@ -29,6 +33,10 @@ def prepare_ac_lines(net, config: dict):
 
 
 def prepare_dc_links(net, config: dict):
+    """
+    Extracts and prepares DC link data, initializing parameters for DC-OPF compatibility 
+    and generating unique names.
+    """
     links = net.links[net.links["carrier"] == "DC"].copy()
 
     # Define line parameters as nan for DC links, as they are not relevant for DC-OPF
@@ -54,6 +62,10 @@ def prepare_dc_links(net, config: dict):
 
 
 def prepare_transformers(net, config: dict) -> pd.DataFrame:
+    """
+    Calculates transformer electrical parameters (r, x, b) based on their types 
+    and sets default values for LEGO compatibility.
+    """
     transformers = net.transformers.copy()
     types = net.transformer_types
 
@@ -77,6 +89,10 @@ def prepare_transformers(net, config: dict) -> pd.DataFrame:
 
 
 def prepare_ac_lines_and_dc_links(net, config: dict):
+    """
+    Combines AC lines, DC links, and transformers into a single DataFrame 
+    for comprehensive network mapping.
+    """
     ac_lines = prepare_ac_lines(net, config)
     dc_links = prepare_dc_links(net, config)
     transformers = prepare_transformers(net, config)
@@ -84,6 +100,10 @@ def prepare_ac_lines_and_dc_links(net, config: dict):
 
 
 def prepare_renewable_profiles(net, config: dict):
+    """
+    Extracts renewable generation profiles (p_max_pu) for specified carriers 
+    and formats them for LEGO input.
+    """
     # renewable_types = ['Solar', 'Wind Onshore', 'Wind Offshore']
     gens = net.generators.copy()
     vres_gens = gens.query(config["source"]["filter"])
@@ -100,6 +120,10 @@ def prepare_renewable_profiles(net, config: dict):
 
 
 def prepare_inflow_profiles(net, config: dict):
+    """
+    Aggregates inflow data from hydro storage units and Run-of-River generators 
+    into a unified profile format.
+    """
     # Get hydro storage inflows
     hydro_ids = net.storage_units.query(config["source"]["filter"]).index.to_list()
     set_hydro_ids = set(hydro_ids)
@@ -150,6 +174,10 @@ def prepare_inflow_profiles(net, config: dict):
 
 
 def prepare_demand_profiles(net, config: dict):
+    """
+    Extracts load demand profiles and formats them into a long-form DataFrame 
+    for LEGO representation.
+    """
     df = net.loads_t.p_set.copy()  # shape: [time, load_id]
     df = df.rename_axis("k").reset_index()  # 'k' = time
 
