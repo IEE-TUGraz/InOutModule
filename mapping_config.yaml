@@ -3,7 +3,7 @@ Metadata:
     type: "metadata"
   dataPackage: "PyPSA-Import"
   dataSource: "Eur_2050_1h"
-  LDES_threshold: 3 # hours
+  LDES_threshold: 2160 # hours
 
   # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
   # [technology]:

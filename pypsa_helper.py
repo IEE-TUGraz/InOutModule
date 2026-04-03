@@ -22,9 +22,8 @@ def prepare_ac_lines(net, config: dict):
     if "name" not in lines.columns or lines["name"].isnull().all():
         lines["name"] = "c1"
 
-    # Todo: Add robust checking if carrier of line is defined!
-    # if carrier is not defined, set to AC for all lines to get defined as DC-OPF
-    lines.carrier = lines.carrier.fillna('AC')
+    # if carrier is nan or empty string (''), set to AC for all lines to get defined as DC-OPF
+    lines.carrier = lines.carrier.fillna('AC').where(lines.carrier != '', 'AC')
 
     return lines
 
@@ -44,7 +43,8 @@ def prepare_dc_links(net, config: dict):
     # Vectorized name generation
     links["name"] = "DC_Link_" + pd.Series(range(len(links)), index=links.index).astype(str)
 
-    links.carrier = links.carrier.fillna('DC')
+    # if carrier is nan or empty string (''), set to DC for all links to get defined as transport problem (TP)
+    links.carrier = links.carrier.fillna('DC').where(links.carrier != '', 'DC')
 
     # Add tap ratios and phase shifts with default values (if not already present)
     links['tap_ratio'] = 1

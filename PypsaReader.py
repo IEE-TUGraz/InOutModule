@@ -6,6 +6,7 @@ import pandas as pd
 import pypsa
 import yaml
 
+from ExcelWriter import ExcelWriter
 import pypsa_helper as h
 
 
@@ -24,10 +25,12 @@ class Conversions:
 
     @staticmethod
     def MW_to_kW(val: pd.Series, df: pd.DataFrame = None) -> pd.Series:
+        """Converts MW to kW."""
         return val * 1e3
 
     @staticmethod
     def V_to_kV(val, df: pd.DataFrame = None) -> pd.Series:
+        """Converts V to kV."""
         return val * 1e-3
 
     @staticmethod
@@ -68,6 +71,7 @@ class Conversions:
 
     @staticmethod
     def line_carrier_to_tec_repr(val, df: pd.DataFrame) -> pd.Series:
+        """Maps line carriers to LEGO's technology representations (e.g., DC-OPF for AC lines)."""
         if df.carrier.isnull().all():
             return 'DC-OPF'
         else:
@@ -132,6 +136,13 @@ class Conversions:
 
 class NetworkDataExtractor:
     def __init__(self, network: pypsa.Network, config_path: str = None, table_definitions_path: str = None):
+        """
+        Initializes the extractor with a PyPSA network and configuration files.
+
+        :param network: The PyPSA network instance to extract data from.
+        :param config_path: Path to the mapping configuration YAML file.
+        :param table_definitions_path: Path to the TableDefinitions XML file.
+        """
         self.network = network
         self._conv_params_cache = {}  # Performance: Cache function signatures
         
@@ -144,43 +155,42 @@ class NetworkDataExtractor:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
-        # Automatically load expected columns from TableDefinitions.xml
-        self.columns = self._load_table_definitions(table_definitions_path)
+        # Initialize ExcelWriter to get definitions for checking/normalization
+        self.writer = ExcelWriter(table_definitions_path)
+        self.excel_definitions = self.writer.excel_definitions
 
         self.dataframes = self._extract_dataframes()
-        # add empty columns
-        self.dataframes = self._add_empty_columns()
-        # reorder columns
-        # self.dataframes = self._reorder_columns()
+        # Normalize and check dataframes (moving checking functionality from testing script)
+        self.dataframes = self._normalize_dataframes()
 
-    @staticmethod
-    def _load_table_definitions(xml_path):
-        """Parses TableDefinitions.xml to determine expected LEGO columns for each table."""
-        if not os.path.exists(xml_path):
-            print(f"Warning: Table definitions file not found at {xml_path}. Using fallback column lists.")
-            return {}
+    def _normalize_dataframes(self):
+        """Checks and normalizes dataframes to ensure they are ready for LEGO output."""
+        normalized_dfs = {}
+        for name, df in self.dataframes.items():
+            # Only write tables that are defined in TableDefinitions.xml
+            table_id = name[1:] if name.startswith('d') else name
+            
+            if table_id not in self.excel_definitions:
+                print(f"  Skipping {name} (not defined in TableDefinitions.xml)")
+                continue
 
-        import xml.etree.ElementTree as ET
-        try:
-            tree = ET.parse(xml_path)
-            root = tree.getroot()
-            table_cols = {}
-            for table in root.findall(".//TableDefinition"):
-                # Map XML ID (Power_BusInfo) to internal ID (dPower_BusInfo)
-                table_id = "d" + table.get("id")
-                cols = []
-                columns_node = table.find("Columns")
-                if columns_node is not None:
-                    for col in columns_node:
-                        col_id = col.get("id")
-                        if col_id:
-                            cols.append(col_id)
-                table_cols[table_id] = cols
-            return table_cols
-        except Exception as e:
-            print(f"Error parsing TableDefinitions.xml: {e}")
-            return {}
+            # Add mandatory 'scenario' column for LEGO format if missing
+            if 'scenario' not in df.columns:
+                df['scenario'] = 'ScenarioA'
 
+            # Add 'id' column if missing
+            if 'id' not in df.columns:
+                df['id'] = np.nan
+
+            # Ensure all columns from TableDefinition are present (at least as NaN)
+            definition = self.excel_definitions[table_id]
+            for col_def in definition.columns:
+                if col_def.db_name not in df.columns and col_def.db_name != "NOEXCL":
+                    df[col_def.db_name] = np.nan
+            
+            normalized_dfs[name] = df
+            
+        return normalized_dfs
 
     def _extract_dataframes(self):
         """Extracts and transforms data from the PyPSA network into LEGO DataFrames."""
@@ -353,45 +363,60 @@ class NetworkDataExtractor:
         return df
 
 
-    def _add_empty_columns(self):
-        for name, df in self.dataframes.items():
-            # Add scenario column
-            if 'scenario' not in df.columns:
-                df['scenario'] = 'ScenarioA'
-
-            # Add id column if missing
-            if 'id' not in df.columns:
-                df['id'] = np.nan
-
-            if name in self.columns:
-                for col in self.columns[name]:
-                    if col not in df.columns:
-                        df[col] = np.nan
-        return self.dataframes
-
-
-    def _reorder_columns(self):
-        for name, df in self.dataframes.items():
-            if name in self.columns:
-                cols = self.columns[name]
-                df = df.reindex(columns=cols)
-                self.dataframes[name] = df
-        return self.dataframes
-
-
     def get_dataframes(self):
+        """Returns the dictionary of extracted and normalized DataFrames."""
         return self.dataframes
 
 
 if __name__ == "__main__":
-    filepath = os.path.join(r"C:\BeSt\PyPSA-LEGO-Translator\scigrid-de.nc")
-    if os.path.exists(filepath):
-        net = pypsa.Network(filepath)
+    """
+    Main execution block for converting a PyPSA network to LEGO-formatted Excel files.
+    
+    To use this:
+    1. Update the 'directory' and 'input_file' variables to point to your .nc PyPSA network.
+    2. Set 'output_directory' and 'output_folder_name' for the resulting Excel files.
+    3. Run the script: `python PypsaReader.py`
+    """
+    # Define the path to the PyPSA network (similar than implemented in PyPSA-LEGO-Translator_testing.py)
+    directory = r"C:\BeSt\PyPSA-LEGO-Translator"
+    output_directory = r"C:\BeSt\PyPSA-LEGO-Translator"
+    input_file = r"scigrid-de.nc"
+    output_folder_name = "scigrid-de"
+    filepath = os.path.join(directory, input_file)
+
+    if not os.path.exists(filepath):
+        print(f"Error: File not found at {filepath}")
+    else:
+        # Load the network
+        print(f"Loading PyPSA network from {filepath}...")
+        try:
+            net = pypsa.Network(filepath)
+        except Exception as e:
+            print(f"Could not load network: {e}")
+            exit(1)
+
+        # Extract data using NetworkDataExtractor
+        print("Extracting data into LEGO format...")
         extractor = NetworkDataExtractor(net)
         dfs = extractor.get_dataframes()
+
+        # Initialize ExcelWriter
+        writer = ExcelWriter()
+
+        # Define output directory
+        output_dir = os.path.join(output_directory, output_folder_name)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+
+        # Writing Excel files (filtering/checking functionality is now inside NetworkDataExtractor)
+        print("Writing Excel files...")
         for name, df in dfs.items():
-            print(f"DataFrame: {name}")
-            print(df.head())
-            print("\n")
-    else:
-        print(f"Test file not found: {filepath}")
+            table_id = name[1:] if name.startswith('d') else name
+            
+            print(f"  Writing {name} to {output_dir}...")
+            try:
+                writer._write_Excel_from_definition(df, output_dir, table_id)
+            except Exception as e:
+                print(f"  Error writing {name}: {e}")
+
+        print("\nConversion complete. Output files are in:", output_dir)
