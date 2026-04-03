@@ -6,8 +6,8 @@ import pandas as pd
 import pypsa
 import yaml
 
-from ExcelWriter import ExcelWriter
 import pypsa_helper as h
+from ExcelWriter import ExcelWriter
 
 
 class Conversions:
@@ -145,10 +145,10 @@ class NetworkDataExtractor:
         """
         self.network = network
         self._conv_params_cache = {}  # Performance: Cache function signatures
-        
+
         if config_path is None:
             config_path = os.path.join(os.path.dirname(__file__), "mapping_config.yaml")
-        
+
         if table_definitions_path is None:
             table_definitions_path = os.path.join(os.path.dirname(__file__), "TableDefinitions.xml")
 
@@ -169,7 +169,7 @@ class NetworkDataExtractor:
         for name, df in self.dataframes.items():
             # Only write tables that are defined in TableDefinitions.xml
             table_id = name[1:] if name.startswith('d') else name
-            
+
             if table_id not in self.excel_definitions:
                 print(f"  Skipping {name} (not defined in TableDefinitions.xml)")
                 continue
@@ -187,9 +187,9 @@ class NetworkDataExtractor:
             for col_def in definition.columns:
                 if col_def.db_name not in df.columns and col_def.db_name != "NOEXCL":
                     df[col_def.db_name] = np.nan
-            
+
             normalized_dfs[name] = df
-            
+
         return normalized_dfs
 
     def _extract_dataframes(self):
@@ -228,7 +228,6 @@ class NetworkDataExtractor:
 
         return df_dict
 
-
     def _resolve_category_filters(self, cfg):
         """Resolves technology filters from Metadata if a category is defined."""
         if 'category' not in cfg:
@@ -259,7 +258,6 @@ class NetworkDataExtractor:
             unique_filter = list(set(cat_filter))
             cfg['source']['filter'] = f"carrier in {unique_filter}"
 
-
     def _get_source_df(self, cfg):
         """Retrieves the source DataFrame based on the configuration."""
         src = cfg.get('source')
@@ -274,7 +272,6 @@ class NetworkDataExtractor:
         elif src['type'] == 'helper':
             return getattr(h, src['name'])(self.network, cfg)
         return None
-
 
     def _map_columns(self, source_df, cfg):
         """Maps PyPSA attributes to LEGO columns using the mapping configuration."""
@@ -354,7 +351,6 @@ class NetworkDataExtractor:
             # Fallback for current list style: assumes columns match LEGO names
             df.index = pd.MultiIndex.from_frame(source_df[idx_cfg]).set_names(idx_cfg)
 
-
     def _add_scenario_columns(self, df) -> pd.DataFrame:
         """Adds dataPackage and dataSource columns based on config or defaults."""
         meta = self.config.get('Metadata', {})
@@ -362,27 +358,25 @@ class NetworkDataExtractor:
         df['dataSource'] = meta.get('dataSource', 'default-source')
         return df
 
-
     def get_dataframes(self):
         """Returns the dictionary of extracted and normalized DataFrames."""
         return self.dataframes
 
 
-if __name__ == "__main__":
+def translate_pypsa_to_lego(input_directory: str = r"./input_data",
+                            input_file: str = r"pypsa-model.nc",
+                            output_directory: str = r"./output_data",
+                            output_folder_name: str = "LEGO-Model"):
     """
-    Main execution block for converting a PyPSA network to LEGO-formatted Excel files.
-    
-    To use this:
-    1. Update the 'directory' and 'input_file' variables to point to your .nc PyPSA network.
-    2. Set 'output_directory' and 'output_folder_name' for the resulting Excel files.
-    3. Run the script: `python PypsaReader.py`
-    """
+        Main execution block for converting a PyPSA network to LEGO-formatted Excel files.
+
+        To use this:
+        1. Update the 'directory' and 'input_file' variables to point to your .nc PyPSA network.
+        2. Set 'output_directory' and 'output_folder_name' for the resulting Excel files.
+        3. Run the script: `python PypsaReader.py`
+        """
     # Define the path to the PyPSA network (similar than implemented in PyPSA-LEGO-Translator_testing.py)
-    directory = r"C:\BeSt\PyPSA-LEGO-Translator"
-    output_directory = r"C:\BeSt\PyPSA-LEGO-Translator"
-    input_file = r"scigrid-de.nc"
-    output_folder_name = "scigrid-de"
-    filepath = os.path.join(directory, input_file)
+    filepath = os.path.join(input_directory, input_file)
 
     if not os.path.exists(filepath):
         print(f"Error: File not found at {filepath}")
@@ -412,7 +406,7 @@ if __name__ == "__main__":
         print("Writing Excel files...")
         for name, df in dfs.items():
             table_id = name[1:] if name.startswith('d') else name
-            
+
             print(f"  Writing {name} to {output_dir}...")
             try:
                 writer._write_Excel_from_definition(df, output_dir, table_id)
@@ -420,3 +414,7 @@ if __name__ == "__main__":
                 print(f"  Error writing {name}: {e}")
 
         print("\nConversion complete. Output files are in:", output_dir)
+
+
+if __name__ == "__main__":
+    translate_pypsa_to_lego()
