@@ -23,8 +23,8 @@ def prepare_ac_lines(net, config: dict):
     lines['tap_ratio'] = 1
     lines['phase_shift'] = 0
 
-    if "name" not in lines.columns or lines["name"].isnull().all():
-        lines["name"] = "c1"
+    # Ensure every line has an individual circuit identifier (c1, c2, ...) for parallel lines
+    lines["name"] = "c" + (lines.groupby(["bus0", "bus1"]).cumcount() + 1).astype(str)
 
     # if carrier is nan or empty string (''), set to AC for all lines to get defined as DC-OPF
     lines.carrier = lines.carrier.fillna('AC').where(lines.carrier != '', 'AC')
@@ -82,8 +82,8 @@ def prepare_transformers(net, config: dict) -> pd.DataFrame:
     # Set carrier to AC for all transformers to get defined as DC-OPF
     transformers["carrier"] = "AC"
 
-    if "name" not in transformers.columns or transformers["name"].isnull().all():
-        transformers["name"] = "c1"
+    # Ensure every transformer has an individual circuit identifier (c1, c2, ...) for parallel transformers
+    transformers["name"] = "c" + (transformers.groupby(["bus0", "bus1"]).cumcount() + 1).astype(str)
 
     return transformers
 
