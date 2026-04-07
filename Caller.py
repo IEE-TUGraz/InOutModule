@@ -14,6 +14,17 @@ from printer import Printer
 
 printer = Printer.getInstance()
 
+
+def _tail(text, n=20):
+    """Return the last n lines of text, or all if fewer."""
+    if not text:
+        return "(no output)"
+    lines = text.rstrip('\n').split('\n')
+    if len(lines) <= n:
+        return text
+    return f"... ({len(lines) - n} lines omitted)\n" + '\n'.join(lines[-n:])
+
+
 parser = argparse.ArgumentParser(description='Calls the exact lines from the given file, can be called multiple times.')
 
 parser.add_argument('jobs', type=str, help='Path to the text-file containing the commands to be called.')
@@ -96,22 +107,41 @@ while True:
             f.write(f"Command: {line.strip()}\n")
             f.write(f"Started at: {start_datetime}")
         found_one = True
+        log_file = f"{args.jobs}.log{i}"
         try:
             printer.information(f"Executing job {i} from '{args.jobs}': {line.strip()}")
             os.system(f"title Job {i} from '{args.jobs}': {line.strip()}")
 
             start_time = time.time()
-            exit_code = os.system(line.strip())
+            result = subprocess.run(
+                line.strip(),
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
             end_time = time.time()
 
-            if exit_code != 0:
-                raise RuntimeError(f"Command exited with code {exit_code}")
+            with open(log_file, 'w') as f:
+                f.write(f"Command: {line.strip()}\n")
+                f.write(f"Started at:  {start_datetime}\n")
+                f.write(f"Exit code:   {result.returncode}\n")
+                f.write(f"{'=' * 60}\n")
+                f.write(result.stdout or "")
+
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"Command exited with code {result.returncode}. "
+                    f"See log: {log_file}\n"
+                    f"Last output:\n{_tail(result.stdout, 20)}"
+                )
 
             with open(finished_job_flag, 'w') as f:
                 f.write(f"Command: {line.strip()}\n")
                 f.write(f"Started at:  {start_datetime}\n")
-                f.write(f"Finished at: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n")
+                f.write(f"Finished at: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write(f"Execution time: {end_time - start_time:.2f} seconds (= {(end_time - start_time) / 60 / 60:.2f} hours)\n")
+                f.write(f"Log file: {log_file}\n")
 
             printer.information(f"Finished job {i} from '{args.jobs}' after {end_time - start_time:.2f} seconds (= {(end_time - start_time) / 60 / 60:.2f} hours).")
         except Exception as e:
@@ -120,7 +150,8 @@ while True:
                 f.write(f"Command: {line.strip()}\n")
                 f.write(f"Error while executing job {i} from '{args.jobs}': {e}\n")
                 f.write(f"Started at:  {start_datetime}\n")
-                f.write(f"Occurred at: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}")
+                f.write(f"Occurred at: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"Log file: {log_file}\n")
         break
 
     if not found_one and not restart:
