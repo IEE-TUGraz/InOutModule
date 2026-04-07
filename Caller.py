@@ -2,6 +2,7 @@ import argparse
 import datetime
 import os
 import subprocess
+import sys
 import time
 
 from rich.highlighter import ReprHighlighter
@@ -15,14 +16,18 @@ from printer import Printer
 printer = Printer.getInstance()
 
 
-def _tail(text, n=20):
-    """Return the last n lines of text, or all if fewer."""
-    if not text:
+def _tail_file(filepath, n=20):
+    """Return the last n lines of a file, or all if fewer."""
+    try:
+        with open(filepath, 'r', errors='replace') as f:
+            lines = f.readlines()
+    except OSError:
+        return "(could not read log file)"
+    if not lines:
         return "(no output)"
-    lines = text.rstrip('\n').split('\n')
     if len(lines) <= n:
-        return text
-    return f"... ({len(lines) - n} lines omitted)\n" + '\n'.join(lines[-n:])
+        return ''.join(lines)
+    return f"... ({len(lines) - n} lines omitted)\n" + ''.join(lines[-n:])
 
 
 parser = argparse.ArgumentParser(description='Calls the exact lines from the given file, can be called multiple times.')
@@ -113,27 +118,30 @@ while True:
             os.system(f"title Job {i} from '{args.jobs}': {line.strip()}")
 
             start_time = time.time()
-            result = subprocess.run(
-                line.strip(),
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-            )
+            with open(log_file, 'w') as log_f:
+                log_f.write(f"Command: {line.strip()}\n")
+                log_f.write(f"Started at:  {start_datetime}\n")
+                log_f.write(f"{'=' * 60}\n")
+                log_f.flush()
+
+                proc = subprocess.Popen(
+                    line.strip(),
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
+                for raw_line in proc.stdout:
+                    sys.stdout.buffer.write(raw_line)
+                    sys.stdout.buffer.flush()
+                    log_f.write(raw_line.decode(errors='replace'))
+                proc.wait()
             end_time = time.time()
 
-            with open(log_file, 'w') as f:
-                f.write(f"Command: {line.strip()}\n")
-                f.write(f"Started at:  {start_datetime}\n")
-                f.write(f"Exit code:   {result.returncode}\n")
-                f.write(f"{'=' * 60}\n")
-                f.write(result.stdout or "")
-
-            if result.returncode != 0:
+            if proc.returncode != 0:
                 raise RuntimeError(
-                    f"Command exited with code {result.returncode}. "
+                    f"Command exited with code {proc.returncode}. "
                     f"See log: {log_file}\n"
-                    f"Last output:\n{_tail(result.stdout, 20)}"
+                    f"Last output:\n{_tail_file(log_file, 20)}"
                 )
 
             with open(finished_job_flag, 'w') as f:
