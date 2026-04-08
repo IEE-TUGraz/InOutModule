@@ -130,11 +130,18 @@ while True:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                 )
+                interrupted = False
                 for raw_line in proc.stdout:
-                    sys.stdout.buffer.write(raw_line)
-                    sys.stdout.buffer.flush()
-                    log_f.write(raw_line.decode(errors='replace'))
+                    decoded = raw_line.decode(errors='replace')
+                    try:
+                        sys.stdout.write(decoded)
+                        sys.stdout.flush()
+                    except KeyboardInterrupt:
+                        interrupted = True
+                    log_f.write(decoded)
                 proc.wait()
+                if interrupted:
+                    raise KeyboardInterrupt
             end_time = time.time()
 
             if proc.returncode != 0:
