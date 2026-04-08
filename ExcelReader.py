@@ -390,6 +390,11 @@ def get_Power_Network(excel_file_path: str, keep_excluded_entries: bool = False,
     """
     dPower_Network = __read_non_pivoted_file(excel_file_path, "v0.1.2", ["i", "j", "c"], True, keep_excluded_entries, fail_on_wrong_version)
 
+    # Check that all values in column pEnableInvest are either 0 or 1
+    if not dPower_Network['pEnableInvest'].isin([0, 1]).all():
+        invalid_values = dPower_Network.loc[~dPower_Network['pEnableInvest'].isin([0, 1]), 'pEnableInvest']
+        raise ValueError(f"dPower_Network: Found invalid values in 'pEnableInvest' column. Only 0 and 1 are allowed, but found: {invalid_values}")
+
     return dPower_Network
 
 
@@ -561,8 +566,10 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                     for k, v in source_cell.font.__dict__.items():
                         if k == "color" and v is not None:
                             for k2, v2 in v.__dict__.items():
-                                if v2 != getattr(target_cell.font.color, k2):
-                                    printer.error(f"Mismatch in font color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.font.color, k2)}")
+                                if ((v2 is None and target_cell.font.color is not None) or
+                                        (v2 is not None and target_cell.font.color is None) or
+                                        (v2 != getattr(target_cell.font.color, k2))):
+                                    printer.error(f"Mismatch in font color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.font.color, k2) if target_cell.font.color is not None else None}")
                                     equal = False
                         elif getattr(target_cell.font, k) != v:
                             printer.error(f"Mismatch in font property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.font, k)} != {v}")
@@ -572,8 +579,10 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                     for k, v in source_cell.fill.__dict__.items():
                         if k == "color" and v is not None:
                             for k2, v2 in v.__dict__.items():
-                                if v2 != getattr(target_cell.fill.color, k2):
-                                    printer.error(f"Mismatch in fill color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.fill.color, k2)}")
+                                if ((v2 is None and target_cell.fill.color is not None) or
+                                        (v2 is not None and target_cell.fill.color is None) or
+                                        (v2 != getattr(target_cell.fill.color, k2))):
+                                    printer.error(f"Mismatch in fill color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.fill.color, k2) if target_cell.fill.color is not None else None}")
                                     equal = False
                         elif getattr(target_cell.fill, k) != v:
                             printer.error(f"Mismatch in fill property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.fill, k)} != {v}")

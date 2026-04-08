@@ -1,14 +1,17 @@
 import concurrent.futures
 import copy
 import os
+import typing
 import warnings
 from pathlib import Path
-from typing import Optional, Self
+from typing import Optional, Self, Literal
 
 import numpy as np
 import pandas as pd
+import tsam.timeseriesaggregation as tsam
 
 import ExcelReader
+from InOutModule import Utilities
 from printer import Printer
 
 printer = Printer.getInstance()
@@ -286,7 +289,34 @@ class CaseStudy:
             self.scale_CaseStudy()
 
     def copy(self):
-        return copy.deepcopy(self)
+        new_self = copy.deepcopy(self)
+        return new_self
+
+    def equal_to(self, cs: typing.Self) -> bool:
+        """
+        Check if this CaseStudy is equal to another CaseStudy, checking all dataframes for equality.
+        :param cs: Other CaseStudy to compare to
+        :return: True if equal, False otherwise
+        """
+        all_equal = True
+        for df in (self.rpk_dependent_dataframes + self.rp_only_dependent_dataframes + self.k_only_dependent_dataframes + self.non_time_dependent_dataframes + self.non_dependent_dataframes):
+            if hasattr(self, df) and hasattr(cs, df):
+                self_df = getattr(self, df)
+                cs_df = getattr(cs, df)
+
+                if type(self_df) is pd.DataFrame and type(cs_df) is pd.DataFrame:
+                    if not self_df.equals(cs_df):
+                        printer.error(f"DataFrame '{df}' is not equal.")
+                        all_equal = False
+                else:
+                    if self_df != cs_df:
+                        printer.error(f"Attribute '{df}' is not equal.")
+                        all_equal = False
+            else:
+                printer.error(f"Attribute '{df}' is missing in one of the CaseStudies.")
+                all_equal = False
+
+        return all_equal
 
     def scale_CaseStudy(self):
         self.scale_dPower_Parameters()
@@ -512,23 +542,31 @@ class CaseStudy:
         connected_buses.sort()
         return connected_buses
 
-    def merge_single_node_buses(self):
-        # Create a connection matrix
-        # TODO check
-        connectionMatrix = pd.DataFrame(index=self.dPower_BusInfo.index, columns=[self.dPower_BusInfo.index], data=False)
+    def merge_single_node_buses(self, inplace: bool = True) -> typing.Optional[typing.Self]:
+        """
+        Merge all buses that are only connected via single-node connections (i.e., "SN" technical representation) into one bus.
+        :param inplace: Whether to perform the operation inplace or return a new CaseStudy object.
+        :return: The modified CaseStudy object if inplace is False, otherwise None.
+        """
+        if inplace:
+            cs = self
+        else:
+            cs = self.copy()
 
-        for index, entry in self.dPower_Network.iterrows():
+        # Create a connection matrix
+        connectionMatrix = pd.DataFrame(index=cs.dPower_BusInfo.index, columns=[cs.dPower_BusInfo.index], data=False)
+        for index, entry in cs.dPower_Network.iterrows():
             if entry["pTecRepr"] == "SN":
-                connectionMatrix.loc[index] = True
+                connectionMatrix.loc[index[0], index[1]] = True
                 connectionMatrix.loc[index[1], index[0]] = True
 
+        # Merge buses based on connection matrix
         merged_buses = set()  # Set of buses that have been merged already
-
         for index, entry in connectionMatrix.iterrows():
-            if index in merged_buses or entry[entry == True].empty:  # Skip if bus has already been merged or has no connections
+            if index in merged_buses or not entry.any():  # Skip if bus has already been merged or has no connections
                 continue
 
-            connected_buses = self.get_connected_buses(connectionMatrix, str(index))
+            connected_buses = cs.get_connected_buses(connectionMatrix, str(index))
 
             for bus in connected_buses:
                 merged_buses.add(bus)
@@ -536,8 +574,10 @@ class CaseStudy:
             new_bus_name = "merged-" + "-".join(connected_buses)
 
             ### Adapt dPower_BusInfo
-            dPower_BusInfo_entry = self.dPower_BusInfo.loc[connected_buses]  # Entry for the new bus
+            dPower_BusInfo_entry = cs.dPower_BusInfo.loc[connected_buses]  # Entry for the new bus
             zoneOfInterest = 1 if any(dPower_BusInfo_entry['zoi'] == 1) else 0
+            zone_values = sorted(set(dPower_BusInfo_entry['z'].dropna().unique()))
+            zone_name = '_'.join(str(v) for v in zone_values)
             aggregation_methods_for_columns = {
                 # 'System': 'max',
                 # 'BaseVolt': 'mean',
@@ -549,98 +589,89 @@ class CaseStudy:
                 'YearCom': 'mean',
                 'YearDecom': 'mean',
                 'lat': 'mean',
-                'long': 'mean'
+                'lon': 'mean'
             }
             dPower_BusInfo_entry = dPower_BusInfo_entry.agg(aggregation_methods_for_columns)
             dPower_BusInfo_entry['zoi'] = zoneOfInterest
+            dPower_BusInfo_entry['z'] = zone_name
             dPower_BusInfo_entry = dPower_BusInfo_entry.to_frame().T
             dPower_BusInfo_entry.index = [new_bus_name]
 
-            self.dPower_BusInfo = self.dPower_BusInfo.drop(connected_buses)
+            cs.dPower_BusInfo = cs.dPower_BusInfo.drop(connected_buses)
             with warnings.catch_warnings():  # Suppressing FutureWarning because some entries might include NaN values
                 warnings.simplefilter(action='ignore', category=FutureWarning)
-                self.dPower_BusInfo = pd.concat([self.dPower_BusInfo, dPower_BusInfo_entry])
+                cs.dPower_BusInfo = pd.concat([cs.dPower_BusInfo, dPower_BusInfo_entry])
 
             ### Adapt dPower_Network
-            self.dPower_Network = self.dPower_Network.reset_index()
+            cs.dPower_Network = cs.dPower_Network.reset_index()
             rows_to_drop = []
-            for i, row in self.dPower_Network.iterrows():
+            for i, row in cs.dPower_Network.iterrows():
                 if row['i'] in connected_buses and row['j'] in connected_buses:
                     rows_to_drop.append(i)
                 elif row['i'] in connected_buses:
                     row['i'] = new_bus_name
-                    self.dPower_Network.iloc[i] = row
+                    cs.dPower_Network.iloc[i] = row
                 elif row['j'] in connected_buses:
                     row['j'] = new_bus_name
-                    self.dPower_Network.iloc[i] = row
-            self.dPower_Network = self.dPower_Network.drop(rows_to_drop)
+                    cs.dPower_Network.iloc[i] = row
+            cs.dPower_Network = cs.dPower_Network.drop(rows_to_drop)
 
             # Always put new_bus_name to 'j' (handles case where e.g. 2->3 and 4->2 would lead to 2->34 and 34->2 (because 3 and 4 are merged))
-            for i, row in self.dPower_Network.iterrows():
+            for i, row in cs.dPower_Network.iterrows():
                 if row['i'] == new_bus_name:
                     row['i'] = row['j']
                     row['j'] = new_bus_name
-                    self.dPower_Network.loc[i] = row
+                    cs.dPower_Network.loc[i] = row
 
             # Handle case where e.g. 2->3 and 2->4 would lead to 2->34 and 2->34 (because 3 and 4 are merged); also incl. handling 2->3 and 4->2
-            self.dPower_Network['Technical Representation'] = self.dPower_Network.groupby(['i', 'j'])['Technical Representation'].transform(lambda series: 'DC-OPF' if 'DC-OPF' in series.values else series.iloc[0])
+            cs.dPower_Network['pTecRepr'] = cs.dPower_Network.groupby(['i', 'j'])['pTecRepr'].transform(lambda series: 'DC-OPF' if 'DC-OPF' in series.values else series.iloc[0])
             aggregation_methods_for_columns = {
                 # 'Circuit ID': 'first',
                 # 'InService': 'max',
                 # 'R': 'mean',
-                'X': lambda x: x.map(lambda a: 1 / a).sum() ** -1,  # Formula: 1/X = sum((i,j), 1/Xij)) (e.g., 1/X = 1/Xij_1 +1/Xij_2 + 1/Xij_3...)
+                'pXline': lambda x: x.map(lambda a: 1 / a).sum() ** -1,  # Formula: 1/X = sum((i,j), 1/Xij)) (e.g., 1/X = 1/Xij_1 +1/Xij_2 + 1/Xij_3...)
                 # 'Bc': 'mean',
                 # 'TapAngle': 'mean',
                 # 'TapRatio': 'mean',
-                'Pmax': lambda x: x.min() * x.count(),  # Number of lines times the minimum Pmax for new Pmax of the merged lines TODO: Calculate this based on more complex method (flow is relative to R, talk to Benjamin)
+                'pPmax': lambda x: x.min() * x.count(),  # Number of lines times the minimum Pmax for new Pmax of the merged lines TODO: Calculate this based on more complex method (flow is relative to R, talk to Benjamin)
                 # 'FixedCost': 'mean',
                 # 'FxChargeRate': 'mean',
-                'Technical Representation': 'first',
-                'LineID': 'first',
+                'pTecRepr': 'first',
                 'YearCom': 'mean',
                 'YearDecom': 'mean'
             }
-            self.dPower_Network = self.dPower_Network.groupby(['i', 'j']).agg(aggregation_methods_for_columns)
+            # Add aggregation for any missing columns
+            for column in cs.dPower_Network.columns:
+                if column not in aggregation_methods_for_columns and column not in ['i', 'j', 'c']:
+                    aggregation_methods_for_columns[column] = 'first'
+
+            cs.dPower_Network = cs.dPower_Network.groupby(['i', 'j', 'c']).agg(aggregation_methods_for_columns)
 
             ### Adapt dPower_ThermalGen
-            if hasattr(self, "dPower_ThermalGen"):
-                for i, row in self.dPower_ThermalGen.iterrows():
-                    if row['i'] in connected_buses:
-                        row['i'] = new_bus_name
-                        self.dPower_ThermalGen.loc[i] = row
+            if hasattr(cs, "dPower_ThermalGen"):
+                cs.dPower_ThermalGen.loc[cs.dPower_ThermalGen['i'].isin(connected_buses), 'i'] = new_bus_name
 
             # Adapt dPower_VRES
-            if hasattr(self, "dPower_VRES"):
-                for i, row in self.dPower_VRES.iterrows():
-                    if row['i'] in connected_buses:
-                        row['i'] = new_bus_name
-                        self.dPower_VRES.loc[i] = row
+            if hasattr(cs, "dPower_VRES"):
+                cs.dPower_VRES.loc[cs.dPower_VRES['i'].isin(connected_buses), 'i'] = new_bus_name
 
             # Adapt dPower_Storage
-            if hasattr(self, "dPower_Storage"):
-                for i, row in self.dPower_Storage.iterrows():
-                    if row['i'] in connected_buses:
-                        row['i'] = new_bus_name
-                        self.dPower_Storage.loc[i] = row
+            if hasattr(cs, "dPower_Storage"):
+                cs.dPower_Storage.loc[cs.dPower_Storage['i'].isin(connected_buses), 'i'] = new_bus_name
 
             # Adapt dPower_Demand
-            self.dPower_Demand = self.dPower_Demand.reset_index()
-            for i, row in self.dPower_Demand.iterrows():
-                if row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    self.dPower_Demand.loc[i] = row
-            self.dPower_Demand = self.dPower_Demand.groupby(['rp', 'i', 'k']).sum()
+            cs.dPower_Demand = cs.dPower_Demand.reset_index()
+            mask = cs.dPower_Demand['i'].isin(connected_buses)  # Create mask for rows to be unified
+            cs.dPower_Demand.loc[mask, 'i'] = new_bus_name  # Update bus names
+            aggregation_methods_power_demand = {
+                'value': 'sum',
+                'dataPackage': lambda v: f"merged-{'-'.join(v.unique())}",
+                'dataSource': lambda v: f"merged-{'-'.join(v.unique())}",
+                'scenario': lambda v: '-'.join(v.unique())  # If there are multiple scenarios, this would probably fail later (which is good - then we know, something isn't right!)
+            }
+            cs.dPower_Demand = cs.dPower_Demand.groupby(['rp', 'k', 'i']).agg(aggregation_methods_power_demand)
 
-            # Adapt dPower_VRESProfiles
-            if hasattr(self, "dPower_VRESProfiles"):
-                self.dPower_VRESProfiles = self.dPower_VRESProfiles.reset_index()
-                for i, row in self.dPower_VRESProfiles.iterrows():
-                    if row['i'] in connected_buses:
-                        row['i'] = new_bus_name
-                        self.dPower_VRESProfiles.loc[i] = row
-
-                self.dPower_VRESProfiles = self.dPower_VRESProfiles.groupby(['rp', 'i', 'k', 'tec']).mean()  # TODO: Aggregate using more complex method (capacity * productionCapacity * ... * / Total Production Capacity)
-                self.dPower_VRESProfiles.sort_index(inplace=True)
+        return cs if not inplace else None
 
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -674,7 +705,7 @@ class CaseStudy:
                     raise ValueError(f"For 'relative_to_highest', clip_value must be between 0 and 1, not {clip_value}.")
                 for rp in rps:
                     threshold = rpTransitionMatrixAbsolute.loc[rp].max() * clip_value
-                    rpTransitionMatrixAbsolute.loc[rp][rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
+                    rpTransitionMatrixAbsolute.loc[rp, rpTransitionMatrixAbsolute.loc[rp] < threshold] = 0
             case _:
                 raise ValueError(f"clip_method must be either 'none', 'absolute_count' or 'relative_to_highest', not {clip_method}.")
 
@@ -777,15 +808,20 @@ class CaseStudy:
 
         return None if inplace else caseStudy
 
-    def filter_timesteps(self, start: str, end: str, inplace: bool = False) -> Optional[Self]:
+    def filter_timesteps(self, start: str, end: str, inplace: bool = False, no_weight_k_adjustment: bool = False) -> Optional[Self]:
         """
         Filters each (relevant) dataframe in the case study to only include the timesteps between start and end (both inclusive).
         :param start: Start timestep (inclusive).
         :param end: End timestep (inclusive).
         :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param no_weight_k_adjustment: If True, does not adjust the weights in dPower_WeightsK after filtering. Adjustment is done by default.
         :return: None if inplace is True, otherwise a new CaseStudy instance.
         """
         case_study = self if inplace else self.copy()
+
+        # Calculate total weight before filtering
+        if not no_weight_k_adjustment and hasattr(case_study, "dPower_WeightsK") and case_study.dPower_WeightsK is not None:
+            total_weight = case_study.dPower_WeightsK['pWeight_k'].sum()
 
         for df_name in CaseStudy.k_dependent_dataframes:
             if hasattr(case_study, df_name) and getattr(case_study, df_name) is not None:
@@ -802,6 +838,19 @@ class CaseStudy:
 
                 setattr(case_study, df_name, filtered_df)
 
+        if no_weight_k_adjustment:
+            printer.information("Skipped adjustment of weights in 'dPower_WeightsK' after filtering timesteps as per user request.")
+        elif (not hasattr(case_study, "dPower_WeightsK")) or (case_study.dPower_WeightsK is None):
+            printer.information("Skipped adjustment of weights in 'dPower_WeightsK' after filtering timesteps because 'dPower_WeightsK' does not exist.")
+        else:
+            # Adjust weights after filtering
+            filtered_total_weight = case_study.dPower_WeightsK['pWeight_k'].sum()
+            if filtered_total_weight == 0:
+                raise ValueError("After filtering timesteps, the total weight in 'dPower_WeightsK' is zero. Cannot adjust weights.")
+            adjustment_factor = total_weight / filtered_total_weight
+            case_study.dPower_WeightsK['pWeight_k'] *= adjustment_factor
+            printer.information(f"Adjusted weights in 'dPower_WeightsK' by a factor of {adjustment_factor} after filtering timesteps.")
+
         return None if inplace else case_study
 
     def filter_representative_periods(self, rp: str, inplace: bool = False) -> Optional[Self]:
@@ -814,7 +863,7 @@ class CaseStudy:
         case_study = self if inplace else self.copy()
 
         for df_name in CaseStudy.rp_dependent_dataframes:
-            if hasattr(case_study, df_name):
+            if hasattr(case_study, df_name) and getattr(case_study, df_name) is not None:
                 df = getattr(case_study, df_name)
 
                 index = df.index.names
@@ -867,3 +916,73 @@ class CaseStudy:
                 setattr(case_study, df_name, df)
 
         return None if inplace else case_study
+
+    def apply_kmedoids_aggregation(self, number_rps: int, rp_length: int = 24,
+                                   cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
+                                   capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
+                                   sum_production: bool = False, inplace: bool = True, verbose: bool = False) -> Optional[Self]:
+        """
+        Apply k-medoids temporal aggregation to a CaseStudy object.
+        Each scenario from dGlobal_Scenarios is processed independently.
+
+        :param self: The CaseStudy object to aggregate
+        :param number_rps: Number of representative periods to create
+        :param rp_length: Hours per representative period (e.g., 24, 48)
+        :param cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+        :param capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+        :param sum_production: If True, sum all technologies into single production column
+        :param inplace: If True, modify the original CaseStudy; otherwise, return a new one
+        :param verbose: If True, print detailed processing information
+
+        :return:
+            CaseStudy: New clustered CaseStudy object if inplace is False; otherwise, None
+        """
+
+        cs = self if inplace else self.copy()
+        Utilities.apply_kmedoids_aggregation(cs, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production, inplace=True, verbose=verbose)
+        if inplace:
+            return None
+        else:
+            return cs
+
+    def get_kmedoids_representative_periods(self, number_rps: int, rp_length: int = 24,
+                                            cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
+                                            capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
+                                            sum_production: bool = False, verbose: bool = False) -> dict[str, tsam.TimeSeriesAggregation]:
+        """
+        Get the representative periods using k-medoids temporal aggregation. Does not modify the original CaseStudy.
+        Each scenario from dGlobal_Scenarios is processed independently.
+
+        :param self: The CaseStudy object to aggregate
+        :param number_rps: Number of representative periods to create
+        :param rp_length: Hours per representative period (e.g., 24, 48)
+        :param cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+        :param capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+        :param sum_production: If True, sum all technologies into single production column
+        :param verbose: If True, print detailed processing information
+
+        :return: TSAM TimeSeriesAggregation object with representative periods for each scenario
+        """
+
+        return Utilities.get_kmedoids_representative_periods(self, number_rps, rp_length, cluster_strategy, capacity_normalization, sum_production=sum_production, verbose=verbose)
+
+    def apply_representative_periods(self, representative_periods: dict[str, tsam.TimeSeriesAggregation], rp_length: int = 24,
+                                     inplace: bool = True, verbose: bool = False) -> Optional[Self]:
+        """
+        Apply precomputed representative periods to a CaseStudy object.
+        Each scenario from dGlobal_Scenarios is processed independently.
+
+        :param self: The CaseStudy object to aggregate
+        :param representative_periods: Precomputed TimeSeriesAggregation object
+        :param rp_length: Hours per representative period (e.g., 24, 48)
+        :param inplace: If True, modify the original CaseStudy; otherwise, return a new one
+        :param verbose: If True, print detailed processing information
+        :returns: New clustered CaseStudy object if inplace is False; otherwise, None
+        """
+
+        cs = self if inplace else self.copy()
+        Utilities.apply_representative_periods(cs, representative_periods, rp_length, inplace=True, verbose=verbose)
+        if inplace:
+            return None
+        else:
+            return cs

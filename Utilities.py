@@ -1,10 +1,16 @@
-from typing import Literal, Dict
+from __future__ import annotations
+
+import typing
+from typing import TYPE_CHECKING, Literal, Dict
 
 import numpy as np
 import pandas as pd
 import tsam.timeseriesaggregation as tsam
 
 from InOutModule.printer import Printer
+
+if TYPE_CHECKING:
+    from InOutModule.CaseStudy import CaseStudy
 
 printer = Printer.getInstance()
 
@@ -89,87 +95,6 @@ def capacityFactorsToInflows(vresProfiles_df: pd.DataFrame, vres_df: pd.DataFram
     return df.set_index(['rp', 'k', 'g']).sort_index(level="k")
 
 
-def apply_kmedoids_aggregation(
-        case_study,
-        k: int,
-        rp_length: int = 24,
-        cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
-        capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
-        sum_production: bool = False
-):
-    """
-    Apply k-medoids temporal aggregation to a CaseStudy object.
-    Each scenario from dGlobal_Scenarios is processed independently.
-
-    Args:
-        case_study: The CaseStudy object to aggregate
-        k: Number of representative periods to create
-        rp_length: Hours per representative period (e.g., 24, 48)
-        cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
-        capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
-        sum_production: If True, sum all technologies into single production column
-
-    Returns:
-        CaseStudy: New clustered CaseStudy object
-    """
-
-    # Create a deep copy to avoid modifying the original
-    aggregated_case_study = case_study.copy()
-
-    # Get scenario names
-    scenario_names = aggregated_case_study.dGlobal_Scenarios.index.values
-
-    # Process each scenario independently
-    all_processed_data = {}
-    for scenario in scenario_names:
-        print(f"\n=== Processing scenario: {scenario} ===")
-
-        print(f"  Step 1: Extracting data for scenario {scenario}")
-        scenario_clustering_data = _extract_scenario_data(case_study, scenario, capacity_normalization)
-
-        if len(scenario_clustering_data) == 0:
-            raise ValueError(f"No data found for scenario {scenario}")
-
-        print(f"  Found {len(scenario_clustering_data)} data points for clustering")
-
-        print(f"  \nStep 2: Preparing data using {cluster_strategy} strategy")
-        if cluster_strategy == "disaggregated":
-            pivot_df = _prepare_disaggregated_data(scenario_clustering_data, sum_production)
-        else:
-            pivot_df = _prepare_aggregated_data(scenario_clustering_data, sum_production)
-
-        print(f"  Prepared {len(pivot_df)} time periods for clustering")
-
-        print(f"  \nStep 3: Running k-medoids clustering (k={k}, rp_length={rp_length})")
-        aggregation_result = _run_kmedoids_clustering(pivot_df, k, rp_length)
-
-        print(f"  \nStep 4: Building representative period data")
-        data = _build_representative_periods(
-            case_study, scenario, aggregation_result, rp_length
-        )
-
-        print(f"  \nStep 5: Building weights and hour indices")
-        weights_rp, weights_k, hindex = _build_scenario_weights_and_indices(
-            aggregation_result, scenario, rp_length
-        )
-
-        all_processed_data[scenario] = {
-            'Power_Demand': data["Power_Demand"],
-            'Power_VRESProfiles': data["Power_VRESProfiles"] if "Power_VRESProfiles" in data else [],
-            'Power_Inflows': data["Power_Inflows"] if "Power_Inflows" in data else [],
-            'weights_rp': weights_rp,
-            'weights_k': weights_k,
-            'hindex': hindex
-        }
-        print(f"Scenario {scenario} completed successfully")
-
-    # Update CaseStudy with aggregated data
-    _update_casestudy_with_scenarios(aggregated_case_study, all_processed_data)
-
-    print(f"\nAll scenarios have been processed and combined successfully!")
-    return aggregated_case_study
-
-
 def _extract_scenario_data(case_study, scenario: str, capacity_normalization_strategy: str) -> pd.DataFrame:
     """Extract and combine demand, VRES, and inflows data for a single scenario."""
 
@@ -251,7 +176,7 @@ def _extract_scenario_data(case_study, scenario: str, capacity_normalization_str
 
             # Try to merge with Power_VRES data
             if (hasattr(case_study, 'dPower_VRES') and case_study.dPower_VRES is not None and
-                    'vres_df' in locals() and len(vres_df) > 0):
+                    vres_with_profiles is not None and len(vres_df) > 0):
                 inflows_with_vres = pd.merge(
                     inflows_df,
                     vres_df[['g', 'tec', 'i', 'ExisUnits', 'EnableInvest', 'MaxInvest']],
@@ -353,8 +278,9 @@ def _sum_technology_columns(df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 
-def _run_kmedoids_clustering(pivot_df: pd.DataFrame, k: int, rp_length: int):
+def _run_kmedoids_clustering(pivot_df: pd.DataFrame, k: int, rp_length: int, solver: str = None, verbose: bool = False):
     """Run k-medoids clustering using tsam."""
+    printer = Printer.getInstance()
 
     # Prepare data for tsam
     pivot_df_sorted = pivot_df.sort_values('k')
@@ -365,21 +291,25 @@ def _run_kmedoids_clustering(pivot_df: pd.DataFrame, k: int, rp_length: int):
     # Drop grouping columns and set datetime index
     clustering_data = pivot_df_sorted.drop(columns=['scenario', 'rp', 'k']).set_index('datetime')
 
-    print(f"    Running k-medoids with {k} clusters, {rp_length} hours/period, {len(clustering_data)} total hours")
+    if verbose:
+        printer.information(f"    Running k-medoids with {k} clusters, {rp_length} hours/period, {len(clustering_data)} total hours")
 
     # Run clustering
-    aggregation = tsam.TimeSeriesAggregation(
-        clustering_data,
+    tsam_kwargs = dict(
         noTypicalPeriods=k,
         hoursPerPeriod=rp_length,
         clusterMethod='k_medoids',
         rescaleClusterPeriods=False,
-        solver="gurobi"
     )
+    if solver is not None:
+        tsam_kwargs['solver'] = solver
+
+    aggregation = tsam.TimeSeriesAggregation(clustering_data, **tsam_kwargs)
 
     typical_periods = aggregation.createTypicalPeriods()
-    print(f"    Clustering completed. Created {len(typical_periods)} typical periods.")
-    print(f"    Cluster center indices (medoids): {aggregation.clusterCenterIndices}")
+    if verbose:
+        printer.information(f"    Clustering completed. Created {len(typical_periods)} typical periods.")
+        printer.information(f"    Cluster center indices (medoids): {aggregation.clusterCenterIndices}")
 
     return aggregation
 
@@ -467,8 +397,9 @@ def _build_scenario_weights_and_indices(aggregation, scenario: str, rp_length: i
     return weights_rp, weights_k, hindex
 
 
-def _update_casestudy_with_scenarios(case_study, all_processed_data: Dict):
+def _update_casestudy_with_scenarios(case_study, all_processed_data: Dict, verbose: bool = False):
     """Update CaseStudy with aggregated data, maintaining original index structures."""
+    printer = Printer.getInstance()
 
     # Collect all data across scenarios
     all_demand_data = []
@@ -486,36 +417,202 @@ def _update_casestudy_with_scenarios(case_study, all_processed_data: Dict):
         all_weights_k_data.extend(scenario_data['weights_k'])
         all_hindex_data.extend(scenario_data['hindex'])
 
-    print(f"Updating CaseStudy with combined data:")
+    if verbose:
+        printer.information(f"Updating CaseStudy with combined data:")
 
     if all_demand_data:
         demand_df = pd.DataFrame(all_demand_data)
-        case_study.dPower_Demand = demand_df.set_index(['rp', 'i', 'k'])
-        print(f"  - Updated demand: {len(all_demand_data)} entries")
+        case_study.dPower_Demand = demand_df.set_index(['rp', 'k', 'i'])
+        if verbose:
+            printer.information(f"  - Updated demand: {len(all_demand_data)} entries")
 
     if all_vres_data:
         vres_df = pd.DataFrame(all_vres_data)
         case_study.dPower_VRESProfiles = vres_df.set_index(['rp', 'k', 'g'])
-        print(f"  - Updated VRES profiles: {len(all_vres_data)} entries")
+        if verbose:
+            printer.information(f"  - Updated VRES profiles: {len(all_vres_data)} entries")
 
     if all_inflows_data:
         inflows_df = pd.DataFrame(all_inflows_data)
         case_study.dPower_Inflows = inflows_df.set_index(['rp', 'k', 'g'])
-        print(f"  - Updated inflows: {len(all_inflows_data)} entries")
+        if verbose:
+            printer.information(f"  - Updated inflows: {len(all_inflows_data)} entries")
 
     if all_weights_rp_data:
         weights_rp_df = pd.DataFrame(all_weights_rp_data)
         case_study.dPower_WeightsRP = weights_rp_df.set_index(['rp'])
-        print(f"  - Updated RP weights: {len(all_weights_rp_data)} entries")
+        if verbose:
+            printer.information(f"  - Updated RP weights: {len(all_weights_rp_data)} entries")
 
     if all_weights_k_data:
         weights_k_df = pd.DataFrame(all_weights_k_data)
         case_study.dPower_WeightsK = weights_k_df.set_index(['k'])
-        print(f"  - Updated K weights: {len(all_weights_k_data)} entries")
+        if verbose:
+            printer.information(f"  - Updated K weights: {len(all_weights_k_data)} entries")
 
     if all_hindex_data:
         hindex_df = pd.DataFrame(all_hindex_data)
         case_study.dPower_Hindex = hindex_df.set_index(['p', 'rp', 'k'])
-        print(f"  - Updated Hindex: {len(all_hindex_data)} entries")
+        if verbose:
+            printer.information(f"  - Updated Hindex: {len(all_hindex_data)} entries")
 
-    print("CaseStudy update completed successfully!")
+    if verbose:
+        printer.information("CaseStudy update completed successfully!")
+
+
+def get_kmedoids_representative_periods(case_study, number_rps: int, rp_length: int = 24,
+                                        cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
+                                        capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
+                                        sum_production: bool = False, solver: str = "gurobi",
+                                        verbose: bool = False) -> dict[str, tsam.TimeSeriesAggregation]:
+    """
+    Get the representative periods using k-medoids temporal aggregation. Does not modify the original CaseStudy.
+    Each scenario from dGlobal_Scenarios is processed independently.
+
+    :param case_study: The CaseStudy object to aggregate
+    :param number_rps: Number of representative periods to create
+    :param rp_length: Hours per representative period (e.g., 24, 48)
+    :param cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+    :param capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+    :param sum_production: If True, sum all technologies into single production column
+    :param solver: Solver to use for k-medoids clustering (e.g. "gurobi", "glpk"). Defaults to "gurobi".
+    :param verbose: If True, print detailed processing information
+
+    :return: TSAM TimeSeriesAggregation object with representative periods for each scenario
+    """
+
+    # Get scenario names
+    scenario_names = case_study.dGlobal_Scenarios.index.values
+
+    # Process each scenario independently
+    all_scenario_results = {}
+    for scenario in scenario_names:
+        printer.information(f"Scenario: {scenario}") if verbose else None
+
+        printer.information(f"Extracting data for scenario {scenario}") if verbose else None
+        scenario_clustering_data = _extract_scenario_data(case_study, scenario, capacity_normalization)
+
+        if len(scenario_clustering_data) == 0:
+            raise ValueError(f"No data found for scenario {scenario}")
+
+        printer.information(f"Found {len(scenario_clustering_data)} data points for clustering") if verbose else None
+
+        printer.information(f"Preparing data using {cluster_strategy} strategy") if verbose else None
+        if cluster_strategy == "disaggregated":
+            pivot_df = _prepare_disaggregated_data(scenario_clustering_data, sum_production)
+        else:
+            pivot_df = _prepare_aggregated_data(scenario_clustering_data, sum_production)
+
+        printer.information(f"Prepared {len(pivot_df)} time periods for clustering") if verbose else None
+
+        printer.information(f"Running k-medoids clustering (k={number_rps}, rp_length={rp_length})") if verbose else None
+        aggregation_result = _run_kmedoids_clustering(pivot_df, number_rps, rp_length, solver=solver, verbose=verbose)
+
+        printer.information(f"Aggregation result for scenario {scenario} received after {aggregation_result.clusteringDuration} seconds") if verbose else None
+        all_scenario_results[scenario] = aggregation_result
+    return all_scenario_results
+
+
+def apply_representative_periods(
+        case_study,
+        aggregation: dict[str, tsam.TimeSeriesAggregation],
+        rp_length: int = 24,
+        inplace: bool = False,
+        verbose: bool = False) -> typing.Optional[CaseStudy]:
+    """
+    Apply precomputed representative periods to a CaseStudy object.
+    Each scenario from dGlobal_Scenarios is processed independently.
+
+    :param case_study: The CaseStudy object to aggregate
+    :param aggregation: Precomputed TimeSeriesAggregation object
+    :param rp_length: Hours per representative period (e.g., 24, 48)
+    :param inplace: If True, modify the original CaseStudy; otherwise, return a new one
+    :param verbose: If True, print detailed processing information
+    :returns: New clustered CaseStudy object if inplace is False; otherwise, None
+    """
+
+    # Create a deep copy to avoid modifying the original
+    aggregated_case_study = case_study.copy() if not inplace else case_study
+    scenario_names = aggregated_case_study.dGlobal_Scenarios.index.values
+
+    # Process each scenario independently
+    all_processed_data = {}
+    for scenario in scenario_names:
+        printer.information(f"Scenario: {scenario}") if verbose else None
+
+        printer.information(f"Building representative period data") if verbose else None
+        data = _build_representative_periods(
+            case_study, scenario, aggregation[scenario], rp_length
+        )
+
+        printer.information(f"Building weights and hour indices") if verbose else None
+        weights_rp, weights_k, hindex = _build_scenario_weights_and_indices(
+            aggregation[scenario], scenario, rp_length
+        )
+
+        all_processed_data[scenario] = {
+            'Power_Demand': data["Power_Demand"],
+            'Power_VRESProfiles': data["Power_VRESProfiles"] if "Power_VRESProfiles" in data else [],
+            'Power_Inflows': data["Power_Inflows"] if "Power_Inflows" in data else [],
+            'weights_rp': weights_rp,
+            'weights_k': weights_k,
+            'hindex': hindex
+        }
+        printer.information(f"Scenario {scenario} completed successfully") if verbose else None
+
+    # Update CaseStudy with aggregated data
+    _update_casestudy_with_scenarios(aggregated_case_study, all_processed_data, verbose=verbose)
+
+    printer.information(f"\nAll scenarios have been processed and combined successfully!") if verbose else None
+    if not inplace:
+        return aggregated_case_study
+    else:
+        return None
+
+
+def apply_kmedoids_aggregation(
+        case_study,
+        k: int,
+        rp_length: int = 24,
+        cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
+        capacity_normalization: Literal["installed", "maxInvestment"] = "maxInvestment",
+        sum_production: bool = False,
+        solver: str = "gurobi",
+        inplace: bool = False,
+        verbose: bool = False):
+    """
+    Apply k-medoids temporal aggregation to a CaseStudy object.
+    Each scenario from dGlobal_Scenarios is processed independently.
+
+    :param case_study: The CaseStudy object to aggregate
+    :param k: Number of representative periods to create
+    :param rp_length: Hours per representative period (e.g., 24, 48)
+    :param cluster_strategy: "aggregated" (sum across buses) or "disaggregated" (keep buses separate)
+    :param capacity_normalization: "installed" or "maxInvestment" for VRES capacity factor weighting
+    :param sum_production: If True, sum all technologies into single production column
+    :param solver: Solver to use for k-medoids clustering (e.g. "gurobi", "glpk"). Defaults to "gurobi".
+    :param inplace: If True, modify the original CaseStudy; otherwise, return a new one
+    :param verbose: If True, print detailed processing information
+
+    :return:
+        CaseStudy: New clustered CaseStudy object if inplace is False; otherwise, None
+    """
+
+    aggregation_results = get_kmedoids_representative_periods(
+        case_study,
+        number_rps=k,
+        rp_length=rp_length,
+        cluster_strategy=cluster_strategy,
+        capacity_normalization=capacity_normalization,
+        sum_production=sum_production,
+        solver=solver,
+        verbose=verbose
+    )
+
+    return apply_representative_periods(
+        case_study,
+        aggregation=aggregation_results,
+        rp_length=rp_length,
+        inplace=inplace,
+        verbose=verbose
+    )
