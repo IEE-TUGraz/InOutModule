@@ -430,7 +430,7 @@ class CaseStudy:
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[0], axis=1)
         dGlobal_Parameters = dGlobal_Parameters.set_index('Solver Options')
 
-        self.yesNo_to_bool(dGlobal_Parameters, ['pEnableRMIP'])
+        self.yesNo_to_bool(dGlobal_Parameters, ['pEnableRMIP', 'pEnableSelfSufficiency'])
 
         # Transform to make it easier to access values
         dGlobal_Parameters = dGlobal_Parameters.drop(dGlobal_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)
