@@ -1,0 +1,47 @@
+# CLAUDE.md — InOutModule
+
+This file provides guidance to Claude Code when working with code in this directory.
+See `README.md` for usage, key concepts, and data structure.
+
+## Architecture Notes
+
+### CaseStudy
+
+- Sequential reads happen first (`Global_Parameters`, `Global_Scenarios`, `Power_Parameters`), because subsequent file selection depends on `pEnable*` flags.
+- All remaining files are read in parallel via `ThreadPoolExecutor` — order of assignment is non-deterministic, so no file read may depend on another parallel read.
+- `dPower_WeightsRP` is **computed** from `dPower_Hindex` (counting occurrences per `rp`); if a `Power_WeightsRP.xlsx` file also exists, it is read and compared — a mismatch triggers a warning but uses the **file** value, not the computed one.
+- `merge_single_node_buses()` preserves the `z` (zone) column as a sorted unique union string of all merged zones (e.g. `"R1_R2"`). This is documented in root `CLAUDE.md` as well.
+- `CaseStudy.copy()` is a full `deepcopy` — safe to modify independently.
+- Transition matrices (`rpTransitionMatrixAbsolute`, `rpTransitionMatrixRelativeTo`, `rpTransitionMatrixRelativeFrom`) are computed in the constructor and attached as attributes.
+
+### ExcelReader
+
+- Excel sheets whose name starts with `~` are silently skipped (used to disable scenarios in a multi-sheet file without deleting them).
+- All Excel files have a version specifier in cell `C2` of each sheet. `check_LEGOExcel_version()` warns (or raises, if `fail_on_wrong_version=True`) on mismatch — wrong version can cause silent column misreads.
+- The reader uses `calamine` engine (fast), not `openpyxl`.
+
+### ExcelWriter
+
+- All cell styles, column definitions, and table layouts are declared in `TableDefinitions.xml`, not in Python code. When adding a new output table, define its columns there first.
+- `ExcelWriter.__init__()` parses the XML once and stores resolved objects (`self.columns`, `self.cell_styles`, etc.). Avoid re-instantiating per row.
+
+### SQLiteWriter
+
+- `model_to_sqlite()` automatically calls `add_objective_decomposition_to_sqlite()` and `add_dual_values_to_sqlite()` — these do not need to be called separately.
+- `add_run_parameters_to_sqlite()` stores all run configuration in the `run_parameters` table. Evaluation scripts should read from this table (more reliable than filename parsing).
+- Pyomo component types not handled by the writer emit a `printer.warning()` and are skipped silently — add new `case` branches if new Pyomo types need to be stored.
+
+### Utilities
+
+- `inflowsToCapacityFactors()` joins inflows onto `vresProfiles_df` by dividing by `MaxProd`; generators with missing or zero `MaxProd` are dropped with a warning.
+- `capacityFactorsToInflows()` is the inverse; the `remove_Inflows_from_VRESProfiles_inplace` flag modifies the input DataFrame in place when set.
+
+### Printer
+
+- `Printer` is a singleton — obtain the instance with `Printer.getInstance()`, never call the constructor directly.
+- `set_logfile(path)` redirects all subsequent output to a file (appending). Set to `None` to stop logging.
+
+### Caller
+
+- `Caller.py` is a parallel job runner reading from a text file. It uses sentinel files (`.finished{n}`, `.error{n}`) for barrier synchronization across parallel workers.
+- Lines containing only `---` act as barriers — workers wait until all prior jobs are complete before continuing past the barrier.
