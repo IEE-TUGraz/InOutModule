@@ -74,7 +74,7 @@ dPower_BusInfo:
   source:
     type: "attribute"
     name: "buses"
-    filter: "carrier == 'AC'"
+    filter: "carrier in ['AC', 'DC']"
   index: "i"
   mapping:
     z: "country"
