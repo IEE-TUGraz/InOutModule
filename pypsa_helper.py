@@ -176,9 +176,22 @@ def prepare_inflow_profiles(net, config: dict):
 def prepare_demand_profiles(net, config: dict):
     """
     Extracts load demand profiles and formats them into a long-form DataFrame 
-    for LEGO representation.
+    for LEGO representation. Make sure all buses are included, even those without loads, to ensure a complete demand profile.
     """
     df = net.loads_t.p_set.copy()  # shape: [time, load_id]
+
+    # Map load IDs to bus IDs and aggregate demand per bus
+    df.columns = df.columns.map(net.loads.bus)
+    if not df.empty:
+        df = df.groupby(level=0, axis=1).sum()
+
+    # Ensure all buses are present in the demand DataFrame
+    missing_buses = net.buses.index.difference(df.columns)
+    if not missing_buses.empty:
+        index = df.index if not df.empty else net.snapshots
+        zero_demand = pd.DataFrame(0.0, index=index, columns=missing_buses)
+        df = pd.concat([df, zero_demand], axis=1)
+
     df = df.rename_axis("k").reset_index()  # 'k' = time
 
     demand_long = df.melt(id_vars="k", var_name="n", value_name="Demand")
