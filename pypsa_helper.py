@@ -110,6 +110,11 @@ def prepare_renewable_profiles(net, config: dict):
     vres_ids = vres_gens.index.to_list()
 
     profiles = net.generators_t.p_max_pu[vres_ids].copy()
+
+    # Change the index to k0001, k0002, ...
+    num_timesteps = len(profiles)
+    profiles.index = [f"k{i + 1:04d}" for i in range(num_timesteps)]
+
     # Ensure the index (snapshots) has a known name before resetting
     profiles = profiles.rename_axis("k").reset_index().melt(
         id_vars="k", var_name="generator_id", value_name="Capacity"
@@ -162,6 +167,11 @@ def prepare_inflow_profiles(net, config: dict):
 
     # Concatenate both: hydro + RoR inflows → [time, generator]
     combined = pd.concat([inflow_storage, inflow_ror], axis=1)
+
+    # Change the index to k0001, k0002, ...
+    num_timesteps = len(combined)
+    combined.index = [f"k{i + 1:04d}" for i in range(num_timesteps)]
+
     combined = combined.T  # index: generator_id, columns: time
 
     # Convert to long format by renaming index to 'g' before resetting
@@ -176,7 +186,7 @@ def prepare_inflow_profiles(net, config: dict):
 def prepare_demand_profiles(net, config: dict):
     """
     Extracts load demand profiles and formats them into a long-form DataFrame 
-    for LEGO representation. Make sure all buses are included, even those without loads, to ensure a complete demand profile.
+    for LEGO representation.
     """
     df = net.loads_t.p_set.copy()  # shape: [time, load_id]
 
@@ -192,8 +202,12 @@ def prepare_demand_profiles(net, config: dict):
         zero_demand = pd.DataFrame(0.0, index=index, columns=missing_buses)
         df = pd.concat([df, zero_demand], axis=1)
 
-    df = df.rename_axis("k").reset_index()  # 'k' = time
+    # Change the index to k0001, k0002, ...
+    num_timesteps = len(df)
+    df.index = [f"k{i + 1:04d}" for i in range(num_timesteps)]
+    df = df.rename_axis("k").reset_index()
 
     demand_long = df.melt(id_vars="k", var_name="n", value_name="Demand")
     demand_long["rp"] = "rp01"
     return demand_long[["rp", "n", "k", "Demand"]]
+
