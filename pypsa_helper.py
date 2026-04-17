@@ -190,13 +190,24 @@ def prepare_demand_profiles(net, config: dict):
     """
     df = net.loads_t.p_set.copy()  # shape: [time, load_id]
 
-    # Map load IDs to bus IDs and aggregate demand per bus
+    # Map load IDs to bus IDs
     df.columns = df.columns.map(net.loads.bus)
+
+    # Filter buses based on the filter defined in the config (e.g. from dPower_BusInfo)
+    bus_filter = config.get("source", {}).get("filter")
+    if bus_filter:
+        valid_buses = net.buses.query(bus_filter).index
+        # Only keep demands at valid buses
+        df = df[df.columns.intersection(valid_buses)]
+    else:
+        valid_buses = net.buses.index
+
+    # Aggregate demand per bus
     if not df.empty:
         df = df.groupby(level=0, axis=1).sum()
 
-    # Ensure all buses are present in the demand DataFrame
-    missing_buses = net.buses.index.difference(df.columns)
+    # Ensure all valid buses are present in the demand DataFrame
+    missing_buses = valid_buses.difference(df.columns)
     if not missing_buses.empty:
         index = df.index if not df.empty else net.snapshots
         zero_demand = pd.DataFrame(0.0, index=index, columns=missing_buses)

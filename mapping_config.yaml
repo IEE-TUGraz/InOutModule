@@ -247,6 +247,7 @@ dPower_Demand:
   source:
     type: "helper"
     name: "prepare_demand_profiles"
+    filter: "carrier in ['AC', 'DC']"  # Should be the same filter as for the buses in dPower_BusInfo
   index:
     rp: "rp"
     k: "k"
