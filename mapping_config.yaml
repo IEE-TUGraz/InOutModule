@@ -53,6 +53,7 @@ Metadata:
   hydro:
     filter: [ 'Storage Hydro', 'hydro' ]
   phs:
+    default_storage_capacity_cost: 1  # EUR/MWh, PyPSA does not have a separation between power and energy capacity for investment costs
     filter: [ 'PHS', 'Pumped Hydro' ]
 
   # Define categories of technologies and their corresponding technologies.
@@ -223,6 +224,9 @@ dPower_Storage:
       attr: "p_nom_max"
       conversion: "total_capacity_to_number_of_units"
     InvestCostPerMW: "capital_cost"
+    InvestCostPerMWh:
+      attr: "carrier"
+      conversion: "get_storage_capacity_cost_from_metadata"
     Ene2PowRatio: "max_hours"
     YearCom: "build_year"
     YearDecom:

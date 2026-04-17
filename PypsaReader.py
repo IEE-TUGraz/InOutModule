@@ -115,6 +115,26 @@ class Conversions:
         return Conversions._get_fuel_costs(df, metadata)
 
     @staticmethod
+    def _get_storage_capacity_costs(df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Helper to get storage capacity costs for each row in the DataFrame based on carrier."""
+        cost_mapping = {}
+        meta_config = metadata.get('Metadata', {})
+        for key, info in meta_config.items():
+            if isinstance(info, dict) and 'filter' in info and 'default_storage_capacity_cost' in info:
+                for carrier in info['filter']:
+                    cost_mapping[carrier] = info['default_storage_capacity_cost']
+
+        # Map carriers to costs; default to NaN if not found
+        costs = df['carrier'].map(cost_mapping)
+
+        return costs
+
+    @staticmethod
+    def get_storage_capacity_cost_from_metadata(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Retrieves storage capacity costs based on the carrier and Metadata configuration."""
+        return Conversions._get_storage_capacity_costs(df, metadata)
+
+    @staticmethod
     def EUR_per_hour_to_MWh_per_hour(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
         """Converts costs per hour of thermal generation (e.g. stand_by_cost) to costs per MWh based on the fuel cost specified in the metadata."""
         fuel_costs = Conversions._get_fuel_costs(df, metadata)
