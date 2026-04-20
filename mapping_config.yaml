@@ -142,8 +142,12 @@ dPower_ThermalGen:
     RampDown:
       attr: "ramp_limit_down"
       conversion: "pu_to_absolute"
-    MinUpTime: "min_up_time"
-    MinDownTime: "min_down_time"
+    MinUpTime:
+      attr: "min_up_time"
+      conversion: "greater_or_equal_to_one"
+    MinDownTime:
+      attr: "min_down_time"
+      conversion: "greater_or_equal_to_one"
     Efficiency: "efficiency"
     FuelCost:
       attr: "carrier"
@@ -212,6 +216,7 @@ dPower_Storage:
     DisEffic: "efficiency_dispatch"
     ChEffic: "efficiency_store"
     Self Discharge: "standing_loss"
+    MinReserve: 0
     IniReserve: "state_of_charge_initial"
     IsLDES:
       attr: "max_hours"

@@ -153,6 +153,11 @@ class Conversions:
             res = val / fuel_costs
         return res.replace([np.inf, -np.inf], 0).fillna(0)
 
+    @staticmethod
+    def greater_or_equal_to_one(val: pd.Series, df: pd.DataFrame, metadata: dict) -> pd.Series:
+        """Ensures that all values are greater or equal to 1, replacing values less than 1 with 1."""
+        return val.apply(lambda x: max(x, 1) if pd.notnull(x) else x)
+
 
 class NetworkDataExtractor:
     def __init__(self, network: pypsa.Network, config_path: str = None, table_definitions_path: str = None):
