@@ -168,6 +168,9 @@ def prepare_inflow_profiles(net, config: dict):
     # Concatenate both: hydro + RoR inflows → [time, generator]
     combined = pd.concat([inflow_storage, inflow_ror], axis=1)
 
+    # sanitize combined inflow profiles for LEGO model
+    combined.fillna(0, inplace=True)  # fill missing inflows with 0 (if any) to avoid NaNs in the final profiles
+
     # Change the index to k0001, k0002, ...
     num_timesteps = len(combined)
     combined.index = [f"k{i + 1:04d}" for i in range(num_timesteps)]
