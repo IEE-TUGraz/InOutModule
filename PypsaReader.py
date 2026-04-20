@@ -158,6 +158,11 @@ class Conversions:
         """Ensures that all values are greater or equal to 1, replacing values less than 1 with 1."""
         return val.apply(lambda x: max(x, 1) if pd.notnull(x) else x)
 
+    @staticmethod
+    def pu_to_absolute_and_p_nom_if_nan_or_zero(val: pd.Series, df: pd.DataFrame) -> pd.Series:
+        val = val * df.p_nom
+        return val.where((val.notnull() & (val != 0)), df.p_nom)
+
 
 class NetworkDataExtractor:
     def __init__(self, network: pypsa.Network, config_path: str = None, table_definitions_path: str = None):
