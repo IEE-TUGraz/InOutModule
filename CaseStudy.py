@@ -63,6 +63,7 @@ class CaseStudy:
                  power_inflows_file: str = "Power_Inflows.xlsx", dPower_Inflows: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
+                 dCustom_Parameters: dict = None,
                  power_storage_file: str = "Power_Storage.xlsx", dPower_Storage: pd.DataFrame = None,
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
                  power_vres_file: str = "Power_VRES.xlsx", dPower_VRES: pd.DataFrame = None,
@@ -101,6 +102,12 @@ class CaseStudy:
         else:
             self.power_parameters_file = power_parameters_file
             self.dPower_Parameters = self.get_dPower_Parameters()
+
+        # create a dCustom_Parameter if given, else not
+        if dCustom_Parameters is not None:
+            self.dCustom_Parameters = dCustom_Parameters
+        else:
+            self.dCustom_Parameters = None
 
         # === PARALLEL READS ===
         tasks = []  # List of (attribute_name, function, args_tuple)
