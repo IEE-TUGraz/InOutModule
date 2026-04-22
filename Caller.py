@@ -5,12 +5,6 @@ import subprocess
 import sys
 import time
 
-from rich.highlighter import ReprHighlighter
-from rich.live import Live
-from rich.text import Text
-
-_highlighter = ReprHighlighter()
-
 from printer import Printer
 
 printer = Printer.getInstance()
@@ -79,18 +73,22 @@ while True:
         if line.strip() == "---":
             dot_i = 0
             found_unclaimed = False
-            with Live(console=printer.console, refresh_per_second=2) as live:
-                while not _all_previous_done(args.jobs, lines, i):
-                    if _any_previous_unclaimed(args.jobs, lines, i):
-                        found_unclaimed = True
-                        break
-                    barrier_waited[i] = barrier_waited.get(i, 0) + 3
-                    dots = "." * ((dot_i % 5) + 1)
-                    msg = _highlighter(Text(f"Barrier '---' at line {i}: Checking every 3s, waited {barrier_waited[i]}s already"))
-                    msg.append(dots)
-                    live.update(msg)
-                    dot_i += 1
-                    time.sleep(3)
+            last_len = 0
+            while not _all_previous_done(args.jobs, lines, i):
+                if _any_previous_unclaimed(args.jobs, lines, i):
+                    found_unclaimed = True
+                    break
+                barrier_waited[i] = barrier_waited.get(i, 0) + 3
+                dots = "." * ((dot_i % 5) + 1)
+                msg = f"Barrier '---' at line {i}: Checking every 3s, waited {barrier_waited[i]}s already{dots}"
+                sys.stdout.write(f"\r{msg}{' ' * max(0, last_len - len(msg))}")
+                sys.stdout.flush()
+                last_len = len(msg)
+                dot_i += 1
+                time.sleep(3)
+            if last_len:
+                sys.stdout.write('\n')
+                sys.stdout.flush()
             if found_unclaimed:
                 restart = True
                 break  # restart outer while loop to pick up the unclaimed job
