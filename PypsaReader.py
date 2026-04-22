@@ -163,6 +163,22 @@ class Conversions:
         val = val * df.p_nom
         return val.where((val.notnull() & (val != 0)), df.p_nom)
 
+    @staticmethod
+    def one_if_nan_or_zero(val: pd.Series,) -> pd.Series:
+        """Replaces NaN or zero values with 1, keeping other values unchanged."""
+        return val.where((val.notnull() | (val != 0)), 1)
+
+    @staticmethod
+    def bool_to_binary_zero_if_p_nom_is_zero(val: pd.Series, df: pd.DataFrame) -> pd.Series:
+        """Converts boolean values to binary (0/1) integers and sets to 0, if p_nom is zero."""
+        if val.isnull().all():
+            return 0
+        else:
+            # Use infer_objects to explicitly handle the type conversion from object to bool
+            val = val.fillna(False).infer_objects(copy=False)
+            val = val.where(df.p_nom != 0, 0)  # set to 0 if p_nom is zero
+            return val.astype(int)
+
 
 class NetworkDataExtractor:
     def __init__(self, network: pypsa.Network, config_path: str = None, table_definitions_path: str = None):

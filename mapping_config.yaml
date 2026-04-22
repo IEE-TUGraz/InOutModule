@@ -180,8 +180,10 @@ dPower_VRES: # including ROR
     i: "bus"
     ExisUnits:
       attr: "active"
-      conversion: "bool_to_binary"
-    MaxProd: "p_nom"
+      conversion: "bool_to_binary_zero_if_p_nom_is_zero"
+    MaxProd:
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
     EnableInvest:
       attr: "p_nom_extendable"
       conversion: "bool_to_binary"
