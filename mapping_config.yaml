@@ -51,6 +51,7 @@ Metadata:
   ror:
     filter: [ 'ror', 'Run of River' ]
   hydro:
+    default_storage_capacity_cost: 1  # EUR/MWh, PyPSA does not have a separation between power and energy capacity for investment costs
     filter: [ 'Storage Hydro', 'hydro' ]
   phs:
     default_storage_capacity_cost: 1  # EUR/MWh, PyPSA does not have a separation between power and energy capacity for investment costs
