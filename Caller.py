@@ -138,11 +138,18 @@ while True:
                     # CTRL+C also signals Gurobi, which does a graceful shutdown and saves
                     # results. Drain remaining output so the log is complete, then let the
                     # subprocess finish — do not re-raise here.
-                    for raw_line in proc.stdout:
-                        decoded = raw_line.decode(errors='replace').replace('\r\n', '\n').replace('\r', '\n')
-                        sys.stdout.write(decoded)
-                        sys.stdout.flush()
-                        log_f.write(decoded)
+                    try:
+                        for raw_line in proc.stdout:
+                            decoded = raw_line.decode(errors='replace').replace('\r\n', '\n').replace('\r', '\n')
+                            sys.stdout.write(decoded)
+                            sys.stdout.flush()
+                            log_f.write(decoded)
+                    except KeyboardInterrupt:
+                        remaining = proc.stdout.read()
+                        if remaining:
+                            decoded = remaining.decode(errors='replace').replace('\r\n', '\n').replace('\r', '\n')
+                            sys.stdout.write(decoded)
+                            log_f.write(decoded)
                 proc.wait()
             end_time = time.time()
 
