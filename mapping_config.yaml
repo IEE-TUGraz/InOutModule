@@ -132,8 +132,10 @@ dPower_ThermalGen:
     i: "bus"
     ExisUnits:
       attr: "active"
-      conversion: "bool_to_binary"
-    MaxProd: "p_nom"
+      conversion: "bool_to_binary_zero_if_p_nom_is_zero"
+    MaxProd:
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
     MinProd:
       attr: "p_min_pu"
       conversion: "pu_to_absolute"
@@ -208,14 +210,16 @@ dPower_Storage:
   mapping:
     tec: "carrier"
     i: "bus"
-    ExisUnits: 1
+    ExisUnits:
+      attr: "active"
+      conversion: "bool_to_binary_zero_if_p_nom_is_zero"
     MaxProd:
-      attr: "p_max_pu"
-      conversion: "pu_to_absolute"
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
     MinProd: 0
     MaxCons:
-      attr: "p_max_pu"
-      conversion: "pu_to_absolute"
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
     DisEffic: "efficiency_dispatch"
     ChEffic: "efficiency_store"
     Self Discharge: "standing_loss"
