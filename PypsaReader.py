@@ -166,7 +166,7 @@ class Conversions:
     @staticmethod
     def one_if_nan_or_zero(val: pd.Series,) -> pd.Series:
         """Replaces NaN or zero values with 1, keeping other values unchanged."""
-        return val.where((val.notnull() | (val != 0)), 1)
+        return val.where((val.notnull() & (val != 0)), 1)
 
     @staticmethod
     def bool_to_binary_zero_if_p_nom_is_zero(val: pd.Series, df: pd.DataFrame) -> pd.Series:
