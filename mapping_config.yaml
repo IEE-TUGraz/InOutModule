@@ -140,7 +140,7 @@ dPower_ThermalGen:
     RampUp:
       attr: "ramp_limit_up"
       conversion: "pu_to_absolute_and_p_nom_if_nan_or_zero"
-    RampDown:
+    RampDw:
       attr: "ramp_limit_down"
       conversion: "pu_to_absolute_and_p_nom_if_nan_or_zero"
     MinUpTime:
