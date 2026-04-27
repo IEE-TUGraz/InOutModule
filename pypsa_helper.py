@@ -85,24 +85,60 @@ def prepare_dc_links(net, config: dict):
 def prepare_transformers(net, config: dict) -> pd.DataFrame:
     """
     Calculates transformer electrical parameters (r, x, b) based on their types
-    and sets default values for LEGO compatibility.
+    if they are not already defined, converts them to per-unit values based
+    on the system BasePower and v_nom, and sets default values for LEGO compatibility.
     """
     transformers = net.transformers.copy()
     types = net.transformer_types
+    s_base = config.get("BasePower", 100)
 
-    # Calculate r, x, b, based on transformer type if specified
-    vsc = transformers["type"].map(types["vsc"])
-    nlc = transformers["type"].map(types["i0"])
-    pfe = transformers["type"].map(types["pfe"])
-    g = pfe / (1000 * transformers.s_nom)
+    # Define which values are considered "not defined" (0 or NaN)
+    r_missing = (transformers["r"] == 0) | transformers["r"].isna()
+    x_missing = (transformers["x"] == 0) | transformers["x"].isna()
+    b_missing = (transformers["b"] == 0) | transformers["b"].isna()
 
-    transformers["r"] = transformers["r"].where(transformers["r"] != 0, vsc / 100)
-    transformers["x"] = transformers["x"].where(
-        transformers["x"] != 0, np.sqrt((vsc / 100) ** 2 - transformers.r**2)
-    )
-    transformers["b"] = transformers["b"].where(
-        transformers["b"] != 0, -np.sqrt((nlc / 100) ** 2 - g**2)
-    )
+    # Only perform type-based calculation if there are missing values
+    if r_missing.any() or x_missing.any() or b_missing.any():
+        vsc = transformers["type"].map(types["vsc"])
+        nlc = transformers["type"].map(types["i0"])
+        pfe = transformers["type"].map(types["pfe"])
+
+        # Avoid division by zero for s_nom
+        s_nom_safe = transformers.s_nom.where(transformers.s_nom != 0, 1)
+
+        if r_missing.any():
+            transformers.loc[r_missing, "r"] = vsc.loc[r_missing] / 100
+
+        if x_missing.any():
+            r_val = transformers["r"]
+            transformers.loc[x_missing, "x"] = np.sqrt(
+                np.maximum((vsc.loc[x_missing] / 100) ** 2 - r_val.loc[x_missing] ** 2, 0)
+            )
+
+        if b_missing.any():
+            g = pfe / (1000 * s_nom_safe)
+            transformers.loc[b_missing, "b"] = -np.sqrt(
+                np.maximum((nlc.loc[b_missing] / 100) ** 2 - g.loc[b_missing] ** 2, 0)
+            )
+
+    # Get v_nom from buses (kV) for each transformer (using bus0 as reference)
+    v_nom = transformers.bus0.map(net.buses.v_nom)
+
+    # Calculate Z_base = V_nom^2 / S_base [Ohm]
+    z_base = (v_nom**2) / s_base
+
+    # Convert electrical parameters to per-unit values
+    # Transformers r, x, b in PyPSA are usually p.u. on transformer base (s_nom)
+    # To convert to system base (s_base):
+    # Z_pu_sys = Z_pu_trans * (S_base / S_trans)
+    # Y_pu_sys = Y_pu_trans * (S_trans / S_base)
+    s_nom = transformers.s_nom.where(transformers.s_nom != 0, 1)
+    scaling_factor_z = s_base / s_nom
+    scaling_factor_y = s_nom / s_base
+
+    transformers["r"] = transformers["r"] * scaling_factor_z
+    transformers["x"] = transformers["x"] * scaling_factor_z
+    transformers["b"] = transformers["b"] * scaling_factor_y
 
     # Set carrier to AC for all transformers to get defined as DC-OPF
     transformers["carrier"] = "AC"
