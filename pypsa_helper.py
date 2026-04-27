@@ -4,20 +4,39 @@ import numpy as np
 
 def prepare_ac_lines(net, config: dict):
     """
-    Prepares AC line data by calculating missing parameters (r, x, b) from line types
+    Prepares AC line data by calculating missing parameters (r, x, b) from line types,
+    converting them to per-unit values using BasePower and v_nom,
     and ensuring consistent naming and carrier definitions.
     """
     lines = net.lines.copy()
     types = net.line_types
+    s_base = config.get("BasePower", 100)
 
     # Define the line parameters r, x, b if only line type is specified
     r_per_len = lines["type"].map(types["r_per_length"])
     x_per_len = lines["type"].map(types["x_per_length"])
 
-    # Vectorized calculation: replace 0 values with type-based defaults
+    # Determine b_per_length, assuming 50 Hz
+    # b_per_len [uS/km] = 2 * pi * 50 * C [nF/km] * 1e-3
+    b_per_len = lines["type"].map(types["c_per_length"]) * 2 * np.pi * 50 * 1e-3
+
+    # Vectorized calculation: replace 0 values with type-based defaults (SI values)
+    # Note: b_per_length in PyPSA line_types is typically in uS/km, so we multiply by 1e-6 to get Siemens
     lines["r"] = lines["r"].where(lines["r"] != 0, r_per_len * lines["length"])
     lines["x"] = lines["x"].where(lines["x"] != 0, x_per_len * lines["length"])
-    lines["b"] = lines["b"].where(lines["b"] != 0, x_per_len * lines["length"])
+    lines["b"] = lines["b"].where(lines["b"] != 0, b_per_len * lines["length"] * 1e-6)
+
+    # Get v_nom from buses (kV) for each line (using bus0 as reference)
+    v_nom = lines.bus0.map(net.buses.v_nom)
+
+    # Calculate Z_base = V_nom^2 / S_base [Ohm]
+    # Since V_nom is in kV and S_base is in MW, (kV^2 / MW) results in Ohms.
+    z_base = (v_nom**2) / s_base
+
+    # Convert electrical parameters to per-unit values
+    lines["r"] = lines["r"] / z_base
+    lines["x"] = lines["x"] / z_base
+    lines["b"] = lines["b"] * z_base
 
     # Add tap ratios and phase shifts with default values (if not already present)
     lines["tap_ratio"] = 1

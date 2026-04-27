@@ -3,7 +3,7 @@ Metadata:
     type: "metadata"
   dataPackage: "PyPSA-Import"
   dataSource: "Eur_2050_1h"
-  LDES_threshold: 2160 # hours
+  LDES_threshold: 2160 # defines the threshold in hours for storage units to be classified as LDES (Long Duration Energy Storage)
 
   # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
   # [technology]:
@@ -88,6 +88,7 @@ dPower_BusInfo:
 
 
 dPower_Network:
+  BasePower: 100
   source:
     type: "helper"
     name: "prepare_ac_lines_and_dc_links"
