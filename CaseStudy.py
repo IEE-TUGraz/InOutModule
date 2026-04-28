@@ -627,6 +627,169 @@ class CaseStudy:
 
         return cs if not inplace else None
 
+    def merge_generators(self, inplace: bool = False) -> Optional['CaseStudy']:
+        """
+        Merge generators of the same technology at the same bus into one representative generator.
+        Affects dPower_ThermalGen, dPower_VRES, dPower_VRESProfiles, and dPower_Inflows.
+        The new generator ID is '{i}_{tec}'.
+
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        cs = self if inplace else self.copy()
+
+        # Save original VRES mapping before any merges (needed for VRESProfiles and Inflows weighting)
+        original_vres_info = None
+        if hasattr(cs, 'dPower_VRES') and cs.dPower_VRES is not None and 'MaxProd' in cs.dPower_VRES.columns:
+            original_vres_info = cs.dPower_VRES[['tec', 'i', 'MaxProd']].copy()
+
+        ### Merge dPower_ThermalGen
+        if hasattr(cs, 'dPower_ThermalGen') and cs.dPower_ThermalGen is not None:
+            df = cs.dPower_ThermalGen.reset_index()
+            groups = ['tec', 'i']
+
+            thermal_simple_agg = {
+                'ExisUnits': 'max',
+                'MaxProd': 'sum',
+                'MinProd': 'min',
+                'RampUp': 'sum',
+                'RampDw': 'sum',
+                'MinUpTime': 'min',
+                'MinDownTime': 'min',
+                'Qmax': 'sum',
+                'Qmin': 'sum',
+                'EnableInvest': 'max',
+                'YearCom': 'min',
+                'YearDecom': 'max',
+                'lat': 'mean',
+                'lon': 'mean',
+            }
+            thermal_weighted_cols = ['InertiaConst', 'FuelCost', 'Efficiency', 'CommitConsumption',
+                                     'OMVarCost', 'StartupConsumption', 'EFOR', 'InvestCost',
+                                     'FirmCapCoef', 'CO2Emis']
+
+            agg_dict = {}
+            skip_cols = set(groups + ['g'] + thermal_weighted_cols)
+            for col in df.columns:
+                if col in skip_cols:
+                    continue
+                agg_dict[col] = thermal_simple_agg.get(col, 'first')
+
+            merged = df.groupby(groups).agg(agg_dict).reset_index()
+
+            for col in thermal_weighted_cols:
+                if col not in df.columns:
+                    continue
+                numer = (df[col] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                denom = df['MaxProd'].groupby([df['tec'], df['i']]).sum()
+                wavg = (numer / denom.replace(0, np.nan)).fillna(df.groupby(groups)[col].mean())
+                wavg.name = col
+                merged = merged.merge(wavg.reset_index(), on=groups, how='left')
+
+            merged['g'] = merged['i'] + '_' + merged['tec']
+            cs.dPower_ThermalGen = merged.set_index('g')
+
+        ### Merge dPower_VRESProfiles (before dPower_VRES so original MaxProd weights are available)
+        if (hasattr(cs, 'dPower_VRESProfiles') and cs.dPower_VRESProfiles is not None
+                and original_vres_info is not None):
+            df = cs.dPower_VRESProfiles.reset_index()
+            vres_cols = original_vres_info.reset_index()[['g', 'tec', 'i', 'MaxProd']]
+            df = df.merge(vres_cols, on='g', how='left')
+
+            groups = ['rp', 'k', 'scenario', 'tec', 'i']
+            key = [df['rp'], df['k'], df['scenario'], df['tec'], df['i']]
+
+            numer = (df['value'] * df['MaxProd']).groupby(key).sum()
+            denom = df['MaxProd'].groupby(key).sum()
+            merged_value = (numer / denom.replace(0, np.nan)).fillna(df.groupby(groups)['value'].mean())
+            merged_value.name = 'value'
+
+            meta_cols = [c for c in ['dataPackage', 'dataSource', 'id'] if c in df.columns]
+            meta = df.groupby(groups)[meta_cols].first().reset_index()
+            merged = meta.merge(merged_value.reset_index(), on=groups, how='left')
+            merged['g'] = merged['i'] + '_' + merged['tec']
+            merged = merged.drop(columns=['tec', 'i'])
+            cs.dPower_VRESProfiles = merged.set_index(['rp', 'k', 'g'])
+
+        ### Merge dPower_Inflows
+        if (hasattr(cs, 'dPower_Inflows') and cs.dPower_Inflows is not None
+                and original_vres_info is not None):
+            df = cs.dPower_Inflows.reset_index()
+            vres_cols = original_vres_info.reset_index()[['g', 'tec', 'i']]
+            df = df.merge(vres_cols, on='g', how='left')
+
+            groups = ['rp', 'k', 'scenario', 'tec', 'i']
+            key = [df['rp'], df['k'], df['scenario'], df['tec'], df['i']]
+
+            merged_value = df['value'].groupby(key).sum()
+            merged_value.name = 'value'
+
+            meta_cols = [c for c in ['dataPackage', 'dataSource', 'id'] if c in df.columns]
+            meta = df.groupby(groups)[meta_cols].first().reset_index()
+            merged = meta.merge(merged_value.reset_index(), on=groups, how='left')
+            merged['g'] = merged['i'] + '_' + merged['tec']
+            merged = merged.drop(columns=['tec', 'i'])
+            cs.dPower_Inflows = merged.set_index(['rp', 'k', 'g'])
+
+        ### Merge dPower_VRES (last, after VRESProfiles and Inflows)
+        if hasattr(cs, 'dPower_VRES') and cs.dPower_VRES is not None:
+            df = cs.dPower_VRES.reset_index()
+            groups = ['tec', 'i']
+
+            vres_simple_agg = {
+                'ExisUnits': 'sum',
+                'EnableInvest': 'max',
+                'Qmax': 'sum',
+                'Qmin': 'sum',
+                'YearCom': 'min',
+                'YearDecom': 'max',
+                'lat': 'mean',
+                'lon': 'mean',
+            }
+            vres_weighted_cols = ['InvestCost', 'OMVarCost', 'FirmCapCoef', 'InertiaConst']
+            special_cols = {'MaxProd', 'MaxInvest'}
+
+            agg_dict = {}
+            skip_cols = set(groups + ['g'] + vres_weighted_cols + list(special_cols))
+            for col in df.columns:
+                if col in skip_cols:
+                    continue
+                agg_dict[col] = vres_simple_agg.get(col, 'first')
+
+            merged = df.groupby(groups).agg(agg_dict).reset_index()
+
+            # Special: newMaxProd = sum(ExisUnits * MaxProd) / sum(ExisUnits); fallback to sum when all units are greenfield
+            if 'MaxProd' in df.columns:
+                total_mw = (df['ExisUnits'] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                total_units = df['ExisUnits'].groupby([df['tec'], df['i']]).sum()
+                new_maxprod = (total_mw / total_units.replace(0, np.nan)).fillna(
+                    df['MaxProd'].groupby([df['tec'], df['i']]).sum()
+                )
+                new_maxprod.name = 'MaxProd'
+                merged = merged.merge(new_maxprod.reset_index(), on=groups, how='left')
+
+            # Special: newMaxInvest = sum(MaxInvest * MaxProd) / newMaxProd
+            if 'MaxInvest' in df.columns and 'MaxProd' in df.columns:
+                invest_mw = (df['MaxInvest'] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                new_maxprod_s = merged.set_index(groups)['MaxProd']
+                new_maxinvest = (invest_mw / new_maxprod_s.replace(0, np.nan)).fillna(0)
+                new_maxinvest.name = 'MaxInvest'
+                merged = merged.merge(new_maxinvest.reset_index(), on=groups, how='left')
+
+            for col in vres_weighted_cols:
+                if col not in df.columns:
+                    continue
+                numer = (df[col] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                denom = df['MaxProd'].groupby([df['tec'], df['i']]).sum()
+                wavg = (numer / denom.replace(0, np.nan)).fillna(df.groupby(groups)[col].mean())
+                wavg.name = col
+                merged = merged.merge(wavg.reset_index(), on=groups, how='left')
+
+            merged['g'] = merged['i'] + '_' + merged['tec']
+            cs.dPower_VRES = merged.set_index('g')
+
+        return None if inplace else cs
+
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         rps = sorted(self.dPower_Hindex.index.get_level_values('rp').unique().tolist())
