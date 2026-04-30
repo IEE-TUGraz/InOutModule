@@ -925,6 +925,81 @@ class CaseStudy:
 
         return None if inplace else caseStudy
 
+    def filter_zone(self, zone: str | list[str], inplace: bool = False) -> Optional[Self]:
+        """
+        Filters the case study to only include buses in the given zone(s). All generators,
+        network lines, demand entries, and time series profiles connected to buses outside the
+        zone are removed.
+        :param zone: Zone name (value of the 'z' column in Power_BusInfo) or list of zone names to keep.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
+
+        zones = [zone] if isinstance(zone, str) else list(zone)
+
+        # Filter BusInfo and derive remaining bus set
+        case_study.dPower_BusInfo = case_study.dPower_BusInfo[case_study.dPower_BusInfo['z'].isin(zones)]
+        remaining_buses = set(case_study.dPower_BusInfo.index)
+
+        # Filter Network: drop lines where either endpoint is outside the zone
+        network_reset = case_study.dPower_Network.reset_index()
+        case_study.dPower_Network = network_reset[
+            network_reset['i'].isin(remaining_buses) & network_reset['j'].isin(remaining_buses)
+            ].set_index(['i', 'j', 'c'])
+
+        # Filter ThermalGen
+        if hasattr(case_study, 'dPower_ThermalGen') and case_study.dPower_ThermalGen is not None:
+            case_study.dPower_ThermalGen = case_study.dPower_ThermalGen[
+                case_study.dPower_ThermalGen['i'].isin(remaining_buses)
+            ]
+
+        # Filter VRES; collect remaining VRES generator IDs for VRESProfiles / Inflows
+        remaining_vres_gens: set = set()
+        if hasattr(case_study, 'dPower_VRES') and case_study.dPower_VRES is not None:
+            case_study.dPower_VRES = case_study.dPower_VRES[
+                case_study.dPower_VRES['i'].isin(remaining_buses)
+            ]
+            remaining_vres_gens = set(case_study.dPower_VRES.index)
+
+        # Filter Storage; collect remaining storage generator IDs for Inflows
+        remaining_storage_gens: set = set()
+        if hasattr(case_study, 'dPower_Storage') and case_study.dPower_Storage is not None:
+            case_study.dPower_Storage = case_study.dPower_Storage[
+                case_study.dPower_Storage['i'].isin(remaining_buses)
+            ]
+            remaining_storage_gens = set(case_study.dPower_Storage.index)
+
+        # Filter Demand
+        demand_reset = case_study.dPower_Demand.reset_index()
+        case_study.dPower_Demand = demand_reset[
+            demand_reset['i'].isin(remaining_buses)
+        ].set_index(['rp', 'k', 'i'])
+
+        # Filter VRESProfiles by remaining VRES generator IDs
+        if hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None:
+            profiles_reset = case_study.dPower_VRESProfiles.reset_index()
+            case_study.dPower_VRESProfiles = profiles_reset[
+                profiles_reset['g'].isin(remaining_vres_gens)
+            ].set_index(['rp', 'k', 'g'])
+
+        # Filter Inflows by remaining VRES + Storage generator IDs
+        if hasattr(case_study, 'dPower_Inflows') and case_study.dPower_Inflows is not None:
+            remaining_gens = remaining_vres_gens | remaining_storage_gens
+            inflows_reset = case_study.dPower_Inflows.reset_index()
+            case_study.dPower_Inflows = inflows_reset[
+                inflows_reset['g'].isin(remaining_gens)
+            ].set_index(['rp', 'k', 'g'])
+
+        # Filter ImportExport by remaining buses
+        if hasattr(case_study, 'dPower_ImportExport') and case_study.dPower_ImportExport is not None:
+            ie_reset = case_study.dPower_ImportExport.reset_index()
+            case_study.dPower_ImportExport = ie_reset[
+                ie_reset['i'].isin(remaining_buses)
+            ].set_index(['hub', 'i', 'rp', 'k'])
+
+        return None if inplace else case_study
+
     def filter_timesteps(self, start: str, end: str, inplace: bool = False, no_weight_k_adjustment: bool = False) -> Optional[Self]:
         """
         Filters each (relevant) dataframe in the case study to only include the timesteps between start and end (both inclusive).

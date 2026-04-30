@@ -8,7 +8,7 @@ Data I/O package for LEGO-Pyomo. Handles reading Excel case study files, writing
 |------------------------|-------------------------------------------------------------------------|
 | `CaseStudy.py`         | Loads all Excel input files into a single object; data manipulation     |
 | `ExcelReader.py`       | Low-level Excel parsing (per-file reader functions, version checking)   |
-| `ExcelWriter.py`       | Writes formatted Excel output files, driven by `TableDefinitions.xml`  |
+| `ExcelWriter.py`       | Writes formatted Excel output files, driven by `TableDefinitions.xml`   |
 | `SQLiteWriter.py`      | Exports Pyomo model results to SQLite; stores solver stats & run params |
 | `Utilities.py`         | Data transformations (inflows ↔ capacity factors, Printer helpers)      |
 | `printer.py`           | Singleton console/logfile printer with severity levels                  |
@@ -58,13 +58,19 @@ All Excel files in `data_folder` are read automatically. Any `d*` parameter can 
 
 ### Key Methods
 
-| Method                         | Description                                              |
-|--------------------------------|----------------------------------------------------------|
-| `copy()`                       | Deep copy — safe to modify independently                 |
-| `equal_to(cs)`                 | Compare all DataFrames with another CaseStudy            |
-| `merge_single_node_buses()`    | Collapse single-bus zones; preserves `z` as union string |
-| `scale_CaseStudy()`            | Applies power and cost scaling factors from parameters   |
-| `get_rpTransitionMatrices()`   | Returns absolute and relative transition matrices        |
+| Method                              | Description                                              |
+|-------------------------------------|----------------------------------------------------------|
+| `copy()`                            | Deep copy — safe to modify independently                 |
+| `equal_to(cs)`                      | Compare all DataFrames with another CaseStudy            |
+| `merge_single_node_buses()`         | Collapse single-bus zones; preserves `z` as union string |
+| `merge_generators()`                | Merge generators of the same `(tec, i)` into one         |
+| `scale_CaseStudy()`                 | Applies power and cost scaling factors from parameters   |
+| `get_rpTransitionMatrices()`        | Returns absolute and relative transition matrices        |
+| `filter_scenario(name)`             | Keep only rows matching the given scenario               |
+| `filter_zone(zone)`                 | Keep only buses (and all connected data) in a zone       |
+| `filter_timesteps(start, end)`      | Keep only timesteps in the given `k` range               |
+| `filter_representative_periods(rp)` | Keep only one representative period                      |
+| `apply_kmedoids_aggregation()`      | Temporally aggregate using k-medoids clustering          |
 
 ## SQLiteWriter
 
