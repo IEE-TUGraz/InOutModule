@@ -321,7 +321,9 @@ def _build_representative_periods(case_study, scenario: str, aggregation, rp_len
         """Extract numeric values from rp/k strings and calculate absolute hour."""
         df['rp_num'] = df['rp'].str[2:].astype(int)
         df['k_num'] = df['k'].str[1:].astype(int)
-        df['p'] = (df['rp_num'] - 1) * rp_length + df['k_num']
+        # Normalize k so the first k value maps to 1, regardless of offset (e.g. --limitK k2161-k4320)
+        min_k_num = df['k_num'].min()
+        df['p'] = (df['rp_num'] - 1) * rp_length + (df['k_num'] - min_k_num + 1)
         return df
 
     time_series_tables = [("Power_Demand", case_study.dPower_Demand)]
