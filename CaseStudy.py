@@ -19,7 +19,7 @@ printer = Printer.getInstance()
 
 class CaseStudy:
     # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
-    rpk_dependent_dataframes: list[str] = ["dHeat_P2H_Conversion_Factors"
+    rpk_dependent_dataframes: list[str] = ["dHeat_P2H_Conversion_Factors",
                                            "dHeat_Demand",
                                            "dPower_Demand",
                                            "dPower_Hindex",
