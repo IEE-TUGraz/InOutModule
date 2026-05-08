@@ -13,7 +13,7 @@ printer = Printer.getInstance()
 def _tail_file(filepath, n=20):
     """Return the last n lines of a file, or all if fewer."""
     try:
-        with open(filepath, 'r', errors='replace') as f:
+        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
     except OSError:
         return "(could not read log file)"
@@ -61,7 +61,7 @@ def _any_previous_unclaimed(jobs_file, lines, barrier_index):
 
 
 while True:
-    with open(args.jobs, 'r') as f:
+    with open(args.jobs, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     found_one = False
@@ -106,7 +106,7 @@ while True:
         if barrier_waited:
             barrier_waited.clear()
         start_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with os.fdopen(fd, 'w') as f:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
             f.write(f"Command: {line.strip()}\n")
             f.write(f"Started at: {start_datetime}")
         found_one = True
@@ -116,7 +116,7 @@ while True:
             os.system(f"title Job {i} from '{args.jobs}': {line.strip()}")
 
             start_time = time.time()
-            with open(log_file, 'w') as log_f:
+            with open(log_file, 'w', encoding='utf-8') as log_f:
                 log_f.write(f"Command: {line.strip()}\n")
                 log_f.write(f"Started at:  {start_datetime}\n")
                 log_f.write(f"{'=' * 60}\n")
@@ -160,7 +160,7 @@ while True:
                     f"Last output:\n{_tail_file(log_file, 20)}"
                 )
 
-            with open(finished_job_flag, 'w') as f:
+            with open(finished_job_flag, 'w', encoding='utf-8') as f:
                 f.write(f"Command: {line.strip()}\n")
                 f.write(f"Started at:  {start_datetime}\n")
                 f.write(f"Finished at: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -170,7 +170,7 @@ while True:
             printer.information(f"Finished job {i} from '{args.jobs}' after {end_time - start_time:.2f} seconds (= {(end_time - start_time) / 60 / 60:.2f} hours).")
         except Exception as e:
             printer.error(f"Error while executing job {i}: {e}")
-            with open(error_job_flag, 'w') as f:
+            with open(error_job_flag, 'w', encoding='utf-8') as f:
                 f.write(f"Command: {line.strip()}\n")
                 f.write(f"Error while executing job {i} from '{args.jobs}': {e}\n")
                 f.write(f"Started at:  {start_datetime}\n")
