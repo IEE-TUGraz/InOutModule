@@ -62,7 +62,7 @@ Metadata:
   ThermalGen:
     technologies: [ 'naturalGas', 'openCycleGasTurbine', 'closedCycleGasTurbine', 'coal', 'hardCoal', 'brownCoal_lignite', 'oil', 'nuclear', 'biomass', 'geothermal', 'waste' ]
   VRES:
-    technologies: [ 'solar', 'onshoreWind', 'offshoreWind', ]
+    technologies: [ 'solar', 'onshoreWind', 'offshoreWind', 'ror']
   Storage:
     technologies: [ 'phs', 'hydro' ]
   VRESProfiles:
