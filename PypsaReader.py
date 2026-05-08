@@ -302,6 +302,16 @@ class NetworkDataExtractor:
                 if idx_name in df.columns:
                     df = df.drop(columns=[idx_name])
 
+            # Reduces length of index to less than 100 characters
+            # This is only implemented because the LEGO database currently cannot handle more than 100 characters in the index!
+            # This can be deleted once the LEGO database is updated to handle longer index values
+            if isinstance(df.index, pd.MultiIndex):
+                df.index = pd.MultiIndex.from_frame(
+                    df.index.to_frame().astype(str).apply(lambda x: x.str[:99])
+                )
+            else:
+                df.index = df.index.astype(str).str[:99]
+
             df = df.reset_index()
             df = self._add_scenario_columns(df)
 
@@ -506,4 +516,9 @@ def translate_pypsa_to_lego(
 
 
 if __name__ == "__main__":
-    translate_pypsa_to_lego()
+    translate_pypsa_to_lego(
+        input_directory=r"C:\BeSt\VA-GA\PyPSA-Eur-all_v2026.02.0\networks",
+        input_file="base_s_all_elec_.nc",
+        output_directory=r"C:\BeSt\PyPSA-LEGO-Translator",
+        output_folder_name="LEGO_PyPSA-Eur_2050",
+    )

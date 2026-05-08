@@ -212,7 +212,7 @@ def prepare_inflow_profiles(net, config: dict):
         inflow_storage = net.storage_units_t.inflow[existing_inflows].copy()
         if len(missing_inflows) > 0:
             print(
-                f"Warning: The following hydro storage units are missing inflow data and will not be defined: {missing_inflows}"
+                f"Warning: The following hydro storage units are missing inflow data and therefore inflows will not be defined: {missing_inflows}"
             )
 
     # Get RoR generator inflows
