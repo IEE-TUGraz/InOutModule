@@ -46,9 +46,9 @@ class CaseStudy:
                  do_not_merge_single_node_buses: bool = False,
                  parallel_read: bool = True,
                  n_jobs: int = 4,
-                 global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
+                 global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: dict = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
-                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
+                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: dict = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
@@ -838,68 +838,103 @@ class CaseStudy:
         or return a new `CaseStudy` instance if `inplace` is `False`. The adjustments align the data
         to represent hourly indices and corresponding weights.
 
+        Each enabled scenario in `dGlobal_Scenarios` is processed independently.
+
+        If the case study is already a full hourly model (no two p-values share the same 'k' within
+        any scenario), no adjustment is made and the original instance is returned unchanged.
+
         :param inplace: If `True`, modifies the given instance. If `False`, returns a new `CaseStudy` instance.
         :return: Adjusted `CaseStudy` instance if `inplace` is `False`, otherwise `None`.
         """
         caseStudy = self.copy() if not inplace else self
 
-        # First Adjustment of Hindex (important if the case study was filtered before, to get a coherent p-index)
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
-        for i in caseStudy.dPower_Hindex.index:
-            caseStudy.dPower_Hindex.loc[i, "p"] = f"h{i + 1:0>4}"
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+        # Check if already hourly: within each scenario no 'k' appears more than once
+        hindex_flat = caseStudy.dPower_Hindex.reset_index()
+        already_hourly = all(
+            not (grp.groupby(['k']).size() > 1).any()
+            for _, grp in hindex_flat.groupby('scenario')
+        )
+        if already_hourly:
+            return None if inplace else caseStudy
 
-        # Adjust Demand
-        adjusted_demand = []
-        for i in caseStudy.dPower_BusInfo.index:
-            for h in caseStudy.dPower_Hindex.index:
-                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"], "ScenarioA", None, None, None])
+        scenario_names = caseStudy.dGlobal_Scenarios.index.tolist()
 
-        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value", "scenario", "id", "dataPackage", "dataSource"])
-        caseStudy.dPower_Demand = caseStudy.dPower_Demand.set_index(["rp", "k", "i"])
+        all_demand = []
+        all_vresprofiles = []
+        all_inflows = []
+        all_hindex = []
+        all_weightsk = []
+        all_weightsrp = []
 
-        # Adjust VRESProfiles
-        if hasattr(caseStudy, "dPower_VRESProfiles"):
-            adjusted_vresprofiles = []
-            caseStudy.dPower_VRESProfiles.sort_index(inplace=True)
-            for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
-                for h in caseStudy.dPower_Hindex.index:
-                    adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
+        demand_flat = caseStudy.dPower_Demand.reset_index()
+        vres_flat = caseStudy.dPower_VRESProfiles.reset_index() if hasattr(caseStudy, 'dPower_VRESProfiles') and caseStudy.dPower_VRESProfiles is not None else None
+        inflows_flat = caseStudy.dPower_Inflows.reset_index() if hasattr(caseStudy, 'dPower_Inflows') and caseStudy.dPower_Inflows is not None else None
 
-            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
-            caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
+        for scenario in scenario_names:
+            scen_hindex = hindex_flat[hindex_flat['scenario'] == scenario].copy().reset_index(drop=True)
+            num_hours = len(scen_hindex)
+            scen_hindex['new_k'] = [f"k{i + 1:0>4}" for i in range(num_hours)]
+            scen_hindex['new_p'] = [f"h{i + 1:0>4}" for i in range(num_hours)]
 
-        # Adjust Inflows
-        if hasattr(caseStudy, "dPower_Inflows"):
-            adjusted_inflows = []
-            caseStudy.dPower_Inflows.sort_index(inplace=True)
-            for g in caseStudy.dPower_Inflows.index.get_level_values('g').unique().tolist():
-                for h in caseStudy.dPower_Hindex.index:
-                    adjusted_inflows.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_Inflows.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
-            caseStudy.dPower_Inflows = pd.DataFrame(adjusted_inflows, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
-            caseStudy.dPower_Inflows = caseStudy.dPower_Inflows.set_index(["rp", "k", "g"])
+            # Demand: merge each original (rp, k) with the buses that have that (rp, k)
+            demand_scen = demand_flat[demand_flat['scenario'] == scenario][['rp', 'k', 'i', 'value']]
+            m = scen_hindex[['rp', 'k', 'new_k']].merge(demand_scen, on=['rp', 'k'])
+            all_demand.append(pd.DataFrame({'rp': 'rp01', 'k': m['new_k'], 'i': m['i'], 'value': m['value'],
+                                            'scenario': scenario, 'id': None, 'dataPackage': None, 'dataSource': None}))
 
-        # Adjust Hindex
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
-        for i in caseStudy.dPower_Hindex.index:
-            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None, "ScenarioA"
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+            # VRESProfiles
+            if vres_flat is not None:
+                vres_scen = vres_flat[vres_flat['scenario'] == scenario][['rp', 'k', 'g', 'value']]
+                m = scen_hindex[['rp', 'k', 'new_k']].merge(vres_scen, on=['rp', 'k'])
+                all_vresprofiles.append(pd.DataFrame({'rp': 'rp01', 'k': m['new_k'], 'g': m['g'], 'value': m['value'],
+                                                      'scenario': scenario, 'id': None, 'dataPackage': None, 'dataSource': None}))
 
-        # Adjust WeightsK
-        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.reset_index()
-        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.drop(caseStudy.dPower_WeightsK.index)
-        for i in range(len(caseStudy.dPower_Hindex)):
-            caseStudy.dPower_WeightsK.loc[i] = f"{caseStudy.dPower_Hindex.index[i][2]}", None, 1, None, None, "ScenarioA"
-        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.set_index("k")
+            # Inflows
+            if inflows_flat is not None:
+                inflows_scen = inflows_flat[inflows_flat['scenario'] == scenario][['rp', 'k', 'g', 'value']]
+                m = scen_hindex[['rp', 'k', 'new_k']].merge(inflows_scen, on=['rp', 'k'])
+                all_inflows.append(pd.DataFrame({'rp': 'rp01', 'k': m['new_k'], 'g': m['g'], 'value': m['value'],
+                                                 'scenario': scenario, 'id': None, 'dataPackage': None, 'dataSource': None}))
 
-        # Adjust WeightsRP
-        caseStudy.dPower_WeightsRP = caseStudy.dPower_WeightsRP.drop(caseStudy.dPower_WeightsRP.index)
-        caseStudy.dPower_WeightsRP.loc["rp01"] = None, 1, None, None, "ScenarioA"
+            # Hindex
+            hindex_scen = pd.DataFrame({
+                'p': scen_hindex['new_p'],
+                'rp': 'rp01',
+                'k': scen_hindex['new_k'],
+                'id': None,
+                'dataPackage': None,
+                'dataSource': None,
+                'scenario': scenario,
+            })
+            all_hindex.append(hindex_scen)
 
-        if not inplace:
-            return caseStudy
-        else:
-            return None
+            # WeightsK
+            weightsk_scen = pd.DataFrame({
+                'k': scen_hindex['new_k'],
+                'id': None,
+                'pWeight_k': 1,
+                'dataPackage': None,
+                'dataSource': None,
+                'scenario': scenario,
+            })
+            all_weightsk.append(weightsk_scen)
+
+            # WeightsRP
+            all_weightsrp.append({'rp': 'rp01', 'id': None, 'pWeight_rp': 1, 'dataPackage': None, 'dataSource': None, 'scenario': scenario})
+
+        caseStudy.dPower_Demand = pd.concat(all_demand).set_index(['rp', 'k', 'i'])
+
+        if all_vresprofiles:
+            caseStudy.dPower_VRESProfiles = pd.concat(all_vresprofiles).set_index(['rp', 'k', 'g'])
+
+        if all_inflows:
+            caseStudy.dPower_Inflows = pd.concat(all_inflows).set_index(['rp', 'k', 'g'])
+
+        caseStudy.dPower_Hindex = pd.concat(all_hindex).set_index(['p', 'rp', 'k'])
+        caseStudy.dPower_WeightsK = pd.concat(all_weightsk).set_index('k')
+        caseStudy.dPower_WeightsRP = pd.DataFrame(all_weightsrp).set_index('rp')
+
+        return None if inplace else caseStudy
 
     def filter_scenario(self, scenario_name, inplace: bool = False) -> Optional[Self]:
         """
