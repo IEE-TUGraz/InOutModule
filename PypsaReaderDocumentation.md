@@ -3,12 +3,22 @@
 The `PypsaReader` module provides a specialized pipeline for converting PyPSA (Python for Power System Analysis) networks into the Excel-based data
 format required by the LEGO model.
 
+## Purpose & limitations
+
+- This reader only converts PyPSA networks to LEGO input files (EXCEL). It does not return a LEGO CaseStudy object.
+- For running the converted case study in LEGO, the at least the files `Global_Paramters.xlsx`, `Power_Parameters.xlsx`, `Power_Hindex.xlsx`,
+  `Power_WeightsK.xlsx` and `Power_WeightsRP.xlsx` must be defined.
+- Currently, only the power sector is supported by the converter.
+- For importing the generated Excel files into the LEGO database, the files `Global_Scenarios.xlsx`, `Data_Packages.xlsx` and `Data_Sources.xlsx` must
+  be defined.
+
 ## General Workflow
 
 The conversion process follows a structured workflow:
 
 1. **Network Loading**: A PyPSA network is loaded from a NetCDF (`.nc`) file.
-2. **Configuration Parsing**: The `NetworkDataExtractor` reads `mapping_config.yaml` to determine how PyPSA components (buses, lines, generators,
+2. **Configuration Parsing**: The `NetworkDataExtractor` reads `pypsa_lego_mapping_config.yaml` to determine how PyPSA components (buses, lines,
+   generators,
    etc.) map to LEGO tables.
 3. **Data Extraction & Transformation**:
     - **Source Retrieval**: Data is pulled either directly from PyPSA network attributes (e.g., `net.buses`) or via complex processing in
@@ -18,7 +28,8 @@ The conversion process follows a structured workflow:
     - **Unit Conversion**: The `Conversions` class applies transformations (e.g., MW to kW, EUR to MEUR, or calculating decommissioning years).
 4. **Normalization**: DataFrames are augmented with mandatory LEGO columns (`scenario`, `id`, `dataPackage`, `dataSource`) and aligned with
    definitions in `TableDefinitions.xml`.
-5. **Excel Export**: The `ExcelWriter` saves each processed DataFrame into individual `.xlsx` files. <br> **Warning:** This can take up to several hours for very
+5. **Excel Export**: The `ExcelWriter` saves each processed DataFrame into individual `.xlsx` files. <br> **Warning:** This can take up to several
+   hours for very
    large networks!
 
 ## Configuration File (`mapping_config.yaml`)
@@ -65,16 +76,3 @@ The `Conversions` class in `PypsaReader.py` contains static methods for speciali
 * **Calculated Values**: `year_and_lifetime_to_year_decom` (derives decommissioning date) and `total_capacity_to_number_of_units`.
 * **LEGO Specifics**: `is_ldes` (Long Duration Energy Storage detection) and `line_carrier_to_tec_repr` (mapping carriers to LEGO technical
   representations like `DC-OPF` or `TP`).
-
-## Current Limitations
-
-Users should be aware of the following architectural and data gaps:
-
-1. **Direct-to-File Output**: The reader currently saves data directly to Excel files. It **does not return a LEGO CaseStudy object** in memory,
-   meaning it cannot be used for immediate programmatic manipulation within a Python script without re-reading the exported files.
-2. **Missing LEGO Tables**: The current mapping does not generate several files required for a complete LEGO run:
-    - `Power_Parameters`
-    - `Global_Parameters`
-    - `Power_Hindex` (Time mapping/Horizon index)
-    - `Power_WeightsK` & `Power_WeightsRP` (Representative period weighting)
-3. **Scenario Logic**: The `scenario` column is currently hardcoded to `ScenarioA` during normalization.

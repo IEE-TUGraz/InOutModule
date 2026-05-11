@@ -224,7 +224,7 @@ class NetworkDataExtractor:
         self._conv_params_cache = {}  # Performance: Cache function signatures
 
         if config_path is None:
-            config_path = os.path.join(os.path.dirname(__file__), "mapping_config.yaml")
+            config_path = os.path.join(os.path.dirname(__file__), "pypsa_lego_mapping_config.yaml")
 
         if table_definitions_path is None:
             table_definitions_path = os.path.join(
