@@ -174,9 +174,7 @@ class Conversions:
         return res.replace([np.inf, -np.inf], 0).fillna(0)
 
     @staticmethod
-    def greater_or_equal_to_one(
-        val: pd.Series
-    ) -> pd.Series:
+    def greater_or_equal_to_one(val: pd.Series) -> pd.Series:
         """Ensures that all values are greater or equal to 1, replacing values less than 1 with 1."""
         return val.apply(lambda x: max(x, 1) if pd.notnull(x) else x)
 

@@ -42,8 +42,15 @@ def prepare_ac_lines(net, config: dict):
     lines["tap_ratio"] = 1
     lines["phase_shift"] = 0
 
+    ### INFO: Currently can the LEGO Database not handle similar line names (e.g. c1, c1, c2, c2, ...)
+    # 11-05-2026
     # Ensure every line has an individual circuit identifier (c1, c2, ...) for parallel lines
-    lines["name"] = "c" + (lines.groupby(["bus0", "bus1"]).cumcount() + 1).astype(str)
+    # lines["name"] = "c" + (lines.groupby(["bus0", "bus1"]).cumcount() + 1).astype(str)
+
+    # Define individual line names until LEGO database can handle similar line names
+    lines["name"] = "AC_line_" + pd.Series(range(len(lines)), index=lines.index).astype(
+        str
+    )
 
     # if carrier is nan or empty string (''), set to AC for all lines to get defined as DC-OPF
     lines.carrier = lines.carrier.fillna("AC").where(lines.carrier != "", "AC")
@@ -68,7 +75,13 @@ def prepare_dc_links(net, config: dict):
     links["s_nom_extendable"] = links["p_nom_extendable"]
     links["id"] = links.index
     # Vectorized name generation
-    links["name"] = "DC_Link_" + pd.Series(range(len(links)), index=links.index).astype(
+    ### INFO: Currently can the LEGO Database not handle similar line names (e.g. c1, c1, c2, c2, ...)
+    # 11-05-2026
+    # links["name"] = "DC_Link_" + pd.Series(range(len(links)), index=links.index).astype(
+    #     str
+    # )
+
+    links["name"] = "DC_link_" + pd.Series(range(len(links)), index=links.index).astype(
         str
     )
 
@@ -112,7 +125,9 @@ def prepare_transformers(net, config: dict) -> pd.DataFrame:
         if x_missing.any():
             r_val = transformers["r"]
             transformers.loc[x_missing, "x"] = np.sqrt(
-                np.maximum((vsc.loc[x_missing] / 100) ** 2 - r_val.loc[x_missing] ** 2, 0)
+                np.maximum(
+                    (vsc.loc[x_missing] / 100) ** 2 - r_val.loc[x_missing] ** 2, 0
+                )
             )
 
         if b_missing.any():
@@ -143,9 +158,15 @@ def prepare_transformers(net, config: dict) -> pd.DataFrame:
     # Set carrier to AC for all transformers to get defined as DC-OPF
     transformers["carrier"] = "AC"
 
+    ### INFO: Currently can the LEGO Database not handle similar line names (e.g. c1, c1, c2, c2, ...)
+    # 11-05-2026
     # Ensure every transformer has an individual circuit identifier (c1, c2, ...) for parallel transformers
-    transformers["name"] = "c" + (
-        transformers.groupby(["bus0", "bus1"]).cumcount() + 1
+    # transformers["name"] = "c" + (
+    #     transformers.groupby(["bus0", "bus1"]).cumcount() + 1
+    # ).astype(str)
+
+    transformers["name"] = "Transformer_" + pd.Series(
+        range(len(transformers)), index=transformers.index
     ).astype(str)
 
     return transformers
