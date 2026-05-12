@@ -201,10 +201,14 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
         var_names = [var.parent_component().name for var in repn.linear_vars]
         var_indices = [str(var.index()) for var in repn.linear_vars]
         coefs = list(repn.linear_coefs)
+        var_values = [pyo.value(var) for var in repn.linear_vars]
+        var_times_coefficient = [var_value * coef for var_value, coef in zip(var_values, coefs)]
         df_terms = pd.DataFrame({
             'var_name': var_names,
             'var_index': var_indices,
-            'coefficient': coefs
+            'coefficient': coefs,
+            'var_value': var_values,
+            'var_times_coefficient': var_times_coefficient,
         })
         df_terms.to_sql('objective_terms', cnx, if_exists='replace', index=False)
 
