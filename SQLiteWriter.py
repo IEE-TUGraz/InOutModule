@@ -176,12 +176,16 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
     Add objective function decomposition to SQLite database.
     This enables recalculation of ZOI objectives without the full model.
 
-    The objective is decomposed into:
-    - objective_constant: Single row with the constant term
-    - objective_terms: Variable names, indices, and their coefficients
+    For each active objective on the model, two tables are written:
+    - objective_constant[_<name>]: constant term
+    - objective_terms[_<name>]:    variable names, indices, coefficients
+
+    If there is exactly one objective, the legacy table names
+    'objective_constant' and 'objective_terms' are used (backwards compatible).
+    Otherwise the objective's name is appended.
 
     :param filename: Path to the SQLite database file
-    :param model: Pyomo model with objective
+    :param model: Pyomo model with one or more objectives
     :return: None
     """
     from pyomo.repn import generate_standard_repn
@@ -189,31 +193,56 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
     cnx = sqlite3.connect(filename)
 
     try:
-        # Decompose objective into linear representation
-        repn = generate_standard_repn(model.objective.expr, quadratic=False)
+        objectives = list(model.component_objects(pyo.Objective, active=True))
 
-        # Store objective decomposition as separate tables
-        # 1. Constant term
-        df_constant = pd.DataFrame([{'constant': repn.constant if repn.constant else 0.0}])
-        df_constant.to_sql('objective_constant', cnx, if_exists='replace', index=False)
+        if not objectives:
+            printer.warning("Model has no active objective(s) — skipping objective decomposition")
+            return
 
-        # 2. Variable names, indices, and coefficients
-        var_names = [var.parent_component().name for var in repn.linear_vars]
-        var_indices = [str(var.index()) for var in repn.linear_vars]
-        coefs = list(repn.linear_coefs)
-        var_values = [pyo.value(var) for var in repn.linear_vars]
-        var_times_coefficient = [var_value * coef for var_value, coef in zip(var_values, coefs)]
-        df_terms = pd.DataFrame({
-            'var_name': var_names,
-            'var_index': var_indices,
-            'coefficient': coefs,
-            'var_value': var_values,
-            'var_times_coefficient': var_times_coefficient,
-        })
-        df_terms.to_sql('objective_terms', cnx, if_exists='replace', index=False)
+        single = len(objectives) == 1
+
+        for obj in objectives:
+            # Handle both scalar and indexed objectives
+            for idx in obj:
+                obj_data = obj[idx] if idx is not None else obj
+
+                repn = generate_standard_repn(obj_data.expr, quadratic=False)
+
+                # Build a suffix for table names
+                if single and idx is None:
+                    suffix = ""
+                else:
+                    parts = [obj.name]
+                    if idx is not None:
+                        parts.append(str(idx))
+                    suffix = "_" + "_".join(parts).replace(" ", "")
+
+                df_constant = pd.DataFrame(
+                    [{'constant': repn.constant if repn.constant else 0.0}]
+                )
+                df_constant.to_sql(
+                    f'objective_constant{suffix}', cnx,
+                    if_exists='replace', index=False
+                )
+
+                var_names = [v.parent_component().name for v in repn.linear_vars]
+                var_indices = [str(v.index()) for v in repn.linear_vars]
+                coefs = list(repn.linear_coefs)
+                df_terms = pd.DataFrame({
+                    'var_name': var_names,
+                    'var_index': var_indices,
+                    'coefficient': coefs,
+                })
+                df_terms.to_sql(
+                    f'objective_terms{suffix}', cnx,
+                    if_exists='replace', index=False
+                )
 
         cnx.commit()
-        printer.information(f"Added objective decomposition to SQLite ({len(var_indices)} terms)")
+        printer.information(
+            f"Added objective decomposition to SQLite "
+            f"({len(objectives)} objective component(s))"
+        )
 
     except Exception as e:
         printer.error(f"Failed to add objective decomposition: {e}")
