@@ -695,7 +695,7 @@ class CaseStudy:
                 wavg.name = col
                 merged = merged.merge(wavg.reset_index(), on=groups, how='left')
 
-            merged['g'] = merged['i'] + '_' + merged['tec']
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
             cs.dPower_ThermalGen = merged.set_index('g')
 
         ### Merge dPower_VRESProfiles (before dPower_VRES so original MaxProd weights are available)
@@ -716,7 +716,7 @@ class CaseStudy:
             meta_cols = [c for c in ['dataPackage', 'dataSource', 'id'] if c in df.columns]
             meta = df.groupby(groups)[meta_cols].first().reset_index()
             merged = meta.merge(merged_value.reset_index(), on=groups, how='left')
-            merged['g'] = merged['i'] + '_' + merged['tec']
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
             merged = merged.drop(columns=['tec', 'i'])
             cs.dPower_VRESProfiles = merged.set_index(['rp', 'k', 'g'])
 
@@ -736,7 +736,7 @@ class CaseStudy:
             meta_cols = [c for c in ['dataPackage', 'dataSource', 'id'] if c in df.columns]
             meta = df.groupby(groups)[meta_cols].first().reset_index()
             merged = meta.merge(merged_value.reset_index(), on=groups, how='left')
-            merged['g'] = merged['i'] + '_' + merged['tec']
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
             merged = merged.drop(columns=['tec', 'i'])
             cs.dPower_Inflows = merged.set_index(['rp', 'k', 'g'])
 
@@ -794,7 +794,7 @@ class CaseStudy:
                 wavg.name = col
                 merged = merged.merge(wavg.reset_index(), on=groups, how='left')
 
-            merged['g'] = merged['i'] + '_' + merged['tec']
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
             cs.dPower_VRES = merged.set_index('g')
 
         return None if inplace else cs
