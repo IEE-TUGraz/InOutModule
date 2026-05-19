@@ -44,6 +44,7 @@ class CaseStudy:
                  data_folder: str | Path,
                  do_not_scale_units: bool = False,
                  do_not_merge_single_node_buses: bool = False,
+                 do_not_filter_unused_scenarios: bool = False,
                  parallel_read: bool = True,
                  n_jobs: int = 4,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: dict = None,
@@ -65,6 +66,7 @@ class CaseStudy:
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
+        self.do_not_filter_unused_scenarios = do_not_filter_unused_scenarios
 
         # === SEQUENTIAL READS ===
         if dGlobal_Parameters is not None:
@@ -238,6 +240,13 @@ class CaseStudy:
             else:  # Use calculated dPower_WeightsRP otherwise
                 printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
+
+        if not self.do_not_filter_unused_scenarios:
+            self.dGlobal_Scenarios = self.dGlobal_Scenarios[self.dGlobal_Scenarios['relativeWeight'] != 0]  # Drop rows in dGlobal_Scenarios where relativeWeight is 0
+            if len(self.dGlobal_Scenarios) == 0:
+                raise ValueError("No scenarios are present in the 'Global_Scenarios' table. Please check if the file exists and contains valid data.")
+            elif len(self.dGlobal_Scenarios) == 1:
+                self.filter_scenario(self.dGlobal_Scenarios.index[0], inplace=True)  # Filter case study to only include actually present scenarios
 
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
