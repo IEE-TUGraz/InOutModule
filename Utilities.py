@@ -224,6 +224,7 @@ def _extract_scenario_data(case_study, scenario: str, capacity_normalization_str
     if combined_tech_data is not None:
         # Use right join to keep ALL demand data (even nodes without technology data)
         # Replicates demand for nodes with technology, and preserves demand-only nodes
+        combined_tech_data['i'] = combined_tech_data['i'].astype(str)
         scenario_df = pd.merge(
             combined_tech_data,
             scenario_df,
