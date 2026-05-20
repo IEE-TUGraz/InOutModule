@@ -9,3 +9,6 @@ readme = "README.md"
 
 [tool.setuptools]
 py-modules = ['CaseStudy', 'ExcelReader', 'ExcelWriter', 'printer', 'PypsaReader', 'pypsa_helper', 'SQLiteWriter', 'TableDefinition']
+
+[tool.pytest.ini_options]
+pythonpath = [".."]
