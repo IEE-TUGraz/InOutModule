@@ -983,26 +983,30 @@ class CaseStudy:
         zones = [zone] if isinstance(zone, str) else list(zone)
 
         # Filter BusInfo and derive remaining bus set
-        case_study.dPower_BusInfo = case_study.dPower_BusInfo[case_study.dPower_BusInfo['z'].isin(zones)]
+        case_study.dPower_BusInfo = case_study.dPower_BusInfo[case_study.dPower_BusInfo['z'].astype(str).isin(zones)]
         remaining_buses = set(case_study.dPower_BusInfo.index)
 
         # Filter Network: drop lines where either endpoint is outside the zone
         network_reset = case_study.dPower_Network.reset_index()
         case_study.dPower_Network = network_reset[
-            network_reset['i'].isin(remaining_buses) & network_reset['j'].isin(remaining_buses)
-            ].set_index(['i', 'j', 'c'])
+            network_reset['i'].astype(str).isin(remaining_buses) & network_reset['j'].astype(str).isin(remaining_buses)
+            ]
+        case_study.dPower_Network['i'] = case_study.dPower_Network['i'].astype(str)
+        case_study.dPower_Network['j'] = case_study.dPower_Network['j'].astype(str)
+        case_study.dPower_Network['c'] = case_study.dPower_Network['c'].astype(str)
+        case_study.dPower_Network.set_index(['i', 'j', 'c'], inplace=True)
 
         # Filter ThermalGen
         if hasattr(case_study, 'dPower_ThermalGen') and case_study.dPower_ThermalGen is not None:
             case_study.dPower_ThermalGen = case_study.dPower_ThermalGen[
-                case_study.dPower_ThermalGen['i'].isin(remaining_buses)
+                case_study.dPower_ThermalGen['i'].astype(str).isin(remaining_buses)
             ]
 
         # Filter VRES; collect remaining VRES generator IDs for VRESProfiles / Inflows
         remaining_vres_gens: set = set()
         if hasattr(case_study, 'dPower_VRES') and case_study.dPower_VRES is not None:
             case_study.dPower_VRES = case_study.dPower_VRES[
-                case_study.dPower_VRES['i'].isin(remaining_buses)
+                case_study.dPower_VRES['i'].astype(str).isin(remaining_buses)
             ]
             remaining_vres_gens = set(case_study.dPower_VRES.index)
 
@@ -1010,15 +1014,17 @@ class CaseStudy:
         remaining_storage_gens: set = set()
         if hasattr(case_study, 'dPower_Storage') and case_study.dPower_Storage is not None:
             case_study.dPower_Storage = case_study.dPower_Storage[
-                case_study.dPower_Storage['i'].isin(remaining_buses)
+                case_study.dPower_Storage['i'].astype(str).isin(remaining_buses)
             ]
             remaining_storage_gens = set(case_study.dPower_Storage.index)
 
         # Filter Demand
         demand_reset = case_study.dPower_Demand.reset_index()
         case_study.dPower_Demand = demand_reset[
-            demand_reset['i'].isin(remaining_buses)
-        ].set_index(['rp', 'k', 'i'])
+            demand_reset['i'].astype(str).isin(remaining_buses)
+        ]
+        case_study.dPower_Demand['i'] = case_study.dPower_Demand['i'].astype(str)
+        case_study.dPower_Demand.set_index(['rp', 'k', 'i'], inplace=True)
 
         # Filter VRESProfiles by remaining VRES generator IDs
         if hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None:
@@ -1039,8 +1045,10 @@ class CaseStudy:
         if hasattr(case_study, 'dPower_ImportExport') and case_study.dPower_ImportExport is not None:
             ie_reset = case_study.dPower_ImportExport.reset_index()
             case_study.dPower_ImportExport = ie_reset[
-                ie_reset['i'].isin(remaining_buses)
-            ].set_index(['hub', 'i', 'rp', 'k'])
+                ie_reset['i'].astype(str).isin(remaining_buses)
+            ]
+            case_study.dPower_ImportExport['i'] = case_study.dPower_ImportExport['i'].astype(str)
+            case_study.dPower_ImportExport.set_index(['hub', 'i', 'rp', 'k'], inplace=True)
 
         return None if inplace else case_study
 
