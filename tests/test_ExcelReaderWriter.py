@@ -2,7 +2,7 @@ import pytest
 
 import ExcelReader as ExcelReader
 from ExcelWriter import ExcelWriter
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 

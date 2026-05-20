@@ -5,7 +5,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.cell import get_column_letter
 
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 
