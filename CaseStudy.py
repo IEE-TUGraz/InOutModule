@@ -12,7 +12,7 @@ import tsam.timeseriesaggregation as tsam
 
 import ExcelReader
 from InOutModule import Utilities
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 
@@ -196,6 +196,8 @@ class CaseStudy:
                     printer.error(f"Error reading for '{attr_name}': {exc}")
                     raise exc
 
+        self.check_duplicate_lines_dPower_Network()
+
         # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -255,6 +257,45 @@ class CaseStudy:
     def copy(self):
         new_self = copy.deepcopy(self)
         return new_self
+
+    def check_duplicate_lines_dPower_Network(self):
+        """
+        Check dPower_Network for duplicate and parallel lines.
+        i -> j and j -> i are considered as the same line.
+        Lines with same endpoints and circuit -> error.
+        Lines with same endpoints and different circuits-> warning.
+        :return: None
+        """
+        dPower_Network = self.dPower_Network.reset_index()
+        line_keys_without_circuit = dPower_Network.apply(lambda row: frozenset((row["i"], row["j"])), axis=1)
+        dPower_Network["_line_key_without_circuit"] = line_keys_without_circuit
+        line_keys = dPower_Network.apply(lambda row: (row["scenario"], line_keys_without_circuit[row.name], row["c"]), axis=1)
+        duplicate_lines = dPower_Network[line_keys.duplicated(keep=False)]
+
+        if not duplicate_lines.empty:
+            duplicate_line = duplicate_lines.iloc[0]
+            raise ValueError(
+                f"Duplicate network line found in (at least) scenario '{duplicate_line['scenario']}' "
+                f"for line {duplicate_line['i']} <-> {duplicate_line['j']} "
+                f"with circuit '{duplicate_line['c']}'. "
+                "If the lines should be parallel, assign different 'c' for each parallel line."
+            )
+
+        lines_with_multiple_circuits = dPower_Network[dPower_Network.groupby(["scenario", "_line_key_without_circuit"])["c"].transform("nunique") > 1]
+
+        if not lines_with_multiple_circuits.empty:
+            parallel_line = lines_with_multiple_circuits.iloc[0]  # for printing the example: use first row that belongs to a parallel line group
+            parallel_group = lines_with_multiple_circuits[
+                (lines_with_multiple_circuits["scenario"] == parallel_line["scenario"])  # same scenario
+                & (lines_with_multiple_circuits["_line_key_without_circuit"] == parallel_line["_line_key_without_circuit"])
+                ]
+            circuits = parallel_group["c"].head(2).tolist()  # show only first two circuit IDs
+
+            printer.warning(
+                f"Parallel network lines found in (at least) scenario '{parallel_line['scenario']}' "
+                f"for line {parallel_line['i']} <-> {parallel_line['j']} "
+                f"with circuits {circuits}."
+            )
 
     def equal_to(self, cs: typing.Self) -> bool:
         """
