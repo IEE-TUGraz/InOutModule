@@ -196,6 +196,8 @@ class CaseStudy:
                     printer.error(f"Error reading for '{attr_name}': {exc}")
                     raise exc
 
+        self.check_duplicate_lines_dPower_Network()
+
         # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -363,7 +365,6 @@ class CaseStudy:
         self.dPower_Parameters["pMaxAngleDCOPF"] *= self.angle_to_rad_scaling_factor  # Convert angle from degrees to radians
 
     def scale_dPower_Network(self):
-        self.check_duplicate_lines_dPower_Network()
         self.dPower_Network["pInvestCost"] = self.dPower_Network["pInvestCost"].fillna(0)
         self.dPower_Network["pPmax"] *= self.power_scaling_factor
 
