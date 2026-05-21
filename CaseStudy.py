@@ -1211,6 +1211,22 @@ class CaseStudy:
                 new_rp_seq.extend([next_rp for _ in range(n_ks_per_rp)])
 
             sc['rp'] = sc['p'].map(dict(zip(period_labels, new_rp_seq)))
+
+            # Ensure every RP appears at least once; if not, replace the most frequent period with the missing one
+            rp_count = sc.groupby('rp')['p'].count() / n_ks_per_rp
+            missing_rps = [rp for rp in rps if rp_count.get(rp, 0) == 0]
+            while missing_rps:
+                missing_rp = missing_rps.pop(0)
+                max_rp = rp_count.idxmax()
+                if rp_count[max_rp] <= 1:
+                    raise ValueError(f"It seems like there are more RPs than periods in the case study. Check your data and settings.")
+
+                first_occurence_of_max_rp = sc.rp.eq(max_rp).idxmax()
+                sc.loc[sc.index[first_occurence_of_max_rp:first_occurence_of_max_rp + n_ks_per_rp], 'rp'] = missing_rp
+
+                rp_count.loc[max_rp] -= 1
+                rp_count.loc[missing_rp] = 1
+
             new_parts.append(sc)
 
         new_hindex = pd.concat(new_parts, ignore_index=False)
