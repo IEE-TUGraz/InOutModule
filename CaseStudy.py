@@ -203,22 +203,7 @@ class CaseStudy:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
             self.power_weightsrp_file = power_weightsrp_file
-            # Calculate dPower_WeightsRP from Hindex
-            dPower_WeightsRPs = []
-            for scenario in self.dPower_Hindex['scenario'].unique().tolist():
-                # Count occurences of each value in column 'rp' of dPower_Hindex
-                dPower_WeightsRP_scenario = pd.DataFrame(self.dPower_Hindex[self.dPower_Hindex['scenario'] == scenario].reset_index()['rp'].value_counts().sort_index())
-                dPower_WeightsRP_scenario = dPower_WeightsRP_scenario.rename(columns={'count': 'pWeight_rp'})
-                dPower_WeightsRP_scenario['scenario'] = scenario  # Add scenario ID
-
-                # Add other columns with default values
-                dPower_WeightsRP_scenario['id'] = np.nan
-                dPower_WeightsRP_scenario['dataPackage'] = np.nan
-                dPower_WeightsRP_scenario['dataSource'] = np.nan
-
-                dPower_WeightsRPs.append(dPower_WeightsRP_scenario)
-
-            dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
+            dPower_WeightsRP = self.calculatePowerWeightsRP(db_id=np.nan, dataPackage=np.nan, dataSource=np.nan)
 
             if os.path.exists(self.data_folder + self.power_weightsrp_file):  # Compare with given file if it exists
                 self.dPower_WeightsRP = ExcelReader.get_Power_WeightsRP(self.data_folder + self.power_weightsrp_file)
@@ -226,19 +211,16 @@ class CaseStudy:
                 calculated = dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
                 fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
 
-                # Normalize both to sum to 1 for comparison
-                calc_norm = calculated['pWeight_rp'] / calculated['pWeight_rp'].sum()
-                file_norm = fromFile['pWeight_rp'] / fromFile['pWeight_rp'].sum()
                 # Align indices and fill missing with 0 for comparison
-                combined = pd.concat([calc_norm, file_norm], axis=1, keys=['calculated', 'fromFile']).fillna(0)
+                combined = pd.concat([calculated, fromFile], axis=1, keys=['calculated', 'fromFile']).fillna(0)
                 diff_mask = ~np.isclose(combined['calculated'], combined['fromFile'])
                 if diff_mask.any():
-                    printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
+                    printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, now using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
                     # Print all differing lines
                     diffs = combined[diff_mask]
                     printer.warning("Differing entries (index -> calculated | fromFile):\n" + diffs.to_string())
             else:  # Use calculated dPower_WeightsRP otherwise
-                printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
+                printer.warning(f"Executing without 'Power_WeightsRP' (calculating from Power_Hindex, since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
 
         if not self.do_not_filter_unused_scenarios:
@@ -798,6 +780,21 @@ class CaseStudy:
             cs.dPower_VRES = merged.set_index('g')
 
         return None if inplace else cs
+
+    def calculatePowerWeightsRP(self, db_id, dataPackage, dataSource):
+        dPower_WeightsRPs = []
+        for scenario in self.dPower_Hindex['scenario'].unique().tolist():
+            # Count occurrences of each value in column 'rp' of dPower_Hindex
+            dPower_WeightsRP_scenario = pd.DataFrame(self.dPower_Hindex[self.dPower_Hindex['scenario'] == scenario].reset_index()['rp'].value_counts().sort_index())
+            dPower_WeightsRP_scenario = dPower_WeightsRP_scenario.rename(columns={'count': 'pWeight_rp'})
+            dPower_WeightsRP_scenario['scenario'] = scenario  # Add scenario ID
+            dPower_WeightsRPs.append(dPower_WeightsRP_scenario)
+
+        dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
+        dPower_WeightsRP['id'] = db_id
+        dPower_WeightsRP['dataPackage'] = dataPackage
+        dPower_WeightsRP['dataSource'] = dataSource
+        return dPower_WeightsRP
 
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
