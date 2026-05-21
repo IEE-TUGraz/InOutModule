@@ -212,7 +212,7 @@ class CaseStudy:
                 fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
 
                 # Align indices and fill missing with 0 for comparison
-                combined = pd.concat([calculated, fromFile], axis=1, keys=['calculated', 'fromFile']).fillna(0)
+                combined = pd.concat([calculated["pWeight_rp"], fromFile["pWeight_rp"]], axis=1, keys=['calculated', 'fromFile']).fillna(0)
                 diff_mask = ~np.isclose(combined['calculated'], combined['fromFile'])
                 if diff_mask.any():
                     printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, now using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
@@ -794,6 +794,10 @@ class CaseStudy:
         dPower_WeightsRP['id'] = db_id
         dPower_WeightsRP['dataPackage'] = dataPackage
         dPower_WeightsRP['dataSource'] = dataSource
+
+        scenario_sums = self.dPower_WeightsK.groupby('scenario')['pWeight_k'].sum()
+        dPower_WeightsRP['pWeight_rp'] = dPower_WeightsRP['pWeight_rp'] / dPower_WeightsRP['scenario'].map(scenario_sums)
+
         return dPower_WeightsRP
 
     # Create transition matrix from Hindex
@@ -1157,6 +1161,68 @@ class CaseStudy:
                 setattr(case_study, df_name, df)
 
         return None if inplace else case_study
+
+    def shift_transition_matrix(self, positions: int, inplace: bool = True, seed: int = 42) -> Optional['CaseStudy']:
+        """
+        Adjust the transition matrix by shifting the probabilities by <positions> positions, resampling Hindex from the adjusted
+        target distribution. dPower_WeightsRP and all three transition-matrices are recomputed from the new Hindex.
+
+        :param positions: Number of positions to shift to the right (negative shifts to the left).
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param seed: Random seed to guarantee reproduceability.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        cs = self if inplace else self.copy()
+
+        rps = cs.rpTransitionMatrixAbsolute.index.tolist()
+        n = len(rps)
+
+        target_probs: dict[str, np.ndarray] = {}
+
+        printer.information(f"Adjusting transition matrix, shifting it by {positions} positions")
+        for rp in rps:
+            c = cs.rpTransitionMatrixAbsolute.loc[rp].values.astype(float)
+            total = c.sum()
+            if total == 0:
+                target_probs[rp] = np.ones(n) / n
+            else:
+                c_shifted = np.roll(c, positions)
+                target_probs[rp] = c_shifted / total
+
+        # Rebuild Hindex: sample a new RP sequence per scenario
+        hindex_flat = cs.dPower_Hindex.reset_index()
+        new_parts = []
+        rng = np.random.default_rng(seed)
+
+        for scenario in hindex_flat['scenario'].unique().tolist():
+            sc = hindex_flat[hindex_flat['scenario'] == scenario].copy()
+            sc = sc.sort_values(['p'])
+            n_ks_per_rp = len(cs.dPower_WeightsK['scenario'] == scenario)
+
+            period_labels = sc['p'].tolist()
+            first_rp = sc['rp'].iloc[0]
+            n_periods = len(period_labels)
+
+            # Sample new RP sequence, anchoring the first period to the original
+            new_rp_seq = [first_rp for _ in range(n_ks_per_rp)]
+            for _ in range(n_periods - 1):
+                probs = target_probs[new_rp_seq[-1]]
+                next_rp = str(rng.choice(rps, p=probs))
+                new_rp_seq.extend([next_rp for _ in range(n_ks_per_rp)])
+
+            sc['rp'] = sc['p'].map(dict(zip(period_labels, new_rp_seq)))
+            new_parts.append(sc)
+
+        new_hindex = pd.concat(new_parts, ignore_index=False)
+        cs.dPower_Hindex = new_hindex.set_index(['p', 'rp', 'k'])
+
+        # Recompute WeightsRP from new Hindex
+        cs.dPower_WeightsRP = cs.calculatePowerWeightsRP(np.nan, np.nan, np.nan)
+
+        # Recompute actual TM from new Hindex (approximates the target distributions)
+        cs.rpTransitionMatrixAbsolute, cs.rpTransitionMatrixRelativeTo, cs.rpTransitionMatrixRelativeFrom = cs.get_rpTransitionMatrices()
+
+        return None if inplace else cs
 
     def apply_kmedoids_aggregation(self, number_rps: int, rp_length: int = 24,
                                    cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",
