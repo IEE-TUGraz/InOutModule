@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from typing import TYPE_CHECKING, Literal, Dict
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tsam.timeseriesaggregation as tsam
@@ -619,3 +620,99 @@ def apply_kmedoids_aggregation(
         inplace=inplace,
         verbose=verbose
     )
+
+
+def plot_transition_matrix(tm: pd.DataFrame, title: str | None = None, output: str | None = None):
+    """Plot a transition matrix as a Blue-tinted coloured table.
+
+    Cell text shows absolute counts and row-normalised percentages; cell colour
+    intensity encodes the row-normalised probability (darker = more likely).
+    Row and column sums are appended in bold.
+
+    :param tm: Transition matrix DataFrame (index and columns are RP labels).
+               Typically ``cs.rpTransitionMatrixAbsolute``.
+    :param title: Optional subtitle shown below the main heading.
+    :param output: If given, save the figure to this path instead of displaying it.
+    """
+    labels = list(tm.index)
+    n = len(labels)
+    data = tm.values.astype(float)
+
+    row_totals = data.sum(axis=1)  # shape (n,)
+    col_totals = data.sum(axis=0)  # shape (n,)
+    grand_total = data.sum()
+
+    rel = data / np.where(row_totals == 0, 1, row_totals)[:, np.newaxis]
+
+    fig_w = max(4.0, 0.9 * (n + 1) + 1.5)
+    fig_h = max(2.5, 0.7 * (n + 1) + 1.5)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    ax.set_axis_off()
+
+    cmap = plt.cm.Blues
+
+    cell_text = [
+        [f"{int(data[r, c])}\n{rel[r, c]:.0%}" for c in range(n)] + [f"{int(row_totals[r])}"]
+        for r in range(n)
+    ]
+    cell_text.append([f"{int(col_totals[c])}" for c in range(n)] + [f"{int(grand_total)}"])
+
+    cell_colors = [
+        [cmap(rel[r, c]) for c in range(n)] + ["white"]
+        for r in range(n)
+    ]
+    cell_colors.append(["white"] * (n + 1))
+
+    sum_labels = labels + ["Sum"]
+
+    tbl = ax.table(
+        cellText=cell_text,
+        rowLabels=sum_labels,
+        colLabels=sum_labels,
+        cellColours=cell_colors,
+        loc="center",
+        cellLoc="center",
+    )
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(8)
+    tbl.scale(1, 1.6)
+
+    for r in range(n + 2):
+        tbl[r, n].get_text().set_fontweight("bold")
+    for c in range(-1, n + 1):
+        tbl[n + 1, c].get_text().set_fontweight("bold")
+
+    heading = "Transition matrix (count / row %)"
+    if title:
+        heading += f"\n{title}"
+    ax.set_title(heading, fontsize=10, pad=8)
+    fig.tight_layout()
+
+    # Force layout so cell bounding boxes are finalised
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+
+    def _to_axes(xd, yd):
+        return ax.transAxes.inverted().transform((xd, yd))
+
+    bb0 = tbl[n + 1, 0].get_window_extent(renderer)
+    bb_rc = tbl[n + 1, n].get_window_extent(renderer)
+    bb_rl = tbl[n + 1, -1].get_window_extent(renderer)
+    x0_ax, y_ax = _to_axes(bb_rl.x0, bb0.y1)
+    x1_ax, _ = _to_axes(bb_rc.x1, bb0.y1)
+    ax.plot([x0_ax, x1_ax], [y_ax, y_ax], transform=ax.transAxes,
+            color="black", linewidth=2, clip_on=False, zorder=10)
+
+    bb_hdr = tbl[0, n].get_window_extent(renderer)
+    bb_bot = tbl[n + 1, n].get_window_extent(renderer)
+    x_ax, y0_ax = _to_axes(bb_hdr.x0, bb_bot.y0)
+    _, y1_ax = _to_axes(bb_hdr.x0, bb_hdr.y1)
+    ax.plot([x_ax, x_ax], [y0_ax, y1_ax], transform=ax.transAxes,
+            color="black", linewidth=2, clip_on=False, zorder=10)
+
+    if output:
+        fig.savefig(output, dpi=150, bbox_inches="tight")
+        print(f"Saved to {output}")
+    else:
+        plt.show()
+    plt.close(fig)
