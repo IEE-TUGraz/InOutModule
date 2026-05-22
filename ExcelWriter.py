@@ -19,7 +19,7 @@ import TableDefinition
 if TYPE_CHECKING:
     from CaseStudy import CaseStudy
 from TableDefinition import CellStyle, Alignment, Font, Color, Text, Column, NumberFormat, TableDefinition
-from printer import Printer
+from InOutModule.printer import Printer
 
 package_directory_ExcelWriter = os.path.dirname(os.path.abspath(__file__))
 
