@@ -1203,42 +1203,14 @@ class CaseStudy:
 
         return None if inplace else case_study
 
-    def shift_transition_matrix(self, positions: int, inplace: bool = True, seed: int = 42) -> Optional['CaseStudy']:
-        """
-        Adjust the transition matrix by shifting the probabilities by <positions> positions, resampling Hindex from the adjusted
-        target distribution. dPower_WeightsRP and all three transition-matrices are recomputed from the new Hindex.
-
-        :param positions: Number of positions to shift to the right (negative shifts to the left).
-        :param inplace: If True, modifies the current instance. If False, returns a new instance.
-        :param seed: Random seed to guarantee reproduceability.
-        :return: None if inplace is True, otherwise a new CaseStudy instance.
-        """
-        cs = self if inplace else self.copy()
-
-        rps = cs.rpTransitionMatrixAbsolute.index.tolist()
-        n = len(rps)
-
-        target_probs: dict[str, np.ndarray] = {}
-
-        printer.information(f"Adjusting transition matrix, shifting it by {positions} positions")
-        for rp in rps:
-            c = cs.rpTransitionMatrixAbsolute.loc[rp].values.astype(float)
-            total = c.sum()
-            if total == 0:
-                target_probs[rp] = np.ones(n) / n
-            else:
-                c_shifted = np.roll(c, positions)
-                target_probs[rp] = c_shifted / total
-
-        # Rebuild Hindex: sample a new RP sequence per scenario
-        hindex_flat = cs.dPower_Hindex.reset_index()
+    def _resample_hindex_from_target_probs(self, target_probs: dict[str, np.ndarray], rps: list[str], rng: np.random.Generator) -> None:
+        hindex_flat = self.dPower_Hindex.reset_index()
         new_parts = []
-        rng = np.random.default_rng(seed)
 
         for scenario in hindex_flat['scenario'].unique().tolist():
             sc = hindex_flat[hindex_flat['scenario'] == scenario].copy()
             sc = sc.sort_values(['p'])
-            n_ks_per_rp = len(cs.dPower_WeightsK['scenario'] == scenario)
+            n_ks_per_rp = len(self.dPower_WeightsK['scenario'] == scenario)
 
             period_labels = sc['p'].tolist()
             first_rp = sc['rp'].iloc[0]
@@ -1271,7 +1243,82 @@ class CaseStudy:
             new_parts.append(sc)
 
         new_hindex = pd.concat(new_parts, ignore_index=False)
-        cs.dPower_Hindex = new_hindex.set_index(['p', 'rp', 'k'])
+        self.dPower_Hindex = new_hindex.set_index(['p', 'rp', 'k'])
+
+    def shift_transition_matrix(self, positions: int, inplace: bool = True, seed: int = 42) -> Optional['CaseStudy']:
+        """
+        Adjust the transition matrix by shifting the probabilities by <positions> positions, resampling Hindex from the adjusted
+        target distribution. dPower_WeightsRP and all three transition-matrices are recomputed from the new Hindex.
+
+        :param positions: Number of positions to shift to the right (negative shifts to the left).
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param seed: Random seed to guarantee reproduceability.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        cs = self if inplace else self.copy()
+
+        rps = cs.rpTransitionMatrixAbsolute.index.tolist()
+        n = len(rps)
+
+        target_probs: dict[str, np.ndarray] = {}
+
+        printer.information(f"Adjusting transition matrix, shifting it by {positions} positions")
+        for rp in rps:
+            c = cs.rpTransitionMatrixAbsolute.loc[rp].values.astype(float)
+            total = c.sum()
+            if total == 0:
+                target_probs[rp] = np.ones(n) / n
+            else:
+                c_shifted = np.roll(c, positions)
+                target_probs[rp] = c_shifted / total
+
+        rng = np.random.default_rng(seed)
+        cs._resample_hindex_from_target_probs(target_probs, rps, rng)
+
+        # Recompute WeightsRP from new Hindex
+        cs.dPower_WeightsRP = cs.calculatePowerWeightsRP(np.nan, np.nan, np.nan)
+
+        # Recompute actual TM from new Hindex (approximates the target distributions)
+        cs.rpTransitionMatrixAbsolute, cs.rpTransitionMatrixRelativeTo, cs.rpTransitionMatrixRelativeFrom = cs.get_rpTransitionMatrices()
+
+        return None if inplace else cs
+
+    def perturb_transition_matrix(self, randomness: float, inplace: bool = True, seed: int = 42) -> Optional['CaseStudy']:
+        """
+        Adjust the transition matrix by interpolating each row between its original distribution and a random draw:
+        new_prob = (1 - randomness) * orig_prob + randomness * random_draw
+        Resamples Hindex from the adjusted target distribution. dPower_WeightsRP and all three transition-matrices
+        are recomputed from the new Hindex.
+
+        :param randomness: Interpolation factor [0.0, 1.0]. 0.0 leaves the matrix unchanged; 1.0 replaces it fully with random draws.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param seed: Random seed to guarantee reproducibility.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        if not 0.0 <= randomness <= 1.0:
+            raise ValueError(f"randomness must be in [0.0, 1.0], got {randomness}")
+
+        cs = self if inplace else self.copy()
+
+        rps = cs.rpTransitionMatrixAbsolute.index.tolist()
+        n = len(rps)
+
+        target_probs: dict[str, np.ndarray] = {}
+        rng = np.random.default_rng(seed)
+
+        printer.information(f"Adjusting transition matrix, perturbing it with randomness={randomness}")
+        for rp in rps:
+            c = cs.rpTransitionMatrixAbsolute.loc[rp].values.astype(float)
+            total = c.sum()
+            if total == 0:
+                target_probs[rp] = np.ones(n) / n
+            else:
+                orig_prob = c / total
+                raw = rng.random(n)
+                random_draw = raw / raw.sum()
+                target_probs[rp] = (1 - randomness) * orig_prob + randomness * random_draw
+
+        cs._resample_hindex_from_target_probs(target_probs, rps, rng)
 
         # Recompute WeightsRP from new Hindex
         cs.dPower_WeightsRP = cs.calculatePowerWeightsRP(np.nan, np.nan, np.nan)
