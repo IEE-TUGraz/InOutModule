@@ -273,9 +273,12 @@ class CaseStudy:
         duplicate_lines = dPower_Network[line_keys.duplicated(keep=False)]
 
         if not duplicate_lines.empty:
+            duplicate_line_count = duplicate_lines.groupby(["scenario", "_line_key_without_circuit", "c"]).ngroups
             duplicate_line = duplicate_lines.iloc[0]
+            entries_string = "entries" if duplicate_line_count > 1 else "entry"
             raise ValueError(
-                f"Duplicate network line found in (at least) scenario '{duplicate_line['scenario']}' "
+                f"{duplicate_line_count} duplicate network line {entries_string} found, "
+                f"e.g. in scenario '{duplicate_line['scenario']}' "
                 f"for line {duplicate_line['i']} <-> {duplicate_line['j']} "
                 f"with circuit '{duplicate_line['c']}'. "
                 "If the lines should be parallel, assign different 'c' for each parallel line."
@@ -284,6 +287,7 @@ class CaseStudy:
         lines_with_multiple_circuits = dPower_Network[dPower_Network.groupby(["scenario", "_line_key_without_circuit"])["c"].transform("nunique") > 1]
 
         if not lines_with_multiple_circuits.empty:
+            parallel_line_count = lines_with_multiple_circuits.groupby(["scenario", "_line_key_without_circuit"]).ngroups
             parallel_line = lines_with_multiple_circuits.iloc[0]  # for printing the example: use first row that belongs to a parallel line group
             parallel_group = lines_with_multiple_circuits[
                 (lines_with_multiple_circuits["scenario"] == parallel_line["scenario"])  # same scenario
@@ -291,8 +295,10 @@ class CaseStudy:
                 ]
             circuits = parallel_group["c"].head(2).tolist()  # show only first two circuit IDs
 
+            pairs_string = "pairs" if parallel_line_count > 1 else "pair"
             printer.warning(
-                f"Parallel network lines found in (at least) scenario '{parallel_line['scenario']}' "
+                f"{parallel_line_count} {pairs_string} of parallel network lines found, "
+                f"e.g. in scenario '{parallel_line['scenario']}' "
                 f"for line {parallel_line['i']} <-> {parallel_line['j']} "
                 f"with circuits {circuits}."
             )
