@@ -266,41 +266,34 @@ class CaseStudy:
         Lines with same endpoints and different circuits-> warning.
         :return: None
         """
-        dPower_Network = self.dPower_Network.reset_index()
-        line_keys_without_circuit = dPower_Network.apply(lambda row: frozenset((row["i"], row["j"])), axis=1)
-        dPower_Network["_line_key_without_circuit"] = line_keys_without_circuit
-        line_keys = dPower_Network.apply(lambda row: (row["scenario"], line_keys_without_circuit[row.name], row["c"]), axis=1)
-        duplicate_lines = dPower_Network[line_keys.duplicated(keep=False)]
+        df_incl_scenario = self.dPower_Network.reset_index().set_index(['scenario', 'i', 'j', 'c'])
 
-        if not duplicate_lines.empty:
-            duplicate_line_count = duplicate_lines.groupby(["scenario", "_line_key_without_circuit", "c"]).ngroups
-            duplicate_line = duplicate_lines.iloc[0]
-            entries_string = "entries" if duplicate_line_count > 1 else "entry"
+        df_sorted_index = self.dPower_Network.reset_index()
+        df_sorted_index[['i', 'j']] = np.sort(df_sorted_index[['i', 'j']].values, axis=1)
+        df_sorted_index = df_sorted_index.set_index(['scenario', 'i', 'j', 'c'])
+        duplicate_lines = df_sorted_index.index.duplicated(keep=False)
+        if any(duplicate_lines):
+            duplicate_line_count = sum(duplicate_lines)
             raise ValueError(
-                f"{duplicate_line_count} duplicate network line {entries_string} found, "
-                f"e.g. in scenario '{duplicate_line['scenario']}' "
-                f"for line {duplicate_line['i']} <-> {duplicate_line['j']} "
-                f"with circuit '{duplicate_line['c']}'. "
-                "If the lines should be parallel, assign different 'c' for each parallel line."
+                f"{duplicate_line_count} duplicate network line entries found. "
+                f"If the lines should indeed be parallel, assign a different 'c' for each parallel line. "
+                f"Affected entries: \n"
+                f"(scenario, i, j, c)\n"
+                f"{"\n".join(str(i) for i in df_incl_scenario[duplicate_lines].head(10).index)}"
+                + (f"... (and {duplicate_line_count - 10} more {"entries" if duplicate_line_count > 11 else "entry"})" if duplicate_line_count > 10 else "")
             )
 
-        lines_with_multiple_circuits = dPower_Network[dPower_Network.groupby(["scenario", "_line_key_without_circuit"])["c"].transform("nunique") > 1]
+        parallel_line_groups = {key: group['c'] for key, group in df_sorted_index.reset_index().groupby(["scenario", "i", "j"]) if group['c'].nunique() > 1}
+        if len(parallel_line_groups):
+            first_parallel_group_index = list(parallel_line_groups)[0]
+            first_parallel_group_circuits = next(iter(parallel_line_groups.items()))[1]
 
-        if not lines_with_multiple_circuits.empty:
-            parallel_line_count = lines_with_multiple_circuits.groupby(["scenario", "_line_key_without_circuit"]).ngroups
-            parallel_line = lines_with_multiple_circuits.iloc[0]  # for printing the example: use first row that belongs to a parallel line group
-            parallel_group = lines_with_multiple_circuits[
-                (lines_with_multiple_circuits["scenario"] == parallel_line["scenario"])  # same scenario
-                & (lines_with_multiple_circuits["_line_key_without_circuit"] == parallel_line["_line_key_without_circuit"])
-                ]
-            circuits = parallel_group["c"].head(2).tolist()  # show only first two circuit IDs
-
-            pairs_string = "pairs" if parallel_line_count > 1 else "pair"
+            groups_string = "groups" if len(parallel_line_groups) > 1 else "group"
             printer.warning(
-                f"{parallel_line_count} {pairs_string} of parallel network lines found, "
-                f"e.g. in scenario '{parallel_line['scenario']}' "
-                f"for line {parallel_line['i']} <-> {parallel_line['j']} "
-                f"with circuits {circuits}."
+                f"{len(parallel_line_groups)} {groups_string} of parallel network lines found, "
+                f"e.g., in scenario '{first_parallel_group_index[0]}' "
+                f"for '{first_parallel_group_index[1]}' <-> '{first_parallel_group_index[2]}' "
+                f"with circuits '{"', '".join(first_parallel_group_circuits)}'."
             )
 
     def equal_to(self, cs: typing.Self) -> bool:
