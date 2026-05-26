@@ -5,7 +5,10 @@ import subprocess
 import sys
 import time
 
-from printer import Printer
+if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 
