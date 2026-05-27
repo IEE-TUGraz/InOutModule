@@ -4,7 +4,6 @@ import sqlite3
 import pandas as pd
 import pyomo.core.base.set
 import pyomo.environ as pyo
-
 from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
@@ -22,6 +21,9 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
 
     if os.path.dirname(filename) != "":
         os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    if os.path.exists(filename):
+        os.remove(filename)
 
     cnx = sqlite3.connect(filename)
 
