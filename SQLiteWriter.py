@@ -23,6 +23,7 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     if os.path.exists(filename):
+        printer.warning(f"Overwriting existing SQLite database at '{filename}'")
         os.remove(filename)
 
     cnx = sqlite3.connect(filename)
