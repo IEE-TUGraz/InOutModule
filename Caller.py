@@ -1,4 +1,5 @@
 import argparse
+import ctypes
 import datetime
 import os
 import subprocess
@@ -116,7 +117,7 @@ while True:
         log_file = f"{args.jobs}.log{i}"
         try:
             printer.information(f"Executing job {i} from '{args.jobs}': {line.strip()}")
-            os.system(f"title Job {i} from '{args.jobs}': {line.strip()}")
+            ctypes.windll.kernel32.SetConsoleTitleW(f"Job {i} from '{args.jobs}': {line.strip()}")  # type: ignore[attr-defined] - it is Windows-only anyway, so we can ignore the fact that this attribute doesn't exist on other platforms
 
             start_time = time.time()
             with open(log_file, 'w', encoding='utf-8') as log_f:
