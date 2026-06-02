@@ -300,15 +300,14 @@ class NetworkDataExtractor:
                 if idx_name in df.columns:
                     df = df.drop(columns=[idx_name])
 
-            # Reduces length of index to less than 100 characters
-            # This is only implemented because the LEGO database currently cannot handle more than 100 characters in the index!
-            # This can be deleted once the LEGO database is updated to handle longer index values
+            # Reduces length of index to less than 450 characters
+            # This is only implemented because the LEGO database currently cannot handle more than 450 characters in the index!
             if isinstance(df.index, pd.MultiIndex):
                 df.index = pd.MultiIndex.from_frame(
-                    df.index.to_frame().astype(str).apply(lambda x: x.str[:99])
+                    df.index.to_frame().astype(str).apply(lambda x: x.str[:449])
                 )
             else:
-                df.index = df.index.astype(str).str[:99]
+                df.index = df.index.astype(str).str[:449]
 
             df = df.reset_index()
             df = self._add_scenario_columns(df)
