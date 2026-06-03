@@ -19,14 +19,19 @@ printer = Printer.getInstance()
 
 class CaseStudy:
     # Lists of dataframes based on their dependencies - every table should only be present in one of these lists
-    rpk_dependent_dataframes: list[str] = ["dPower_Demand",
+    rpk_dependent_dataframes: list[str] = ["dGas_Demand",
+                                           "dPower_Demand",
                                            "dPower_Hindex",
                                            "dPower_ImportExport",
                                            "dPower_Inflows",
                                            "dPower_VRESProfiles"]
     rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
     k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
-    non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
+    non_time_dependent_dataframes: list[str] = ["dGas_CandDiam",
+                                                "dGas_Network",
+                                                "dGas_NodeInfo",
+                                                "dGas_Source",
+                                                "dPower_BusInfo",
                                                 "dPower_Network",
                                                 "dPower_Storage",
                                                 "dPower_ThermalGen",
@@ -46,6 +51,11 @@ class CaseStudy:
                  do_not_merge_single_node_buses: bool = False,
                  parallel_read: bool = True,
                  n_jobs: int = 4,
+                 gas_demand_file: str = "Gas_Demand.xlsx", dGas_Demand: pd.DataFrame = None,
+                 gas_canddiam_file: str = "Gas_CandDiam.xlsx", dGas_CandDiam: pd.DataFrame = None,
+                 gas_network_file: str = "Gas_Network.xlsx", dGas_Network: pd.DataFrame = None,
+                 gas_nodeinfo_file: str = "Gas_NodeInfo.xlsx", dGas_NodeInfo: pd.DataFrame = None,
+                 gas_source_file: str = "Gas_Source.xlsx", dGas_Source: pd.DataFrame = None,
                  global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
                  power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
@@ -98,6 +108,11 @@ class CaseStudy:
         tasks = []  # List of (attribute_name, function, args_tuple)
 
         # Define file paths
+        self.gas_demand_file = gas_demand_file
+        self.gas_canddiam_file = gas_canddiam_file
+        self.gas_network_file = gas_network_file
+        self.gas_nodeinfo_file = gas_nodeinfo_file
+        self.gas_source_file = gas_source_file
         self.power_businfo_file = power_businfo_file
         self.power_network_file = power_network_file
         self.power_demand_file = power_demand_file
@@ -105,6 +120,31 @@ class CaseStudy:
         self.power_weightsk_file = power_weightsk_file
 
         # Add independent tasks
+        if dGas_CandDiam is None:
+            tasks.append(("dGas_CandDiam", ExcelReader.get_Gas_CandDiam, (self.data_folder + self.gas_canddiam_file,)))
+        else:
+            self.dGas_CandDiam = dGas_CandDiam
+
+        if dGas_Demand is None:
+            tasks.append(("dGas_Demand", ExcelReader.get_Gas_Demand, (self.data_folder + self.gas_demand_file,)))
+        else:
+            self.dGas_Demand = dGas_Demand
+
+        if dGas_Network is None:
+            tasks.append(("dGas_Network", ExcelReader.get_Gas_Network, (self.data_folder + self.gas_network_file,)))
+        else:
+            self.dGas_Network = dGas_Network
+
+        if dGas_NodeInfo is None:
+            tasks.append(("dGas_NodeInfo", ExcelReader.get_Gas_NodeInfo, (self.data_folder + self.gas_nodeinfo_file,)))
+        else:
+            self.dGas_NodeInfo = dGas_NodeInfo
+
+        if dGas_Source is None:
+            tasks.append(("dGas_Source", ExcelReader.get_Gas_Source, (self.data_folder + self.gas_source_file,)))
+        else:
+            self.dGas_Source = dGas_Source
+
         if dPower_BusInfo is None:
             tasks.append(("dPower_BusInfo", ExcelReader.get_Power_BusInfo, (self.data_folder + self.power_businfo_file,)))
         else:
@@ -323,6 +363,10 @@ class CaseStudy:
         return all_equal
 
     def scale_CaseStudy(self):
+        self.scale_dGas_CandDiam()
+        self.scale_dGas_Network()
+        self.scale_dGas_Source()
+
         self.scale_dPower_Parameters()
         self.scale_dPower_Network()
         self.scale_dPower_Demand()
@@ -355,6 +399,16 @@ class CaseStudy:
         self.power_scaling_factor = 1 / self.power_scaling_factor
         self.cost_scaling_factor = 1 / self.cost_scaling_factor
         self.angle_to_rad_scaling_factor = 1 / self.angle_to_rad_scaling_factor
+
+    def scale_dGas_CandDiam(self):
+        self.dGas_CandDiam["pFOMCost"] *= self.cost_scaling_factor
+        self.dGas_CandDiam["pInvestCost"] *= self.cost_scaling_factor
+
+    def scale_dGas_Network(self):
+        self.dGas_Network["pFOMCost"] *= self.cost_scaling_factor
+
+    def scale_dGas_Source(self):
+        self.dGas_Source["GasCost"] *= self.cost_scaling_factor
 
     def scale_dPower_Parameters(self):
         self.dPower_Parameters["pSBase"] *= self.power_scaling_factor

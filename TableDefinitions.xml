@@ -116,8 +116,8 @@
                 <Column id="m" scenarioDependent="False"/>
                 <Column id="pGasType" scenarioDependent="False"/>
                 <Column id="ExisUnits" scenarioDependent="True"/>
-                <Column id="MaxProd" scenarioDependent="True"/>
-                <Column id="MinProd" scenarioDependent="True"/>
+                <Column id="GasMaxProd" scenarioDependent="True"/>
+                <Column id="GasMinProd" scenarioDependent="True"/>
                 <Column id="GasCost" scenarioDependent="True"/>
                 <Column id="YearCom" scenarioDependent="True"/>
                 <Column id="YearDecom" scenarioDependent="True"/>
@@ -595,6 +595,20 @@
             <Unit>[€/t]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="GasMaxProd">
+            <ReadableName>GasMaxProd</ReadableName>
+            <Description>Maximum gas production of gas source</Description>
+            <Unit>[t/h]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="GasMinProd">
+            <ReadableName>GasMinProd</ReadableName>
+            <Description>Minimum gas production of gas source</Description>
+            <Unit>[t/h]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
         </Column>
         <Column id="gs">
             <ReadableName>GasSource</ReadableName>
