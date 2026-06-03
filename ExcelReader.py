@@ -126,6 +126,68 @@ def get_Data_Sources(excel_file_path: str, keep_excluded_entries: bool = False, 
 
     return dData_Sources
 
+def get_Gas_CandDiam(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dGas_CandDiam data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dGas_CandDiam
+    """
+    dGas_CandDiam = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["l"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dGas_CandDiam
+
+def get_Gas_Demand(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dGas_Demand data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dGas_Demand
+    """
+    dGas_Demand = __read_pivoted_file(excel_file_path, "v0.0.1", ['rp', 'k', 'm'], 'k', ['rp', 'm', 'pGasType', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_Gas_Demand', although nothing is excluded anyway - please check if this is intended.")
+
+    return dGas_Demand
+
+def get_Gas_Network(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dGas_Network data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dGas_Network
+    """
+    dGas_Network = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["m", "n", "l"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dGas_Network
+
+def get_Gas_NodeInfo(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dGas_NodeInfo data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dGas_NodeInfo
+    """
+    dGas_NodeInfo = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["m"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dGas_NodeInfo
+
+def get_Gas_Source(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dGas_Source data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Do not exclude any entries which are marked to be excluded in the Excel file
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_thermalGen
+    """
+    dGas_Source = __read_non_pivoted_file(excel_file_path, "v0.0.1", ["gs"], True, keep_excluded_entries, fail_on_wrong_version)
+
+    return dGas_Source
 
 def get_Global_Scenarios(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """

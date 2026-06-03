@@ -289,6 +289,52 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dData_Sources, folder_path, "Data_Sources")
 
+    def write_Gas_CandDiam(self, dGas_CandDiam: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGas_CandDiam DataFrame to an Excel file in LEGO format.
+        :param dGas_CandDiam: DataFrame containing the dGas_CandDiam data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGas_CandDiam, folder_path, "Gas_CandDiam")
+
+    def write_Gas_Demand(self, dGas_Demand: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGas_Demand DataFrame to an Excel file in LEGO format.
+        :param dGas_Demand: DataFrame containing the dGas_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dGas_Demand, folder_path, "Gas_Demand")
+
+    def write_Gas_Network(self, dGas_Network: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGas_Network DataFrame to an Excel file in LEGO format.
+        :param dGas_Network: DataFrame containing the dGas_Network data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGas_Network, folder_path, "Gas_Network")
+
+    def write_Gas_NodeInfo(self, dGas_NodeInfo: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGas_NodeInfo DataFrame to an Excel file in LEGO format.
+        :param dGas_NodeInfo: DataFrame containing the dGas_NodeInfo data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGas_NodeInfo, folder_path, "Gas_NodeInfo")
+
+    def write_Gas_Source(self, dGas_Source: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dGas_Source DataFrame to an Excel file in LEGO format.
+        :param dGas_Source: DataFrame containing the dGas_Source data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+        self._write_Excel_from_definition(dGas_Source, folder_path, "Gas_Source")
+
     def write_Global_Scenarios(self, dGlobal_Scenarios: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dGlobal_Scenarios DataFrame to an Excel file in LEGO format.
@@ -533,6 +579,11 @@ if __name__ == "__main__":
     combinations = [
         ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_Data_Packages, ew.write_Data_Packages),
         ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_Data_Sources, ew.write_Data_Sources),
+        ("Gas_CandDiam", f"{args.caseStudyFolder}Gas_CandDiam_orig.xlsx", ExcelReader.get_Gas_CandDiam, ew.write_Gas_CandDiam),
+        ("Gas_Demand", f"{args.caseStudyFolder}Gas_Demand_orig.xlsx", ExcelReader.get_Gas_Demand, ew.write_Gas_Demand),
+        ("Gas_Network", f"{args.caseStudyFolder}Gas_Network_orig.xlsx", ExcelReader.get_Gas_Network, ew.write_Gas_Network),
+        ("Gas_NodeInfo", f"{args.caseStudyFolder}Gas_NodeInfo_orig.xlsx", ExcelReader.get_Gas_NodeInfo, ew.write_Gas_NodeInfo),
+        ("Gas_Source", f"{args.caseStudyFolder}Gas_Source_orig.xlsx", ExcelReader.get_Gas_Source, ew.write_Gas_Source),
         ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_Global_Scenarios),
         ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
         ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),

@@ -27,6 +27,106 @@
                 <Column id="comments" scenarioDependent="False"/>
             </Columns>
         </TableDefinition>
+        <TableDefinition id="Gas_CandDiam">
+            <Version>v0.0.1</Version>
+            <TableHeader>Gas - Candidate Diameters</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="l" scenarioDependent="False"/>
+                <Column id="InvGroup" scenarioDependent="True"/>
+                <Column id="pDiam" scenarioDependent="False"/>
+                <Column id="pRough" scenarioDependent="False"/>
+                <Column id="pFOMCost" scenarioDependent="True"/>
+                <Column id="pInvestCost" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Gas_Demand">
+            <Version>v0.0.1</Version>
+            <TableHeader>Gas - Demand</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="NOEXCL" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="rp" scenarioDependent="False"/>
+                <Column id="m" scenarioDependent="False"/>
+                <Column id="pGasType" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+                <PivotColumn id="gas_demand_by_k" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Gas_Network">
+            <Version>v0.0.1</Version>
+            <TableHeader>Gas - Network</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="m" scenarioDependent="False" ReadableName="From Node" Description="From which node"/>
+                <Column id="n" scenarioDependent="False"/>
+                <Column id="l" scenarioDependent="False"/>
+                <Column id="pGasType" scenarioDependent="False"/>
+                <Column id="pLength" scenarioDependent="False"/>
+                <Column id="pDiam" scenarioDependent="False"/>
+                <Column id="pRough" scenarioDependent="False"/>
+                <Column id="pCompRatio" scenarioDependent="False"/>
+                <Column id="pEnableInvest" scenarioDependent="True"/>
+                <Column id="InvGroup" scenarioDependent="True"/>
+                <Column id="pFOMCost" scenarioDependent="True"/>
+                <Column id="pTecRepr" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Gas_NodeInfo">
+            <Version>v0.0.1</Version>
+            <TableHeader>Gas - Node information</TableHeader>
+            <DescriptionRowHeight>45.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="True"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="m" scenarioDependent="False"/>
+                <Column id="pGasType" scenarioDependent="False"/>
+                <Column id="z" scenarioDependent="False"/>
+                <Column id="pMaxPress" scenarioDependent="False"/>
+                <Column id="pMinPress" scenarioDependent="False"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="zoi" scenarioDependent="True"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
+        <TableDefinition id="Gas_Source">
+            <Version>v0.0.1</Version>
+            <TableHeader>Gas - Source</TableHeader>
+            <DescriptionRowHeight>30.0</DescriptionRowHeight>
+            <Columns>
+                <Column id="excl" scenarioDependent="False"/>
+                <Column id="id" scenarioDependent="True"/>
+                <Column id="gs" scenarioDependent="False"/>
+                <Column id="m" scenarioDependent="False"/>
+                <Column id="pGasType" scenarioDependent="False"/>
+                <Column id="ExisUnits" scenarioDependent="True"/>
+                <Column id="MaxProd" scenarioDependent="True"/>
+                <Column id="MinProd" scenarioDependent="True"/>
+                <Column id="GasCost" scenarioDependent="True"/>
+                <Column id="YearCom" scenarioDependent="True"/>
+                <Column id="YearDecom" scenarioDependent="True"/>
+                <Column id="lat" scenarioDependent="False"/>
+                <Column id="lon" scenarioDependent="False"/>
+                <Column id="dataPackage" scenarioDependent="True"/>
+                <Column id="dataSource" scenarioDependent="True"/>
+            </Columns>
+        </TableDefinition>
         <TableDefinition id="Global_Scenarios">
             <Version>v0.1.0</Version>
             <TableHeader>Global - Scenarios and Probabilities</TableHeader>
@@ -489,6 +589,20 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>general</CellStyle>
         </Column>
+        <Column id="GasCost">
+            <ReadableName>GasCost</ReadableName>
+            <Description>Gas cost of the gas source</Description>
+            <Unit>[€/t]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="gs">
+            <ReadableName>GasSource</ReadableName>
+            <Description>Gas source name</Description>
+            <Unit>[gs]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="HubHeight">
             <ReadableName>Hub Height</ReadableName>
             <Description>Heigth of the turbine</Description>
@@ -545,6 +659,13 @@
             <ColumnWidth>20.0</ColumnWidth>
             <CellStyle>rightFloat2</CellStyle>
         </Column>
+        <Column id="InvGroup">
+            <ReadableName>Investment Group</ReadableName>
+            <Description>Investment Group</Description>
+            <Unit>[InvGroup]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="IsLDES">
             <ReadableName>IsLDES</ReadableName>
             <Description>Whether the storage unit is a long-duration energy storage (1) or not (0)</Description>
@@ -593,6 +714,13 @@
             <Unit>[°]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="m">
+            <ReadableName>Node</ReadableName>
+            <Description>Name of node</Description>
+            <Unit>[m]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
         <Column id="MaxCons">
             <ReadableName>MaxCons</ReadableName>
@@ -643,12 +771,26 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </Column>
+        <Column id="n">
+            <ReadableName>To Node</ReadableName>
+            <Description>To which node</Description>
+            <Unit>[n]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
         <Column id="NOEXCL">
             <ReadableName/>
             <Description/>
             <Unit/>
             <ColumnWidth>4.86</ColumnWidth>
             <CellStyle/>
+        </Column>
+        <Column id="l">
+            <ReadableName>Loop / Name</ReadableName>
+            <Description>Name of pipeline (or loop)</Description>
+            <Unit>[l]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
         </Column>
         <Column id="OMVarCost">
             <ReadableName>OMVarCost</ReadableName>
@@ -720,6 +862,20 @@
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
+        <Column id="pCompRatio">
+            <ReadableName>Compression Ratio</ReadableName>
+            <Description>Compression ratio of compressor</Description>
+            <Unit>[p.u.]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
+        <Column id="pDiam">
+            <ReadableName>Diameter</ReadableName>
+            <Description>Diameter of pipeline</Description>
+            <Unit>[m]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat2</CellStyle>
+        </Column>
         <Column id="pEnableInvest">
             <ReadableName>Enable Investment</ReadableName>
             <Description>Whether object exists (0) or can be invested in (1)</Description>
@@ -738,6 +894,34 @@
             <ReadableName>Fixed OM Cost</ReadableName>
             <Description>Per anno fixed O&amp;M cost</Description>
             <Unit>[M€]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pGasType">
+            <ReadableName>Gas Type</ReadableName>
+            <Description>Gas type of pipeline</Description>
+            <Unit>[GasType]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>general</CellStyle>
+        </Column>
+        <Column id="pLength">
+            <ReadableName>Length</ReadableName>
+            <Description>Length of pipeline</Description>
+            <Unit>[km]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat3</CellStyle>
+        </Column>
+        <Column id="pMaxPress">
+            <ReadableName>Maximum Pressure</ReadableName>
+            <Description>Maximum pressure (in bar)</Description>
+            <Unit>[bar]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat1</CellStyle>
+        </Column>
+        <Column id="pMinPress">
+            <ReadableName>Minimum Pressure</ReadableName>
+            <Description>Minimum pressure (in bar)</Description>
+            <Unit>[bar]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat1</CellStyle>
         </Column>
@@ -775,6 +959,13 @@
             <Unit>[p.u.]</Unit>
             <ColumnWidth>15.0</ColumnWidth>
             <CellStyle>rightFloat4</CellStyle>
+        </Column>
+        <Column id="pRough">
+            <ReadableName>Roughness</ReadableName>
+            <Description>Roughness of pipeline</Description>
+            <Unit>[m]</Unit>
+            <ColumnWidth>15.0</ColumnWidth>
+            <CellStyle>rightFloat5</CellStyle>
         </Column>
         <Column id="pTecRepr">
             <ReadableName>Technical Representation</ReadableName>
@@ -1007,6 +1198,14 @@
             <ColumnWidth>10.57</ColumnWidth>
             <CellStyle>rightInt</CellStyle>
         </PivotColumn>
+        <PivotColumn id="gas_demand_by_k">
+            <ReadableName/>
+            <DatabaseName>k</DatabaseName>
+            <Description>Gas demand at this representative time step k</Description>
+            <Unit>[t/h]</Unit>
+            <ColumnWidth>10.57</ColumnWidth>
+            <CellStyle>rightInt</CellStyle>
+        </PivotColumn>
         <PivotColumn id="inflow_by_g">
             <ReadableName/>
             <DatabaseName>g</DatabaseName>
@@ -1134,6 +1333,12 @@
             <Alignment>right</Alignment>
             <Color/>
         </CellStyle>
+        <CellStyle id="rightFloat5">
+            <Font>standard</Font>
+            <NumberFormat>float5</NumberFormat>
+            <Alignment>right</Alignment>
+            <Color/>
+        </CellStyle>
     </CellStyles>
 
     <Texts>
@@ -1204,6 +1409,7 @@
         <NumberFormat id="float2">0.00</NumberFormat>
         <NumberFormat id="float3">0.000</NumberFormat>
         <NumberFormat id="float4">0.0000</NumberFormat>
+        <NumberFormat id="float5">0.00000</NumberFormat>
     </NumberFormats>
 
     <Alignments>
