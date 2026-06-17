@@ -40,6 +40,7 @@ See `README.md` for usage, key concepts, and data structure.
 
 - `inflowsToCapacityFactors()` joins inflows onto `vresProfiles_df` by dividing by `MaxProd`; generators with missing or zero `MaxProd` are dropped with a warning.
 - `capacityFactorsToInflows()` is the inverse; the `remove_Inflows_from_VRESProfiles_inplace` flag modifies the input DataFrame in place when set.
+- `plot_transition_matrix()` passes `bbox=[0, 0, 1, 1]` to `ax.table()` so the table is forced to fill the entire Axes — without it, matplotlib sizes table rows from font metrics rather than the Axes height, leaving large dead space above/below when the figure is taller than the table's natural size. `fig_w`/`fig_h` are tuned per-cell-inch (not just a generic min-size heuristic) since they now directly determine the rendered cell aspect ratio.
 
 ### Printer
 

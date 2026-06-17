@@ -644,8 +644,9 @@ def plot_transition_matrix(tm: pd.DataFrame, title: str | None = None, output: s
 
     rel = data / np.where(row_totals == 0, 1, row_totals)[:, np.newaxis]
 
-    fig_w = max(4.0, 0.9 * (n + 1) + 1.5)
-    fig_h = max(2.5, 0.7 * (n + 1) + 1.5)
+    title_h = 0.55 if title else 0.35
+    fig_w = max(4.0, 0.95 * (n + 1) + 0.3)
+    fig_h = 0.4 * (n + 2) + title_h
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     ax.set_axis_off()
 
@@ -672,10 +673,10 @@ def plot_transition_matrix(tm: pd.DataFrame, title: str | None = None, output: s
         cellColours=cell_colors,
         loc="center",
         cellLoc="center",
+        bbox=[0, 0, 1, 1],
     )
     tbl.auto_set_font_size(False)
     tbl.set_fontsize(8)
-    tbl.scale(1, 1.6)
 
     for r in range(n + 2):
         tbl[r, n].get_text().set_fontweight("bold")
@@ -686,7 +687,7 @@ def plot_transition_matrix(tm: pd.DataFrame, title: str | None = None, output: s
     if title:
         heading += f"\n{title}"
     ax.set_title(heading, fontsize=10, pad=8)
-    fig.tight_layout()
+    fig.tight_layout(pad=0.3)
 
     # Force layout so cell bounding boxes are finalised
     fig.canvas.draw()
