@@ -298,6 +298,46 @@ class ExcelWriter:
         """
         self._write_Excel_from_definition(dGlobal_Scenarios, folder_path, "Global_Scenarios")
 
+    def write_Heat_Demand(self, dHeat_Demand: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dHeat_Demand DataFrame to an Excel file in LEGO format.
+        :param dHeat_Demand: DataFrame containing the dHeat_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dHeat_Demand, folder_path, "Heat_Demand")
+
+    def write_Heat_Nodes(self, dHeat_Nodes: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dHeat_Nodes DataFrame to an Excel file in LEGO format.
+        :param dHeat_Nodes: DataFrame containing the dHeat_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dHeat_Nodes, folder_path, "Heat_Nodes")
+
+    def write_Heat_P2H_Technologies(self, dHeat_P2H_Technologies: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dHeat_P2H_Technologies DataFrame to an Excel file in LEGO format.
+        :param dHeat_P2H_Technologies: DataFrame containing the dHeat_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dHeat_P2H_Technologies, folder_path, "Heat_P2H_Technologies")
+
+    def write_Heat_P2H_Conversion_Factors(self, dHeat_P2H_Conversion_Factors: pd.DataFrame, folder_path: str) -> None:
+        """
+        Write the dHeat_P2H_Conversion_Factors DataFrame to an Excel file in LEGO format.
+        :param dHeat_P2H_Conversion_Factors: DataFrame containing the dHeat_Demand data.
+        :param folder_path: Path to the folder where the Excel file will be saved.
+        :return: None
+        """
+
+        self._write_Excel_from_definition(dHeat_P2H_Conversion_Factors, folder_path, "Heat_P2H_Conversion_Factors")
+
     def write_Power_BusInfo(self, dPower_BusInfo: pd.DataFrame, folder_path: str) -> None:
         """
         Write the dPower_BusInfo DataFrame to an Excel file in LEGO format.
@@ -534,6 +574,10 @@ if __name__ == "__main__":
         ("Data_Packages", f"{args.caseStudyFolder}Data_Packages.xlsx", ExcelReader.get_Data_Packages, ew.write_Data_Packages),
         ("Data_Sources", f"{args.caseStudyFolder}Data_Sources.xlsx", ExcelReader.get_Data_Sources, ew.write_Data_Sources),
         ("Global_Scenarios", f"{args.caseStudyFolder}Global_Scenarios.xlsx", ExcelReader.get_Global_Scenarios, ew.write_Global_Scenarios),
+        ("Heat_Demand", f"{args.caseStudyFolder}Heat_Demand.xlsx", ExcelReader.get_Heat_Demand, ew.write_Heat_Demand),
+        ("Heat_Nodes", f"{args.caseStudyFolder}Heat_Nodes.xlsx", ExcelReader.get_Heat_Nodes, ew.write_Heat_Nodes),
+        ("Heat_P2H_Technologies", f"{args.caseStudyFolder}Heat_P2H_Technologies.xlsx", ExcelReader.get_Heat_P2H_Technologies, ew.write_Heat_P2H_Technologies),
+        ("Heat_P2H_Conversion_Factors", f"{args.caseStudyFolder}Heat_P2H_Conversion_Factors.xlsx", ExcelReader.get_Heat_P2H_Conversion_Factors, ew.write_Heat_P2H_Conversion_Factors),
         ("Power_BusInfo", f"{args.caseStudyFolder}Power_BusInfo.xlsx", ExcelReader.get_Power_BusInfo, ew.write_Power_BusInfo),
         ("Power_Demand", f"{args.caseStudyFolder}Power_Demand.xlsx", ExcelReader.get_Power_Demand, ew.write_Power_Demand),
         ("Power_Demand_KInRows", f"{args.caseStudyFolder}Power_Demand_KInRows.xlsx", ExcelReader.get_Power_Demand_KInRows, ew.write_Power_Demand_KInRows),
