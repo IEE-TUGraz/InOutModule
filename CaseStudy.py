@@ -24,7 +24,8 @@ class CaseStudy:
                                            "dPower_ImportExport",
                                            "dPower_Inflows",
                                            "dPower_VRESProfiles",
-                                           "dPowerQ_Demand"]
+                                           "dPowerQ_Demand",
+                                           "dPower_DGA"]
     rp_only_dependent_dataframes: list[str] = ["dPower_WeightsRP"]
     k_only_dependent_dataframes: list[str] = ["dPower_WeightsK"]
     non_time_dependent_dataframes: list[str] = ["dPower_BusInfo",
@@ -63,6 +64,7 @@ class CaseStudy:
                  power_weightsk_file: str = "Power_WeightsK.xlsx", dPower_WeightsK: pd.DataFrame = None,
                  power_hindex_file: str = "Power_Hindex.xlsx", dPower_Hindex: pd.DataFrame = None,
                  power_importexport_file: str = "Power_ImportExport.xlsx", dPower_ImportExport: pd.DataFrame = None,
+                 power_DGA_file: str = "Power_DGA_KinRows.xlsx", dPower_DGA: pd.DataFrame = None,
                  clip_method: str = "none", clip_value: float = 0):
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
@@ -181,6 +183,13 @@ class CaseStudy:
                 self.dPower_ImportExport = dPower_ImportExport
         else:
             self.dPower_ImportExport = None
+
+        if self.dPower_Parameters["pEnableDGA"]:
+            self.power_DGA_file = power_DGA_file
+            if dPower_DGA is None:
+                tasks.append(("dPower_DGA", ExcelReader.get_Power_DGA, (self.data_folder + self.power_DGA_file,)))
+            else:
+                self.dPower_DGA = dPower_DGA
 
         # --- Execute Tasks (Parallel or Sequential) ---
         if parallel_read and len(tasks) > 0:
@@ -479,7 +488,7 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
 
-        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableSoftVoltageLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pForcePrimitiveStorageUsage', 'pEnableSOCP'])
+        self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableSoftVoltageLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pForcePrimitiveStorageUsage', 'pEnableSOCP', 'pEnableDSM', 'pEnableDGA'])
 
         # Transform to make it easier to access values
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[1:], axis=1)  # Drop all columns but "Value" (rest is just for information in the Excel)

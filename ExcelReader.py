@@ -220,6 +220,20 @@ def get_Power_Hindex(excel_file_path: str, keep_excluded_entries: bool = False, 
 
     return dPower_Hindex
 
+def get_Power_DGA(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
+    """
+    Read the dPower_Hindex data from the Excel file.
+    :param excel_file_path: Path to the Excel file
+    :param keep_excluded_entries: Unused but kept for compatibility with other functions
+    :param fail_on_wrong_version: If True, raise an error if the version of the Excel file does not match the expected version
+    :return: dPower_Hindex
+    """
+    dPower_DGA = __read_pivoted_file(excel_file_path, "v0.1.1", ['rp', 'k', 'g'], 'g', ['rp', 'k', 'dataPackage', 'dataSource', 'id'], False, False, fail_on_wrong_version)
+    if keep_excluded_entries:
+        printer.warning("'keep_excluded_entries' is set for 'get_Power_DGA', although nothing is excluded anyway - please check if this is intended.")
+
+    return dPower_DGA
+
 
 def get_Power_ImportExport(excel_file_path: str, keep_excluded_entries: bool = False, fail_on_wrong_version: bool = False) -> pd.DataFrame:
     """
