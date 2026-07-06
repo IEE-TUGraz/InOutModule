@@ -467,9 +467,9 @@ def translate_pypsa_to_lego(
     Main execution block for converting a PyPSA network to LEGO-formatted Excel files.
 
     To use this:
-    1. Update the 'directory' and 'input_file' variables to point to your .nc PyPSA network.
+    1. Point 'input_directory' and 'input_file' to your .nc PyPSA network.
     2. Set 'output_directory' and 'output_folder_name' for the resulting Excel files.
-    3. Run the script: `python PypsaReader.py`
+    3. Run the script with command-line arguments. See: `python PypsaReader.py --help`
     """
     # Define the path to the PyPSA network (similar than implemented in PyPSA-LEGO-Translator_testing.py)
     filepath = os.path.join(input_directory, input_file)
@@ -513,9 +513,38 @@ def translate_pypsa_to_lego(
 
 
 if __name__ == "__main__":
+    import argparse
+    from rich_argparse import RichHelpFormatter
+
+    parser = argparse.ArgumentParser(
+        description="Convert a PyPSA network file to LEGO formatted Excel files.",
+        formatter_class=RichHelpFormatter,
+    )
+    parser.add_argument(
+        "inputDirectory",
+        type=str,
+        help="Path to the folder containing the PyPSA .nc network file.",
+    )
+    parser.add_argument(
+        "inputFile",
+        type=str,
+        help="Name of the PyPSA .nc network file.",
+    )
+    parser.add_argument(
+        "outputDirectory",
+        type=str,
+        help="Path to the folder where the LEGO output folder should be created.",
+    )
+    parser.add_argument(
+        "outputFolderName",
+        type=str,
+        help="Name of the output folder for the generated LEGO Excel files.",
+    )
+    args = parser.parse_args()
+
     translate_pypsa_to_lego(
-        input_directory=r"C:\BeSt\VA-GA\PyPSA-Eur-all_v2026.02.0\networks",
-        input_file="base_s_all_elec_.nc",
-        output_directory=r"C:\BeSt\PyPSA-LEGO-Translator",
-        output_folder_name="LEGO_PyPSA-Eur_2050",
+        input_directory=args.inputDirectory,
+        input_file=args.inputFile,
+        output_directory=args.outputDirectory,
+        output_folder_name=args.outputFolderName,
     )
