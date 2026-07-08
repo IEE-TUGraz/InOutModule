@@ -8,4 +8,8 @@ version = "0.0.0-dev"
 readme = "README.md"
 
 [tool.setuptools]
-py-modules = ['CaseStudy', 'ExcelReader', 'ExcelWriter', 'printer', 'PypsaReader', 'pypsa_helper', 'SQLiteWriter', 'TableDefinition']
+py-modules = ['CaseStudy', 'ExcelReader', 'ExcelWriter', 'printer', 'SQLiteWriter', 'TableDefinition']
+packages = ['PyPSA']
+
+[tool.setuptools.package-data]
+PyPSA = ['pypsa_lego_mapping_config.yaml', 'README.md']

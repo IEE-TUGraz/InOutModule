@@ -1,5 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+from printer import Printer
+
+printer = Printer.getInstance()
 
 
 def prepare_ac_lines(net, config: dict):
@@ -31,7 +35,7 @@ def prepare_ac_lines(net, config: dict):
 
     # Calculate Z_base = V_nom^2 / S_base [Ohm]
     # Since V_nom is in kV and S_base is in MW, (kV^2 / MW) results in Ohms.
-    z_base = (v_nom**2) / s_base
+    z_base = (v_nom ** 2) / s_base
 
     # Convert electrical parameters to per-unit values
     lines["r"] = lines["r"] / z_base
@@ -140,7 +144,7 @@ def prepare_transformers(net, config: dict) -> pd.DataFrame:
     v_nom = transformers.bus0.map(net.buses.v_nom)
 
     # Calculate Z_base = V_nom^2 / S_base [Ohm]
-    z_base = (v_nom**2) / s_base
+    z_base = (v_nom ** 2) / s_base
 
     # Convert electrical parameters to per-unit values
     # Transformers r, x, b in PyPSA are usually p.u. on transformer base (s_nom)
@@ -225,15 +229,15 @@ def prepare_inflow_profiles(net, config: dict):
     missing_inflows = list(set_hydro_ids - set_inflow_columns)
 
     if len(existing_inflows) == 0:
-        print(
-            "Warning: No hydro storage units have inflow data. Storage inflow profiles will be empty."
+        printer.warning(
+            "No hydro storage units have inflow data. Storage inflow profiles will be empty."
         )
         inflow_storage = net.storage_units_t.inflow.copy()
     else:
         inflow_storage = net.storage_units_t.inflow[existing_inflows].copy()
         if len(missing_inflows) > 0:
-            print(
-                f"Warning: The following hydro storage units are missing inflow data and therefore inflows will not be defined: {missing_inflows}"
+            printer.warning(
+                f"The following hydro storage units are missing inflow data and therefore inflows will not be defined: {missing_inflows}"
             )
 
     # Get RoR generator inflows
@@ -246,8 +250,8 @@ def prepare_inflow_profiles(net, config: dict):
     missing_ror_inflows = list(set_ror_ids - set_ror_inflow_columns)
 
     if len(existing_ror_inflows) == 0:
-        print(
-            "Warning: No RoR generators have inflow data. RoR inflow profiles will be empty."
+        printer.warning(
+            "No RoR generators have inflow data. RoR inflow profiles will be empty."
         )
         inflow_ror = pd.DataFrame()
     else:
@@ -255,8 +259,8 @@ def prepare_inflow_profiles(net, config: dict):
         inflow_ror = net.generators_t.p_max_pu[existing_ror_inflows].copy()
         inflow_ror = inflow_ror.mul(ror["p_nom"], axis=1)
         if len(missing_ror_inflows) > 0:
-            print(
-                f"Warning: The following RoR generators are missing inflow data and will not be defined: {missing_ror_inflows}"
+            printer.warning(
+                f"The following RoR generators are missing inflow data and will not be defined: {missing_ror_inflows}"
             )
 
     # Concatenate both: hydro + RoR inflows → [time, generator]

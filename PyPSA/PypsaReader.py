@@ -1,13 +1,21 @@
 import inspect
 import os
+import sys
 
 import numpy as np
 import pandas as pd
 import pypsa
 import yaml
 
+PYPSA_DIR: str = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR: str = os.path.dirname(PYPSA_DIR)
+sys.path.insert(0, PARENT_DIR)
+
 import pypsa_helper as h
 from ExcelWriter import ExcelWriter
+from printer import Printer
+
+printer = Printer.getInstance()
 
 
 class Conversions:
@@ -99,9 +107,9 @@ class Conversions:
         meta_config = metadata.get("Metadata", {})
         for key, fuel_info in meta_config.items():
             if (
-                isinstance(fuel_info, dict)
-                and "filter" in fuel_info
-                and "cost" in fuel_info
+                    isinstance(fuel_info, dict)
+                    and "filter" in fuel_info
+                    and "cost" in fuel_info
             ):
                 for carrier in fuel_info["filter"]:
                     fuel_mapping[carrier] = fuel_info["cost"]
@@ -113,15 +121,15 @@ class Conversions:
         if not fuel_costs.empty:
             missing_carriers = df.loc[fuel_costs.isnull(), "carrier"].unique()
             if len(missing_carriers) > 0:
-                print(
-                    f"Warning: No fuel cost defined in Metadata for carrier(s): {missing_carriers.tolist()}"
+                printer.warning(
+                    f"No fuel cost defined in Metadata for carrier(s): {missing_carriers.tolist()}"
                 )
 
         return fuel_costs
 
     @staticmethod
     def get_fuel_cost_from_metadata(
-        val: pd.Series, df: pd.DataFrame, metadata: dict
+            val: pd.Series, df: pd.DataFrame, metadata: dict
     ) -> pd.Series:
         """Retrieves fuel costs based on the carrier and Metadata configuration."""
         return Conversions._get_fuel_costs(df, metadata)
@@ -133,9 +141,9 @@ class Conversions:
         meta_config = metadata.get("Metadata", {})
         for key, info in meta_config.items():
             if (
-                isinstance(info, dict)
-                and "filter" in info
-                and "default_storage_capacity_cost" in info
+                    isinstance(info, dict)
+                    and "filter" in info
+                    and "default_storage_capacity_cost" in info
             ):
                 for carrier in info["filter"]:
                     cost_mapping[carrier] = info["default_storage_capacity_cost"]
@@ -147,14 +155,14 @@ class Conversions:
 
     @staticmethod
     def get_storage_capacity_cost_from_metadata(
-        val: pd.Series, df: pd.DataFrame, metadata: dict
+            val: pd.Series, df: pd.DataFrame, metadata: dict
     ) -> pd.Series:
         """Retrieves storage capacity costs based on the carrier and Metadata configuration."""
         return Conversions._get_storage_capacity_costs(df, metadata)
 
     @staticmethod
     def EUR_per_hour_to_MWh_per_hour(
-        val: pd.Series, df: pd.DataFrame, metadata: dict
+            val: pd.Series, df: pd.DataFrame, metadata: dict
     ) -> pd.Series:
         """Converts costs per hour of thermal generation (e.g. stand_by_cost) to costs per MWh based on the fuel cost specified in the metadata."""
         fuel_costs = Conversions._get_fuel_costs(df, metadata)
@@ -180,21 +188,21 @@ class Conversions:
 
     @staticmethod
     def pu_to_absolute_and_p_nom_if_nan_or_zero(
-        val: pd.Series, df: pd.DataFrame
+            val: pd.Series, df: pd.DataFrame
     ) -> pd.Series:
         val = val * df.p_nom
         return val.where((val.notnull() & (val != 0)), df.p_nom)
 
     @staticmethod
     def one_if_nan_or_zero(
-        val: pd.Series,
+            val: pd.Series,
     ) -> pd.Series:
         """Replaces NaN or zero values with 1, keeping other values unchanged."""
         return val.where((val.notnull() & (val != 0)), 1)
 
     @staticmethod
     def bool_to_binary_zero_if_p_nom_is_zero(
-        val: pd.Series, df: pd.DataFrame
+            val: pd.Series, df: pd.DataFrame
     ) -> pd.Series:
         """Converts boolean values to binary (0/1) integers and sets to 0, if p_nom is zero."""
         if val.isnull().all():
@@ -208,10 +216,10 @@ class Conversions:
 
 class NetworkDataExtractor:
     def __init__(
-        self,
-        network: pypsa.Network,
-        config_path: str = None,
-        table_definitions_path: str = None,
+            self,
+            network: pypsa.Network,
+            config_path: str = None,
+            table_definitions_path: str = None,
     ):
         """
         Initializes the extractor with a PyPSA network and configuration files.
@@ -224,11 +232,11 @@ class NetworkDataExtractor:
         self._conv_params_cache = {}  # Performance: Cache function signatures
 
         if config_path is None:
-            config_path = os.path.join(os.path.dirname(__file__), "pypsa_lego_mapping_config.yaml")
+            config_path = os.path.join(PYPSA_DIR, "pypsa_lego_mapping_config.yaml")
 
         if table_definitions_path is None:
             table_definitions_path = os.path.join(
-                os.path.dirname(__file__), "TableDefinitions.xml"
+                PARENT_DIR, "TableDefinitions.xml"
             )
 
         with open(config_path, "r") as f:
@@ -250,7 +258,7 @@ class NetworkDataExtractor:
             table_id = name[1:] if name.startswith("d") else name
 
             if table_id not in self.excel_definitions:
-                print(f"  Skipping {name} (not defined in TableDefinitions.xml)")
+                printer.warning(f"Skipping {name} (not defined in TableDefinitions.xml)")
                 continue
 
             # Add mandatory 'scenario' column for LEGO format if missing
@@ -402,8 +410,8 @@ class NetworkDataExtractor:
                                 f"Error applying conversion '{conv_name}' to column '{lego_col}': {e}"
                             )
                     else:
-                        print(
-                            f"Warning: Conversion function '{conv_name}' not found in Conversions class."
+                        printer.warning(
+                            f"Conversion function '{conv_name}' not found in Conversions class."
                         )
 
                 # Priority 3: Simple multiplier factor
@@ -458,10 +466,10 @@ class NetworkDataExtractor:
 
 
 def translate_pypsa_to_lego(
-    input_directory: str = r"./input_data",
-    input_file: str = r"pypsa-model.nc",
-    output_directory: str = r"./output_data",
-    output_folder_name: str = "LEGO-Model",
+        input_directory: str = r"./input_data",
+        input_file: str = r"pypsa-model.nc",
+        output_directory: str = r"./output_data",
+        output_folder_name: str = "LEGO-Model",
 ):
     """
     Main execution block for converting a PyPSA network to LEGO-formatted Excel files.
@@ -475,18 +483,18 @@ def translate_pypsa_to_lego(
     filepath = os.path.join(input_directory, input_file)
 
     if not os.path.exists(filepath):
-        print(f"Error: File not found at {filepath}")
+        printer.error(f"File not found at {filepath}")
     else:
         # Load the network
-        print(f"Loading PyPSA network from {filepath}...")
+        printer.information(f"Loading PyPSA network from {filepath}...")
         try:
             net = pypsa.Network(filepath)
         except Exception as e:
-            print(f"Could not load network: {e}")
+            printer.error(f"Could not load network: {e}")
             exit(1)
 
         # Extract data using NetworkDataExtractor
-        print("Extracting data into LEGO format...")
+        printer.information("Extracting data into LEGO format...")
         extractor = NetworkDataExtractor(net)
         dfs = extractor.get_dataframes()
 
@@ -499,17 +507,17 @@ def translate_pypsa_to_lego(
             os.makedirs(output_dir, exist_ok=True)
 
         # Writing Excel files (filtering/checking functionality is now inside NetworkDataExtractor)
-        print("Writing Excel files...")
+        printer.information("Writing Excel files...")
         for name, df in dfs.items():
             table_id = name[1:] if name.startswith("d") else name
 
-            print(f"  Writing {name} to {output_dir}...")
+            printer.information(f"Writing {name} to {output_dir}...")
             try:
                 writer._write_Excel_from_definition(df, output_dir, table_id)
             except Exception as e:
-                print(f"  Error writing {name}: {e}")
+                printer.error(f"Error writing {name}: {e}")
 
-        print("\nConversion complete. Output files are in:", output_dir)
+        printer.information(f"Conversion complete. Output files are in: {output_dir}")
 
 
 if __name__ == "__main__":

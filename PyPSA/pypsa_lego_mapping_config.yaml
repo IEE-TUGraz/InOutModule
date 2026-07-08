@@ -8,7 +8,7 @@ Metadata:
   # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
   # [technology]:
   #   filter: list of strings to filter the carrier name in the PyPSA network
-  #   cost: fuel cost in EUR/MWh (only for thermal generators, not needed
+  #   cost: fuel cost in EUR/MWh (only needed for thermal generators)
   naturalGas:
     filter: [ 'Gas', 'gas' ]
     cost: 100 # EUR/MWh
@@ -62,7 +62,7 @@ Metadata:
   ThermalGen:
     technologies: [ 'naturalGas', 'openCycleGasTurbine', 'closedCycleGasTurbine', 'coal', 'hardCoal', 'brownCoal_lignite', 'oil', 'nuclear', 'biomass', 'geothermal', 'waste' ]
   VRES:
-    technologies: [ 'solar', 'onshoreWind', 'offshoreWind', 'ror']
+    technologies: [ 'solar', 'onshoreWind', 'offshoreWind', 'ror' ]
   Storage:
     technologies: [ 'phs', 'hydro' ]
   VRESProfiles:
