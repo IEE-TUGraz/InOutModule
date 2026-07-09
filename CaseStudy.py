@@ -12,7 +12,7 @@ import tsam.timeseriesaggregation as tsam
 
 import ExcelReader
 from InOutModule import Utilities
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 
@@ -196,6 +196,8 @@ class CaseStudy:
                     printer.error(f"Error reading for '{attr_name}': {exc}")
                     raise exc
 
+        self.check_duplicate_lines_dPower_Network()
+
         # === SEQUENTIAL DEPENDENTS ===
         if dPower_WeightsRP is not None:
             self.dPower_WeightsRP = dPower_WeightsRP
@@ -255,6 +257,44 @@ class CaseStudy:
     def copy(self):
         new_self = copy.deepcopy(self)
         return new_self
+
+    def check_duplicate_lines_dPower_Network(self):
+        """
+        Check dPower_Network for duplicate and parallel lines.
+        i -> j and j -> i are considered as the same line.
+        Lines with same endpoints and circuit -> error.
+        Lines with same endpoints and different circuits-> warning.
+        :return: None
+        """
+        df_incl_scenario = self.dPower_Network.reset_index().set_index(['scenario', 'i', 'j', 'c'])
+
+        df_sorted_index = self.dPower_Network.reset_index()
+        df_sorted_index[['i', 'j']] = np.sort(df_sorted_index[['i', 'j']].values, axis=1)
+        df_sorted_index = df_sorted_index.set_index(['scenario', 'i', 'j', 'c'])
+        duplicate_lines = df_sorted_index.index.duplicated(keep=False)
+        if any(duplicate_lines):
+            duplicate_line_count = sum(duplicate_lines)
+            raise ValueError(
+                f"{duplicate_line_count} duplicate network line entries found. "
+                f"If the lines should indeed be parallel, assign a different 'c' for each parallel line. "
+                f"Affected entries: \n"
+                f"(scenario, i, j, c)\n"
+                f"{"\n".join(str(i) for i in df_incl_scenario[duplicate_lines].head(10).index)}"
+                + (f"... (and {duplicate_line_count - 10} more {"entries" if duplicate_line_count > 11 else "entry"})" if duplicate_line_count > 10 else "")
+            )
+
+        parallel_line_groups = {key: group['c'] for key, group in df_sorted_index.reset_index().groupby(["scenario", "i", "j"]) if group['c'].nunique() > 1}
+        if len(parallel_line_groups):
+            first_parallel_group_index = list(parallel_line_groups)[0]
+            first_parallel_group_circuits = next(iter(parallel_line_groups.items()))[1]
+
+            groups_string = "groups" if len(parallel_line_groups) > 1 else "group"
+            printer.warning(
+                f"{len(parallel_line_groups)} {groups_string} of parallel network lines found, "
+                f"e.g., in scenario '{first_parallel_group_index[0]}' "
+                f"for '{first_parallel_group_index[1]}' <-> '{first_parallel_group_index[2]}' "
+                f"with circuits '{"', '".join(first_parallel_group_circuits)}'."
+            )
 
     def equal_to(self, cs: typing.Self) -> bool:
         """

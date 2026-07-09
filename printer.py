@@ -5,6 +5,11 @@ import datetime
 from rich.console import Console
 from rich.markup import escape
 
+if __name__ == "printer":
+    raise ImportError(
+        "Import Printer as 'from InOutModule.printer import Printer', not 'from printer import Printer'"
+    )
+
 
 class Printer:
     """

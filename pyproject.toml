@@ -13,3 +13,6 @@ packages = ['PyPSA']
 
 [tool.setuptools.package-data]
 PyPSA = ['pypsa_lego_mapping_config.yaml', 'README.md']
+
+[tool.pytest.ini_options]
+pythonpath = [".."]

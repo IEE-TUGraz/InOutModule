@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 

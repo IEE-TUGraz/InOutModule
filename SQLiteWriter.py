@@ -4,7 +4,6 @@ import sqlite3
 import pandas as pd
 import pyomo.core.base.set
 import pyomo.environ as pyo
-
 from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
@@ -22,6 +21,10 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
 
     if os.path.dirname(filename) != "":
         os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    if os.path.exists(filename):
+        printer.warning(f"Overwriting existing SQLite database at '{filename}'")
+        os.remove(filename)
 
     cnx = sqlite3.connect(filename)
 
@@ -201,10 +204,14 @@ def add_objective_decomposition_to_sqlite(filename: str, model: pyo.ConcreteMode
         var_names = [var.parent_component().name for var in repn.linear_vars]
         var_indices = [str(var.index()) for var in repn.linear_vars]
         coefs = list(repn.linear_coefs)
+        var_values = [pyo.value(var) for var in repn.linear_vars]
+        var_times_coefficient = [var_value * coef for var_value, coef in zip(var_values, coefs)]
         df_terms = pd.DataFrame({
             'var_name': var_names,
             'var_index': var_indices,
-            'coefficient': coefs
+            'coefficient': coefs,
+            'var_value': var_values,
+            'var_times_coefficient': var_times_coefficient,
         })
         df_terms.to_sql('objective_terms', cnx, if_exists='replace', index=False)
 
