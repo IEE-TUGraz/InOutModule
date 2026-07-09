@@ -6,9 +6,8 @@ To build the PyPSA-Eur dataset first, follow
 [How to create a PyPSA-Eur dataset](https://github.com/IEE-TUGraz/pypsa-eur-multivoltage/blob/fix/corine-bool-and-offshore-keyerror/README_pypsa_dataset.md)
 in the `pypsa-eur-multivoltage` repository.
 
-It is recommended to connect to an IEE workstation via
-[Remote Desktop](https://gitlab.tugraz.at/iee/iee4u/-/wikis/IT-Support/Remote-Desktop),
-since the conversion can require a lot of memory and may also take some time.
+Since the conversion can require a lot of memory and may also take some time, it is recommended to use a powerful
+machine.
 
 ## 1. Set the mapping metadata
 
