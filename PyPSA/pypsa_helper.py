@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 
@@ -192,7 +192,6 @@ def prepare_renewable_profiles(net, config: dict):
     Extracts renewable generation profiles (p_max_pu) for specified carriers
     and formats them for LEGO input.
     """
-    # renewable_types = ['Solar', 'Wind Onshore', 'Wind Offshore']
     gens = net.generators.copy()
     vres_gens = gens.query(config["source"]["filter"])
     vres_ids = vres_gens.index.to_list()

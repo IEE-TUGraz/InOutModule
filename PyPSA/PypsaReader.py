@@ -9,11 +9,12 @@ import yaml
 
 PYPSA_DIR: str = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR: str = os.path.dirname(PYPSA_DIR)
+sys.path.insert(0, os.path.dirname(PARENT_DIR))
 sys.path.insert(0, PARENT_DIR)
 
 import pypsa_helper as h
 from ExcelWriter import ExcelWriter
-from printer import Printer
+from InOutModule.printer import Printer
 
 printer = Printer.getInstance()
 
