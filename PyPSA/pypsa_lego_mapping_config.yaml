@@ -1,8 +1,8 @@
 Metadata:
   source:
     type: "metadata"
-  dataPackage: "dataPackage to be filled out" # Name of data package [text]
-  dataSource: "dataSource to be filled out" # Name of data source [text]
+  dataPackage: "PyPSA-Import" # Name of data package [text]
+  dataSource: "to be filled out" # Name of data source [text]
   LDES_threshold: 2160 # defines the threshold in hours for storage units to be classified as LDES (Long Duration Energy Storage)
 
   # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
@@ -83,7 +83,7 @@ dData_Packages:
       attr: "dataPackage"
     comments:
       attr: "comments"
-  comments: "dData_Packages_comments to be filled out" # Additional comments, manual adjustments, etc. [text]
+  comments: "to be filled out" # Additional comments, manual adjustments, etc. [text]
 
 
 dData_Sources:
@@ -106,11 +106,11 @@ dData_Sources:
       attr: "lastEdited"
     comments:
       attr: "comments"
-  sources: "dData_Sources_sources to be filled out" # List of used sources (detailing which values are from where) [text]
-  licenseInfo: "dData_Sources_licenseInfo to be filled out" # Information about re-usability ['Public', 'Non-Public']
-  personResponsible: "dData_Sources_personResponsible to be filled out" # Person responsible that added this source and the corresponding entries [text]
-  lastEdited: "dData_Sources_lastEdited to be filled out" # Date of last edit (most likely when it was created) [DD.MM.YYYY]
-  comments: "dData_Sources_comments to be filled out" # Additional comments, manual adjustments, etc. [text]
+  sources: "PyPSA-Eur" # List of used sources (detailing which values are from where) [text]
+  licenseInfo: "Public" # Information about re-usability ['Public', 'Non-Public']
+  personResponsible: "to be filled out" # Person responsible that added this source and the corresponding entries [text]
+  lastEdited: "to be filled out" # Date of last edit (most likely when it was created) [DD.MM.YYYY]
+  comments: "to be filled out" # Additional comments, manual adjustments, etc. [text]
 
 
 dGlobal_Scenarios:
@@ -128,7 +128,7 @@ dGlobal_Scenarios:
       attr: "comments"
   scenarioID: "ScenarioA" # Scenario name [text]
   relativeWeight: 1.0 # Relative weight of scenario [float]
-  comments: "dGlobal_Scenarios_comments to be filled out" # Additional comments, manual adjustments, etc. [text]
+  comments: "to be filled out" # Additional comments, manual adjustments, etc. [text]
 
 
 dPower_Hindex:

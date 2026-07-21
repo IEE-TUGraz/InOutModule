@@ -18,15 +18,12 @@ Example for a dataset with the target year 2025 and weather year 2013:
 
 ```yaml
 Metadata:
-  dataPackage: "PyPSA-Import"
   dataSource: "PyPSA-Eur_2025_CY2013"
 
 dData_Packages:
   comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013"
 
 dData_Sources:
-  sources: "PyPSA-Eur"
-  licenseInfo: "Public"
   personResponsible: "Jane Doe"
   lastEdited: "21.07.2026"
   comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013"
@@ -37,11 +34,8 @@ dGlobal_Scenarios:
 
 What these fields mean:
 
-- `dataPackage`: Name of the generated LEGO data package.
 - `dataSource`: Name of the source dataset.
 - `dData_Packages.comments`: Comment written to `Data_Packages.xlsx`.
-- `dData_Sources.sources`: Name or reference of the original source dataset.
-- `dData_Sources.licenseInfo`: Re-use/license information, either Public or Non-Public.
 - `dData_Sources.personResponsible`: The person responsible for the source entry (your name).
 - `dData_Sources.lastEdited`: Date when the source entry was last edited.
 - `dData_Sources.comments`: Comment written to `Data_Sources.xlsx`.
