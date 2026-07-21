@@ -1,8 +1,8 @@
 Metadata:
   source:
     type: "metadata"
-  dataPackage: "PyPSA-Import"
-  dataSource: "Eur_2050_1h"
+  dataPackage: "dataPackage to be filled out" # Name of data package [text]
+  dataSource: "dataSource to be filled out" # Name of data source [text]
   LDES_threshold: 2160 # defines the threshold in hours for storage units to be classified as LDES (Long Duration Energy Storage)
 
   # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
@@ -70,6 +70,104 @@ Metadata:
   Inflows:
     technologies: [ 'phs', 'hydro', 'ror' ]
 
+
+dData_Packages:
+  source:
+    type: "helper"
+    name: "prepare_data_packages"
+    metadata_arg: "dataPackage"
+  mapping:
+    id:
+      attr: "id"
+    dataPackage:
+      attr: "dataPackage"
+    comments:
+      attr: "comments"
+  comments: "dData_Packages_comments to be filled out" # Additional comments, manual adjustments, etc. [text]
+
+
+dData_Sources:
+  source:
+    type: "helper"
+    name: "prepare_data_sources"
+    metadata_arg: "dataSource"
+  mapping:
+    id:
+      attr: "id"
+    dataSource:
+      attr: "dataSource"
+    sources:
+      attr: "sources"
+    licenseInfo:
+      attr: "licenseInfo"
+    personResponsible:
+      attr: "personResponsible"
+    lastEdited:
+      attr: "lastEdited"
+    comments:
+      attr: "comments"
+  sources: "dData_Sources_sources to be filled out" # List of used sources (detailing which values are from where) [text]
+  licenseInfo: "dData_Sources_licenseInfo to be filled out" # Information about re-usability ['Public', 'Non-Public']
+  personResponsible: "dData_Sources_personResponsible to be filled out" # Person responsible that added this source and the corresponding entries [text]
+  lastEdited: "dData_Sources_lastEdited to be filled out" # Date of last edit (most likely when it was created) [DD.MM.YYYY]
+  comments: "dData_Sources_comments to be filled out" # Additional comments, manual adjustments, etc. [text]
+
+
+dGlobal_Scenarios:
+  source:
+    type: "helper"
+    name: "prepare_global_scenarios"
+  mapping:
+    id:
+      attr: "id"
+    scenarioID:
+      attr: "scenarioID"
+    relativeWeight:
+      attr: "relativeWeight"
+    comments:
+      attr: "comments"
+  scenarioID: "ScenarioA" # Scenario name [text]
+  relativeWeight: 1.0 # Relative weight of scenario [float]
+  comments: "dGlobal_Scenarios_comments to be filled out" # Additional comments, manual adjustments, etc. [text]
+
+
+dPower_Hindex:
+  source:
+    type: "helper"
+    name: "prepare_power_hindex"
+  mapping:
+    p:
+      attr: "p"
+    rp:
+      attr: "rp"
+    k:
+      attr: "k"
+  rp: "rp01" # Representative period [rp]
+
+
+dPower_WeightsK:
+  source:
+    type: "helper"
+    name: "prepare_power_weights_k"
+  mapping:
+    k:
+      attr: "k"
+    pWeight_k:
+      attr: "pWeight_k"
+  pWeight_k: 1 # Weight of representative hour within representative period [h]
+
+
+dPower_WeightsRP:
+  source:
+    type: "helper"
+    name: "prepare_power_weights_rp"
+  mapping:
+    rp:
+      attr: "rp"
+    pWeight_rp:
+      attr: "pWeight_rp"
+  rp: "rp01" # Representative period [rp]
+  pWeight_rp: 1 # Weight of representative period within full timespan [h]
 
 
 dPower_BusInfo:

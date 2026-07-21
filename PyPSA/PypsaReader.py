@@ -241,7 +241,14 @@ class NetworkDataExtractor:
             )
 
         with open(config_path, "r") as f:
-            self.config = yaml.safe_load(f)
+            config_text = f.read()
+
+        if "to be filled out" in config_text:
+            printer.error(f"Placeholder value 'to be filled out' is still present in the config file {os.path.basename(config_path)}. "
+                          f"Please fill in all placeholder values before running the converter.")
+            exit(1)
+
+        self.config = yaml.safe_load(config_text)
 
         # Initialize ExcelWriter to get definitions for checking/normalization
         self.writer = ExcelWriter(table_definitions_path)
@@ -367,7 +374,11 @@ class NetworkDataExtractor:
                 source_df = source_df.query(src["filter"])
             return source_df
         elif src["type"] == "helper":
-            return getattr(h, src["name"])(self.network, cfg)
+            helper = getattr(h, src["name"])
+            if "metadata_arg" not in src:
+                return helper(self.network, cfg)
+            meta = self.config.get("Metadata", {})
+            return helper(self.network, cfg, meta.get(src["metadata_arg"]))
         return None
 
     def _map_columns(self, source_df, cfg):

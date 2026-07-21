@@ -11,17 +11,41 @@ machine.
 
 ## 1. Set the mapping metadata
 
-In `pypsa_lego_mapping_config.yaml`, update the dataset metadata fields `dataPackage` and `dataSource`.
+In `pypsa_lego_mapping_config.yaml`, update the dataset fields that are marked with the placeholder value
+`to be filled out`.
 
-Use the name of the PyPSA-Eur dataset for `dataSource`.
-
-Example:
+Example for a dataset with the target year 2025 and weather year 2013:
 
 ```yaml
 Metadata:
-    dataPackage: "PyPSA-Eur"
-    dataSource: "PyPSA-Eur_2025_CY2013"
+  dataPackage: "PyPSA-Import"
+  dataSource: "PyPSA-Eur_2025_CY2013"
+
+dData_Packages:
+  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013"
+
+dData_Sources:
+  sources: "PyPSA-Eur"
+  licenseInfo: "Public"
+  personResponsible: "Jane Doe"
+  lastEdited: "21.07.2026"
+  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013"
+
+dGlobal_Scenarios:
+  comments: "PyPSA-Eur 2025 CY2013"
 ```
+
+What these fields mean:
+
+- `dataPackage`: Name of the generated LEGO data package.
+- `dataSource`: Name of the source dataset.
+- `dData_Packages.comments`: Comment written to `Data_Packages.xlsx`.
+- `dData_Sources.sources`: Name or reference of the original source dataset.
+- `dData_Sources.licenseInfo`: Re-use/license information, either Public or Non-Public.
+- `dData_Sources.personResponsible`: The person responsible for the source entry (your name).
+- `dData_Sources.lastEdited`: Date when the source entry was last edited.
+- `dData_Sources.comments`: Comment written to `Data_Sources.xlsx`.
+- `dGlobal_Scenarios.comments`: Comment written to `Global_Scenarios.xlsx`.
 
 ## 2. Translate to LEGO
 
@@ -47,25 +71,25 @@ This will write the LEGO Excel files to:
 
 The converter generates the following LEGO files:
 
+- `Data_Packages.xlsx`
+- `Data_Sources.xlsx`
+- `Global_Scenarios.xlsx`
 - `Power_BusInfo.xlsx`
 - `Power_Demand.xlsx`
+- `Power_Hindex.xlsx`
 - `Power_Inflows.xlsx`
 - `Power_Network.xlsx`
 - `Power_Storage.xlsx`
 - `Power_ThermalGen.xlsx`
 - `Power_VRES.xlsx`
 - `Power_VRESProfiles.xlsx`
+- `Power_WeightsK.xlsx`
+- `Power_WeightsRP.xlsx`
 
 The following files are not generated and have to be added and adapted manually:
 
-- `Data_Packages.xlsx`
-- `Data_Sources.xlsx`
 - `Global_Parameters.xlsx`
-- `Global_Scenarios.xlsx`
-- `Power_Hindex.xlsx`
 - `Power_Parameters.xlsx`
-- `Power_WeightsK.xlsx`
-- `Power_WeightsRP.xlsx`
 
 # Reader Documentation
 
@@ -76,13 +100,10 @@ format required by the LEGO model.
 ## Purpose & limitations
 
 - This reader only converts PyPSA networks to LEGO input files (EXCEL). It does not return a LEGO CaseStudy object.
-- For running the converted case study in LEGO, at least the files `Global_Parameters.xlsx`, `Power_Parameters.xlsx`,
-  `Power_Hindex.xlsx`,
-  `Power_WeightsK.xlsx` and `Power_WeightsRP.xlsx` must be defined.
+- For running the converted case study in LEGO, the files `Global_Parameters.xlsx` and `Power_Parameters.xlsx` still
+  have to be provided manually.
 - Currently, only the power sector is supported by the converter.
-- For importing the generated Excel files into the LEGO database, the files `Global_Scenarios.xlsx`,
-  `Data_Packages.xlsx` and `Data_Sources.xlsx` must
-  be defined.
+- The generated Excel files include all the required information for importing into the LEGO database.
 
 ## General Workflow
 
@@ -134,6 +155,8 @@ Each entry (e.g., `dPower_ThermalGen`) defines:
     - A direct PyPSA attribute name.
     - A static value (int/float).
     - A dictionary specifying an `attr`, a `conversion` function, or a `factor`.
+* **metadata_arg**: (Optional) Passes a single value from the `Metadata` section into the helper
+  function.
 
 ## Helper Functions (`pypsa_helper.py`)
 
@@ -151,6 +174,13 @@ When simple attribute mapping is insufficient, helper functions handle complex d
     - `prepare_inflow_profiles`: Aggregates inflow data from both `storage_units` (hydro) and `generators` (
       Run-of-River) into a unified time-series.
     - `prepare_demand_profiles`: Sums PyPSA load data per bus and formats it for the LEGO demand table.
+* **Package, Scenario and Time Data**:
+    - `prepare_data_packages`: Creates the data package information.
+    - `prepare_data_sources`: Creates the data source information.
+    - `prepare_global_scenarios`: Creates the scenario information.
+    - `prepare_power_hindex`: Creates the relation between periods and representative periods.
+    - `prepare_power_weights_k`: Creates the representative time step weights.
+    - `prepare_power_weights_rp`: Creates the representative period weights.
 
 ## Conversions & Logic
 

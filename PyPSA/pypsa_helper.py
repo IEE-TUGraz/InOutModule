@@ -6,6 +6,83 @@ from InOutModule.printer import Printer
 printer = Printer.getInstance()
 
 
+def prepare_data_packages(net, config: dict, data_package: str):
+    """
+    Prepares data package information for the LEGO output.
+    """
+    data_packages = pd.DataFrame({
+        "id": [1],
+        "dataPackage": [data_package],
+        "comments": [config.get("comments", "")],
+    })
+    return data_packages
+
+
+def prepare_data_sources(net, config: dict, data_source: str):
+    """
+    Prepares data source information for the LEGO output.
+    """
+    data_sources = pd.DataFrame({
+        "id": [1],
+        "dataSource": [data_source],
+        "sources": [config.get("sources", "")],
+        "licenseInfo": [config.get("licenseInfo", "")],
+        "personResponsible": [config.get("personResponsible", "")],
+        "lastEdited": [config.get("lastEdited", "")],
+        "comments": [config.get("comments", "")],
+    })
+    return data_sources
+
+
+def prepare_global_scenarios(net, config: dict):
+    """
+    Prepares global scenario information for the LEGO output.
+    """
+    global_scenarios = pd.DataFrame({
+        "id": [1],
+        "scenarioID": [config.get("scenarioID", "ScenarioA")],
+        "relativeWeight": [config.get("relativeWeight", 1.0)],
+        "comments": [config.get("comments", "")],
+    })
+    return global_scenarios
+
+
+def prepare_power_hindex(net, config: dict):
+    """
+    Prepares the relation between periods and representative periods for the LEGO output.
+    """
+    num_timesteps = len(net.snapshots)
+    power_hindex = pd.DataFrame({
+        "p": [f"h{i + 1:04d}" for i in range(num_timesteps)],
+        "rp": [config.get("rp", "rp01")] * num_timesteps,
+        "k": [f"k{i + 1:04d}" for i in range(num_timesteps)],
+    })
+    return power_hindex
+
+
+def prepare_power_weights_k(net, config: dict):
+    """
+    Prepares the representative time step weights for the LEGO output.
+    """
+    num_timesteps = len(net.snapshots)
+    power_weights_k = pd.DataFrame({
+        "k": [f"k{i + 1:04d}" for i in range(num_timesteps)],
+        "pWeight_k": [config.get("pWeight_k", 1)] * num_timesteps,
+    })
+    return power_weights_k
+
+
+def prepare_power_weights_rp(net, config: dict):
+    """
+    Prepares the representative period weights for the LEGO output.
+    """
+    power_weights_rp = pd.DataFrame({
+        "rp": [config.get("rp", "rp01")],
+        "pWeight_rp": [config.get("pWeight_rp", 1)],
+    })
+    return power_weights_rp
+
+
 def prepare_ac_lines(net, config: dict):
     """
     Prepares AC line data by calculating missing parameters (r, x, b) from line types,
