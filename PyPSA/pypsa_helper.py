@@ -11,7 +11,6 @@ def prepare_data_packages(net, config: dict, data_package: str):
     Prepares data package information for the LEGO output.
     """
     data_packages = pd.DataFrame({
-        "id": [1],
         "dataPackage": [data_package],
         "comments": [config.get("comments", "")],
     })
@@ -23,7 +22,6 @@ def prepare_data_sources(net, config: dict, data_source: str):
     Prepares data source information for the LEGO output.
     """
     data_sources = pd.DataFrame({
-        "id": [1],
         "dataSource": [data_source],
         "sources": [config.get("sources", "")],
         "licenseInfo": [config.get("licenseInfo", "")],
@@ -39,7 +37,6 @@ def prepare_global_scenarios(net, config: dict):
     Prepares global scenario information for the LEGO output.
     """
     global_scenarios = pd.DataFrame({
-        "id": [1],
         "scenarioID": [config.get("scenarioID", "ScenarioA")],
         "relativeWeight": [config.get("relativeWeight", 1.0)],
         "comments": [config.get("comments", "")],

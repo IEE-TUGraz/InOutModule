@@ -77,8 +77,6 @@ dData_Packages:
     name: "prepare_data_packages"
     metadata_arg: "dataPackage"
   mapping:
-    id:
-      attr: "id"
     dataPackage:
       attr: "dataPackage"
     comments:
@@ -92,8 +90,6 @@ dData_Sources:
     name: "prepare_data_sources"
     metadata_arg: "dataSource"
   mapping:
-    id:
-      attr: "id"
     dataSource:
       attr: "dataSource"
     sources:
@@ -118,8 +114,6 @@ dGlobal_Scenarios:
     type: "helper"
     name: "prepare_global_scenarios"
   mapping:
-    id:
-      attr: "id"
     scenarioID:
       attr: "scenarioID"
     relativeWeight:
