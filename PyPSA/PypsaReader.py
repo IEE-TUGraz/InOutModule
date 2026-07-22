@@ -221,6 +221,7 @@ class NetworkDataExtractor:
             network: pypsa.Network,
             config_path: str = None,
             table_definitions_path: str = None,
+            allow_placeholders: bool = False,
     ):
         """
         Initializes the extractor with a PyPSA network and configuration files.
@@ -228,6 +229,7 @@ class NetworkDataExtractor:
         :param network: The PyPSA network instance to extract data from.
         :param config_path: Path to the mapping configuration YAML file.
         :param table_definitions_path: Path to the TableDefinitions XML file.
+        :param allow_placeholders: If the placeholder value in the config file is allowed.
         """
         self.network = network
         self._conv_params_cache = {}  # Performance: Cache function signatures
@@ -243,7 +245,7 @@ class NetworkDataExtractor:
         with open(config_path, "r") as f:
             config_text = f.read()
 
-        if "to be filled out" in config_text:
+        if not allow_placeholders and "to be filled out" in config_text:
             printer.error(f"Placeholder value 'to be filled out' is still present in the config file {os.path.basename(config_path)}. "
                           f"Please fill in all placeholder values before running the converter.")
             exit(1)
@@ -482,6 +484,7 @@ def translate_pypsa_to_lego(
         input_file: str = r"pypsa-model.nc",
         output_directory: str = r"./output_data",
         output_folder_name: str = "LEGO-Model",
+        allow_placeholders: bool = False,
 ):
     """
     Main execution block for converting a PyPSA network to LEGO-formatted Excel files.
@@ -507,7 +510,7 @@ def translate_pypsa_to_lego(
 
         # Extract data using NetworkDataExtractor
         printer.information("Extracting data into LEGO format...")
-        extractor = NetworkDataExtractor(net)
+        extractor = NetworkDataExtractor(net, allow_placeholders=allow_placeholders)
         dfs = extractor.get_dataframes()
 
         # Initialize ExcelWriter
@@ -560,6 +563,11 @@ if __name__ == "__main__":
         type=str,
         help="Name of the output folder for the generated LEGO Excel files.",
     )
+    parser.add_argument(
+        "--allow-placeholders",
+        action="store_true",
+        help="Allow the converter to be run with the placeholder values in the mapping config.",
+    )
     args = parser.parse_args()
 
     translate_pypsa_to_lego(
@@ -567,4 +575,5 @@ if __name__ == "__main__":
         input_file=args.inputFile,
         output_directory=args.outputDirectory,
         output_folder_name=args.outputFolderName,
+        allow_placeholders=args.allow_placeholders,
     )
