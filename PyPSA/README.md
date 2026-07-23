@@ -41,6 +41,8 @@ What these fields mean:
 - `dData_Sources.comments`: Comment written to `Data_Sources.xlsx`.
 - `dGlobal_Scenarios.comments`: Comment written to `Global_Scenarios.xlsx`.
 
+> **Note:** The fuel costs of thermal technologies defined in the `pypsa_lego_mapping_config.yaml` are only dummy values and should get adapted for your specific case study!
+
 ## 2. Translate to LEGO
 
 From the `PyPSA/` folder, run the converter with:
