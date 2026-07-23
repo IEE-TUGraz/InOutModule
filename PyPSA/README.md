@@ -21,12 +21,12 @@ Metadata:
   dataSource: "PyPSA-Eur_2025_CY2013"
 
 dData_Packages:
-  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013"
+  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013. The (fuel) costs for thermal generators defined in the Metadata section are default assumptions."
 
 dData_Sources:
   personResponsible: "Jane Doe"
   lastEdited: "21.07.2026"
-  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013"
+  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013. The (fuel) costs for thermal generators defined in the Metadata section are default assumptions."
 
 dGlobal_Scenarios:
   comments: "PyPSA-Eur 2025 CY2013"
