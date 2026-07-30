@@ -44,11 +44,12 @@ class CaseStudy:
                  data_folder: str | Path,
                  do_not_scale_units: bool = False,
                  do_not_merge_single_node_buses: bool = False,
+                 do_not_filter_unused_scenarios: bool = False,
                  parallel_read: bool = True,
                  n_jobs: int = 4,
-                 global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: pd.DataFrame = None,
+                 global_parameters_file: str = "Global_Parameters.xlsx", dGlobal_Parameters: dict = None,
                  global_scenarios_file: str = "Global_Scenarios.xlsx", dGlobal_Scenarios: pd.DataFrame = None,
-                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: pd.DataFrame = None,
+                 power_parameters_file: str = "Power_Parameters.xlsx", dPower_Parameters: dict = None,
                  power_businfo_file: str = "Power_BusInfo.xlsx", dPower_BusInfo: pd.DataFrame = None,
                  power_network_file: str = "Power_Network.xlsx", dPower_Network: pd.DataFrame = None,
                  power_thermalgen_file: str = "Power_ThermalGen.xlsx", dPower_ThermalGen: pd.DataFrame = None,
@@ -65,6 +66,7 @@ class CaseStudy:
         self.data_folder = str(data_folder) if str(data_folder).endswith("/") else str(data_folder) + "/"
         self.do_not_scale_units = do_not_scale_units
         self.do_not_merge_single_node_buses = do_not_merge_single_node_buses
+        self.do_not_filter_unused_scenarios = do_not_filter_unused_scenarios
 
         # === SEQUENTIAL READS ===
         if dGlobal_Parameters is not None:
@@ -203,22 +205,7 @@ class CaseStudy:
             self.dPower_WeightsRP = dPower_WeightsRP
         else:
             self.power_weightsrp_file = power_weightsrp_file
-            # Calculate dPower_WeightsRP from Hindex
-            dPower_WeightsRPs = []
-            for scenario in self.dPower_Hindex['scenario'].unique().tolist():
-                # Count occurences of each value in column 'rp' of dPower_Hindex
-                dPower_WeightsRP_scenario = pd.DataFrame(self.dPower_Hindex[self.dPower_Hindex['scenario'] == scenario].reset_index()['rp'].value_counts().sort_index())
-                dPower_WeightsRP_scenario = dPower_WeightsRP_scenario.rename(columns={'count': 'pWeight_rp'})
-                dPower_WeightsRP_scenario['scenario'] = scenario  # Add scenario ID
-
-                # Add other columns with default values
-                dPower_WeightsRP_scenario['id'] = np.nan
-                dPower_WeightsRP_scenario['dataPackage'] = np.nan
-                dPower_WeightsRP_scenario['dataSource'] = np.nan
-
-                dPower_WeightsRPs.append(dPower_WeightsRP_scenario)
-
-            dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
+            dPower_WeightsRP = self.calculatePowerWeightsRP(db_id=np.nan, dataPackage=np.nan, dataSource=np.nan)
 
             if os.path.exists(self.data_folder + self.power_weightsrp_file):  # Compare with given file if it exists
                 self.dPower_WeightsRP = ExcelReader.get_Power_WeightsRP(self.data_folder + self.power_weightsrp_file)
@@ -226,20 +213,24 @@ class CaseStudy:
                 calculated = dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
                 fromFile = self.dPower_WeightsRP.reset_index().set_index(["rp", "scenario"])
 
-                # Normalize both to sum to 1 for comparison
-                calc_norm = calculated['pWeight_rp'] / calculated['pWeight_rp'].sum()
-                file_norm = fromFile['pWeight_rp'] / fromFile['pWeight_rp'].sum()
                 # Align indices and fill missing with 0 for comparison
-                combined = pd.concat([calc_norm, file_norm], axis=1, keys=['calculated', 'fromFile']).fillna(0)
+                combined = pd.concat([calculated["pWeight_rp"], fromFile["pWeight_rp"]], axis=1, keys=['calculated', 'fromFile']).fillna(0)
                 diff_mask = ~np.isclose(combined['calculated'], combined['fromFile'])
                 if diff_mask.any():
-                    printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
+                    printer.warning(f"Values for 'pWeight_rp' in `{self.data_folder + self.power_weightsrp_file}` do not match the calculated values based on `{self.power_hindex_file}`. Please check if this is intended, now using the file `{self.data_folder + self.power_weightsrp_file}` instead of the calculated values.")
                     # Print all differing lines
                     diffs = combined[diff_mask]
                     printer.warning("Differing entries (index -> calculated | fromFile):\n" + diffs.to_string())
             else:  # Use calculated dPower_WeightsRP otherwise
-                printer.warning(f"Executing without 'Power_WeightsRP' (since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
+                printer.warning(f"Executing without 'Power_WeightsRP' (calculating from Power_Hindex, since no file was found at '{self.data_folder + self.power_weightsrp_file}').")
                 self.dPower_WeightsRP = dPower_WeightsRP
+
+        if not self.do_not_filter_unused_scenarios:
+            self.dGlobal_Scenarios = self.dGlobal_Scenarios[self.dGlobal_Scenarios['relativeWeight'] != 0]  # Drop rows in dGlobal_Scenarios where relativeWeight is 0
+            if len(self.dGlobal_Scenarios) == 0:
+                raise ValueError("No scenarios are present in the 'Global_Scenarios' table. Please check if the file exists and contains valid data.")
+            elif len(self.dGlobal_Scenarios) == 1:
+                self.filter_scenario(self.dGlobal_Scenarios.index[0], inplace=True)  # Filter case study to only include actually present scenarios
 
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
@@ -667,6 +658,188 @@ class CaseStudy:
 
         return cs if not inplace else None
 
+    def merge_generators(self, inplace: bool = False) -> Optional['CaseStudy']:
+        """
+        Merge generators of the same technology at the same bus into one representative generator.
+        Affects dPower_ThermalGen, dPower_VRES, dPower_VRESProfiles, and dPower_Inflows.
+        The new generator ID is '{i}_{tec}'.
+
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        cs = self if inplace else self.copy()
+
+        # Save original VRES mapping before any merges (needed for VRESProfiles and Inflows weighting)
+        original_vres_info = None
+        if hasattr(cs, 'dPower_VRES') and cs.dPower_VRES is not None and 'MaxProd' in cs.dPower_VRES.columns:
+            original_vres_info = cs.dPower_VRES[['tec', 'i', 'MaxProd']].copy()
+
+        ### Merge dPower_ThermalGen
+        if hasattr(cs, 'dPower_ThermalGen') and cs.dPower_ThermalGen is not None:
+            df = cs.dPower_ThermalGen.reset_index()
+            groups = ['tec', 'i']
+
+            thermal_simple_agg = {
+                'ExisUnits': 'max',
+                'MaxProd': 'sum',
+                'MinProd': 'min',
+                'RampUp': 'sum',
+                'RampDw': 'sum',
+                'MinUpTime': 'min',
+                'MinDownTime': 'min',
+                'Qmax': 'sum',
+                'Qmin': 'sum',
+                'EnableInvest': 'max',
+                'YearCom': 'min',
+                'YearDecom': 'max',
+                'lat': 'mean',
+                'lon': 'mean',
+            }
+            thermal_weighted_cols = ['InertiaConst', 'FuelCost', 'Efficiency', 'CommitConsumption',
+                                     'OMVarCost', 'StartupConsumption', 'EFOR', 'InvestCost',
+                                     'FirmCapCoef', 'CO2Emis']
+
+            agg_dict = {}
+            skip_cols = set(groups + ['g'] + thermal_weighted_cols)
+            for col in df.columns:
+                if col in skip_cols:
+                    continue
+                agg_dict[col] = thermal_simple_agg.get(col, 'first')
+
+            merged = df.groupby(groups).agg(agg_dict).reset_index()
+
+            for col in thermal_weighted_cols:
+                if col not in df.columns:
+                    continue
+                numer = (df[col] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                denom = df['MaxProd'].groupby([df['tec'], df['i']]).sum()
+                wavg = (numer / denom.replace(0, np.nan)).fillna(df.groupby(groups)[col].mean())
+                wavg.name = col
+                merged = merged.merge(wavg.reset_index(), on=groups, how='left')
+
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
+            cs.dPower_ThermalGen = merged.set_index('g')
+
+        ### Merge dPower_VRESProfiles (before dPower_VRES so original MaxProd weights are available)
+        if (hasattr(cs, 'dPower_VRESProfiles') and cs.dPower_VRESProfiles is not None
+                and original_vres_info is not None):
+            df = cs.dPower_VRESProfiles.reset_index()
+            vres_cols = original_vres_info.reset_index()[['g', 'tec', 'i', 'MaxProd']]
+            df = df.merge(vres_cols, on='g', how='left')
+
+            groups = ['rp', 'k', 'scenario', 'tec', 'i']
+            key = [df['rp'], df['k'], df['scenario'], df['tec'], df['i']]
+
+            numer = (df['value'] * df['MaxProd']).groupby(key).sum()
+            denom = df['MaxProd'].groupby(key).sum()
+            merged_value = (numer / denom.replace(0, np.nan)).fillna(df.groupby(groups)['value'].mean())
+            merged_value.name = 'value'
+
+            meta_cols = [c for c in ['dataPackage', 'dataSource', 'id'] if c in df.columns]
+            meta = df.groupby(groups)[meta_cols].first().reset_index()
+            merged = meta.merge(merged_value.reset_index(), on=groups, how='left')
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
+            merged = merged.drop(columns=['tec', 'i'])
+            cs.dPower_VRESProfiles = merged.set_index(['rp', 'k', 'g'])
+
+        ### Merge dPower_Inflows
+        if (hasattr(cs, 'dPower_Inflows') and cs.dPower_Inflows is not None
+                and original_vres_info is not None):
+            df = cs.dPower_Inflows.reset_index()
+            vres_cols = original_vres_info.reset_index()[['g', 'tec', 'i']]
+            df = df.merge(vres_cols, on='g', how='left')
+
+            groups = ['rp', 'k', 'scenario', 'tec', 'i']
+            key = [df['rp'], df['k'], df['scenario'], df['tec'], df['i']]
+
+            merged_value = df['value'].groupby(key).sum()
+            merged_value.name = 'value'
+
+            meta_cols = [c for c in ['dataPackage', 'dataSource', 'id'] if c in df.columns]
+            meta = df.groupby(groups)[meta_cols].first().reset_index()
+            merged = meta.merge(merged_value.reset_index(), on=groups, how='left')
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
+            merged = merged.drop(columns=['tec', 'i'])
+            cs.dPower_Inflows = merged.set_index(['rp', 'k', 'g'])
+
+        ### Merge dPower_VRES (last, after VRESProfiles and Inflows)
+        if hasattr(cs, 'dPower_VRES') and cs.dPower_VRES is not None:
+            df = cs.dPower_VRES.reset_index()
+            groups = ['tec', 'i']
+
+            vres_simple_agg = {
+                'ExisUnits': 'sum',
+                'EnableInvest': 'max',
+                'Qmax': 'sum',
+                'Qmin': 'sum',
+                'YearCom': 'min',
+                'YearDecom': 'max',
+                'lat': 'mean',
+                'lon': 'mean',
+            }
+            vres_weighted_cols = ['InvestCost', 'OMVarCost', 'FirmCapCoef', 'InertiaConst']
+            special_cols = {'MaxProd', 'MaxInvest'}
+
+            agg_dict = {}
+            skip_cols = set(groups + ['g'] + vres_weighted_cols + list(special_cols))
+            for col in df.columns:
+                if col in skip_cols:
+                    continue
+                agg_dict[col] = vres_simple_agg.get(col, 'first')
+
+            merged = df.groupby(groups).agg(agg_dict).reset_index()
+
+            # Special: newMaxProd = sum(ExisUnits * MaxProd) / sum(ExisUnits); fallback to sum when all units are greenfield
+            if 'MaxProd' in df.columns:
+                total_mw = (df['ExisUnits'] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                total_units = df['ExisUnits'].groupby([df['tec'], df['i']]).sum()
+                new_maxprod = (total_mw / total_units.replace(0, np.nan)).fillna(
+                    df['MaxProd'].groupby([df['tec'], df['i']]).sum()
+                )
+                new_maxprod.name = 'MaxProd'
+                merged = merged.merge(new_maxprod.reset_index(), on=groups, how='left')
+
+            # Special: newMaxInvest = sum(MaxInvest * MaxProd) / newMaxProd
+            if 'MaxInvest' in df.columns and 'MaxProd' in df.columns:
+                invest_mw = (df['MaxInvest'] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                new_maxprod_s = merged.set_index(groups)['MaxProd']
+                new_maxinvest = (invest_mw / new_maxprod_s.replace(0, np.nan)).fillna(0)
+                new_maxinvest.name = 'MaxInvest'
+                merged = merged.merge(new_maxinvest.reset_index(), on=groups, how='left')
+
+            for col in vres_weighted_cols:
+                if col not in df.columns:
+                    continue
+                numer = (df[col] * df['MaxProd']).groupby([df['tec'], df['i']]).sum()
+                denom = df['MaxProd'].groupby([df['tec'], df['i']]).sum()
+                wavg = (numer / denom.replace(0, np.nan)).fillna(df.groupby(groups)[col].mean())
+                wavg.name = col
+                merged = merged.merge(wavg.reset_index(), on=groups, how='left')
+
+            merged['g'] = merged['i'].astype(str) + '_' + merged['tec']
+            cs.dPower_VRES = merged.set_index('g')
+
+        return None if inplace else cs
+
+    def calculatePowerWeightsRP(self, db_id, dataPackage, dataSource):
+        dPower_WeightsRPs = []
+        for scenario in self.dPower_Hindex['scenario'].unique().tolist():
+            # Count occurrences of each value in column 'rp' of dPower_Hindex
+            dPower_WeightsRP_scenario = pd.DataFrame(self.dPower_Hindex[self.dPower_Hindex['scenario'] == scenario].reset_index()['rp'].value_counts().sort_index())
+            dPower_WeightsRP_scenario = dPower_WeightsRP_scenario.rename(columns={'count': 'pWeight_rp'})
+            dPower_WeightsRP_scenario['scenario'] = scenario  # Add scenario ID
+            dPower_WeightsRPs.append(dPower_WeightsRP_scenario)
+
+        dPower_WeightsRP = pd.concat(dPower_WeightsRPs, ignore_index=False)
+        dPower_WeightsRP['id'] = db_id
+        dPower_WeightsRP['dataPackage'] = dataPackage
+        dPower_WeightsRP['dataSource'] = dataSource
+
+        scenario_sums = self.dPower_WeightsK.groupby('scenario')['pWeight_k'].sum()
+        dPower_WeightsRP['pWeight_rp'] = dPower_WeightsRP['pWeight_rp'] / dPower_WeightsRP['scenario'].map(scenario_sums)
+
+        return dPower_WeightsRP
+
     # Create transition matrix from Hindex
     def get_rpTransitionMatrices(self, clip_method: str = "none", clip_value: float = 0) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         rps = sorted(self.dPower_Hindex.index.get_level_values('rp').unique().tolist())
@@ -715,68 +888,103 @@ class CaseStudy:
         or return a new `CaseStudy` instance if `inplace` is `False`. The adjustments align the data
         to represent hourly indices and corresponding weights.
 
+        Each enabled scenario in `dGlobal_Scenarios` is processed independently.
+
+        If the case study is already a full hourly model (no two p-values share the same 'k' within
+        any scenario), no adjustment is made and the original instance is returned unchanged.
+
         :param inplace: If `True`, modifies the given instance. If `False`, returns a new `CaseStudy` instance.
         :return: Adjusted `CaseStudy` instance if `inplace` is `False`, otherwise `None`.
         """
         caseStudy = self.copy() if not inplace else self
 
-        # First Adjustment of Hindex (important if the case study was filtered before, to get a coherent p-index)
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
-        for i in caseStudy.dPower_Hindex.index:
-            caseStudy.dPower_Hindex.loc[i, "p"] = f"h{i + 1:0>4}"
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+        # Check if already hourly: within each scenario no 'k' appears more than once
+        hindex_flat = caseStudy.dPower_Hindex.reset_index()
+        already_hourly = all(
+            not (grp.groupby(['k']).size() > 1).any()
+            for _, grp in hindex_flat.groupby('scenario')
+        )
+        if already_hourly:
+            return None if inplace else caseStudy
 
-        # Adjust Demand
-        adjusted_demand = []
-        for i in caseStudy.dPower_BusInfo.index:
-            for h in caseStudy.dPower_Hindex.index:
-                adjusted_demand.append(["rp01", h[0].replace("h", "k"), i, caseStudy.dPower_Demand.loc[(h[1], h[2], i), "value"], "ScenarioA", None, None, None])
+        scenario_names = caseStudy.dGlobal_Scenarios.index.tolist()
 
-        caseStudy.dPower_Demand = pd.DataFrame(adjusted_demand, columns=["rp", "k", "i", "value", "scenario", "id", "dataPackage", "dataSource"])
-        caseStudy.dPower_Demand = caseStudy.dPower_Demand.set_index(["rp", "k", "i"])
+        all_demand = []
+        all_vresprofiles = []
+        all_inflows = []
+        all_hindex = []
+        all_weightsk = []
+        all_weightsrp = []
 
-        # Adjust VRESProfiles
-        if hasattr(caseStudy, "dPower_VRESProfiles"):
-            adjusted_vresprofiles = []
-            caseStudy.dPower_VRESProfiles.sort_index(inplace=True)
-            for g in caseStudy.dPower_VRESProfiles.index.get_level_values('g').unique().tolist():
-                for h in caseStudy.dPower_Hindex.index:
-                    adjusted_vresprofiles.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_VRESProfiles.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
+        demand_flat = caseStudy.dPower_Demand.reset_index()
+        vres_flat = caseStudy.dPower_VRESProfiles.reset_index() if hasattr(caseStudy, 'dPower_VRESProfiles') and caseStudy.dPower_VRESProfiles is not None else None
+        inflows_flat = caseStudy.dPower_Inflows.reset_index() if hasattr(caseStudy, 'dPower_Inflows') and caseStudy.dPower_Inflows is not None else None
 
-            caseStudy.dPower_VRESProfiles = pd.DataFrame(adjusted_vresprofiles, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
-            caseStudy.dPower_VRESProfiles = caseStudy.dPower_VRESProfiles.set_index(["rp", "k", "g"])
+        for scenario in scenario_names:
+            scen_hindex = hindex_flat[hindex_flat['scenario'] == scenario].copy().reset_index(drop=True)
+            num_hours = len(scen_hindex)
+            scen_hindex['new_k'] = [f"k{i + 1:0>4}" for i in range(num_hours)]
+            scen_hindex['new_p'] = [f"h{i + 1:0>4}" for i in range(num_hours)]
 
-        # Adjust Inflows
-        if hasattr(caseStudy, "dPower_Inflows"):
-            adjusted_inflows = []
-            caseStudy.dPower_Inflows.sort_index(inplace=True)
-            for g in caseStudy.dPower_Inflows.index.get_level_values('g').unique().tolist():
-                for h in caseStudy.dPower_Hindex.index:
-                    adjusted_inflows.append(["rp01", h[0].replace("h", "k"), g, caseStudy.dPower_Inflows.loc[(h[1], h[2], g), "value"], "ScenarioA", None, None, None])
-            caseStudy.dPower_Inflows = pd.DataFrame(adjusted_inflows, columns=["rp", "k", "g", "value", "scenario", "id", "dataPackage", "dataSource"])
-            caseStudy.dPower_Inflows = caseStudy.dPower_Inflows.set_index(["rp", "k", "g"])
+            # Demand: merge each original (rp, k) with the buses that have that (rp, k)
+            demand_scen = demand_flat[demand_flat['scenario'] == scenario][['rp', 'k', 'i', 'value']]
+            m = scen_hindex[['rp', 'k', 'new_k']].merge(demand_scen, on=['rp', 'k'])
+            all_demand.append(pd.DataFrame({'rp': 'rp01', 'k': m['new_k'], 'i': m['i'], 'value': m['value'],
+                                            'scenario': scenario, 'id': None, 'dataPackage': None, 'dataSource': None}))
 
-        # Adjust Hindex
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.reset_index()
-        for i in caseStudy.dPower_Hindex.index:
-            caseStudy.dPower_Hindex.loc[i] = f"h{i + 1:0>4}", f"rp01", f"k{i + 1:0>4}", None, None, None, "ScenarioA"
-        caseStudy.dPower_Hindex = caseStudy.dPower_Hindex.set_index(["p", "rp", "k"])
+            # VRESProfiles
+            if vres_flat is not None:
+                vres_scen = vres_flat[vres_flat['scenario'] == scenario][['rp', 'k', 'g', 'value']]
+                m = scen_hindex[['rp', 'k', 'new_k']].merge(vres_scen, on=['rp', 'k'])
+                all_vresprofiles.append(pd.DataFrame({'rp': 'rp01', 'k': m['new_k'], 'g': m['g'], 'value': m['value'],
+                                                      'scenario': scenario, 'id': None, 'dataPackage': None, 'dataSource': None}))
 
-        # Adjust WeightsK
-        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.reset_index()
-        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.drop(caseStudy.dPower_WeightsK.index)
-        for i in range(len(caseStudy.dPower_Hindex)):
-            caseStudy.dPower_WeightsK.loc[i] = f"{caseStudy.dPower_Hindex.index[i][2]}", None, 1, None, None, "ScenarioA"
-        caseStudy.dPower_WeightsK = caseStudy.dPower_WeightsK.set_index("k")
+            # Inflows
+            if inflows_flat is not None:
+                inflows_scen = inflows_flat[inflows_flat['scenario'] == scenario][['rp', 'k', 'g', 'value']]
+                m = scen_hindex[['rp', 'k', 'new_k']].merge(inflows_scen, on=['rp', 'k'])
+                all_inflows.append(pd.DataFrame({'rp': 'rp01', 'k': m['new_k'], 'g': m['g'], 'value': m['value'],
+                                                 'scenario': scenario, 'id': None, 'dataPackage': None, 'dataSource': None}))
 
-        # Adjust WeightsRP
-        caseStudy.dPower_WeightsRP = caseStudy.dPower_WeightsRP.drop(caseStudy.dPower_WeightsRP.index)
-        caseStudy.dPower_WeightsRP.loc["rp01"] = None, 1, None, None, "ScenarioA"
+            # Hindex
+            hindex_scen = pd.DataFrame({
+                'p': scen_hindex['new_p'],
+                'rp': 'rp01',
+                'k': scen_hindex['new_k'],
+                'id': None,
+                'dataPackage': None,
+                'dataSource': None,
+                'scenario': scenario,
+            })
+            all_hindex.append(hindex_scen)
 
-        if not inplace:
-            return caseStudy
-        else:
-            return None
+            # WeightsK
+            weightsk_scen = pd.DataFrame({
+                'k': scen_hindex['new_k'],
+                'id': None,
+                'pWeight_k': 1,
+                'dataPackage': None,
+                'dataSource': None,
+                'scenario': scenario,
+            })
+            all_weightsk.append(weightsk_scen)
+
+            # WeightsRP
+            all_weightsrp.append({'rp': 'rp01', 'id': None, 'pWeight_rp': 1, 'dataPackage': None, 'dataSource': None, 'scenario': scenario})
+
+        caseStudy.dPower_Demand = pd.concat(all_demand).set_index(['rp', 'k', 'i'])
+
+        if all_vresprofiles:
+            caseStudy.dPower_VRESProfiles = pd.concat(all_vresprofiles).set_index(['rp', 'k', 'g'])
+
+        if all_inflows:
+            caseStudy.dPower_Inflows = pd.concat(all_inflows).set_index(['rp', 'k', 'g'])
+
+        caseStudy.dPower_Hindex = pd.concat(all_hindex).set_index(['p', 'rp', 'k'])
+        caseStudy.dPower_WeightsK = pd.concat(all_weightsk).set_index('k')
+        caseStudy.dPower_WeightsRP = pd.DataFrame(all_weightsrp).set_index('rp')
+
+        return None if inplace else caseStudy
 
     def filter_scenario(self, scenario_name, inplace: bool = False) -> Optional[Self]:
         """
@@ -801,6 +1009,89 @@ class CaseStudy:
                 setattr(caseStudy, df_name, filtered_df)
 
         return None if inplace else caseStudy
+
+    def filter_zone(self, zone: str | list[str], inplace: bool = False) -> Optional[Self]:
+        """
+        Filters the case study to only include buses in the given zone(s). All generators,
+        network lines, demand entries, and time series profiles connected to buses outside the
+        zone are removed.
+        :param zone: Zone name (value of the 'z' column in Power_BusInfo) or list of zone names to keep.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        case_study = self if inplace else self.copy()
+
+        zones = [zone] if isinstance(zone, str) else list(zone)
+
+        # Filter BusInfo and derive remaining bus set
+        case_study.dPower_BusInfo = case_study.dPower_BusInfo[case_study.dPower_BusInfo['z'].astype(str).isin(zones)]
+        remaining_buses = set(case_study.dPower_BusInfo.index)
+
+        # Filter Network: drop lines where either endpoint is outside the zone
+        network_reset = case_study.dPower_Network.reset_index()
+        case_study.dPower_Network = network_reset[
+            network_reset['i'].astype(str).isin(remaining_buses) & network_reset['j'].astype(str).isin(remaining_buses)
+            ]
+        case_study.dPower_Network['i'] = case_study.dPower_Network['i'].astype(str)
+        case_study.dPower_Network['j'] = case_study.dPower_Network['j'].astype(str)
+        case_study.dPower_Network['c'] = case_study.dPower_Network['c'].astype(str)
+        case_study.dPower_Network.set_index(['i', 'j', 'c'], inplace=True)
+
+        # Filter ThermalGen
+        if hasattr(case_study, 'dPower_ThermalGen') and case_study.dPower_ThermalGen is not None:
+            case_study.dPower_ThermalGen = case_study.dPower_ThermalGen[
+                case_study.dPower_ThermalGen['i'].astype(str).isin(remaining_buses)
+            ]
+
+        # Filter VRES; collect remaining VRES generator IDs for VRESProfiles / Inflows
+        remaining_vres_gens: set = set()
+        if hasattr(case_study, 'dPower_VRES') and case_study.dPower_VRES is not None:
+            case_study.dPower_VRES = case_study.dPower_VRES[
+                case_study.dPower_VRES['i'].astype(str).isin(remaining_buses)
+            ]
+            remaining_vres_gens = set(case_study.dPower_VRES.index)
+
+        # Filter Storage; collect remaining storage generator IDs for Inflows
+        remaining_storage_gens: set = set()
+        if hasattr(case_study, 'dPower_Storage') and case_study.dPower_Storage is not None:
+            case_study.dPower_Storage = case_study.dPower_Storage[
+                case_study.dPower_Storage['i'].astype(str).isin(remaining_buses)
+            ]
+            remaining_storage_gens = set(case_study.dPower_Storage.index)
+
+        # Filter Demand
+        demand_reset = case_study.dPower_Demand.reset_index()
+        case_study.dPower_Demand = demand_reset[
+            demand_reset['i'].astype(str).isin(remaining_buses)
+        ]
+        case_study.dPower_Demand['i'] = case_study.dPower_Demand['i'].astype(str)
+        case_study.dPower_Demand.set_index(['rp', 'k', 'i'], inplace=True)
+
+        # Filter VRESProfiles by remaining VRES generator IDs
+        if hasattr(case_study, 'dPower_VRESProfiles') and case_study.dPower_VRESProfiles is not None:
+            profiles_reset = case_study.dPower_VRESProfiles.reset_index()
+            case_study.dPower_VRESProfiles = profiles_reset[
+                profiles_reset['g'].isin(remaining_vres_gens)
+            ].set_index(['rp', 'k', 'g'])
+
+        # Filter Inflows by remaining VRES + Storage generator IDs
+        if hasattr(case_study, 'dPower_Inflows') and case_study.dPower_Inflows is not None:
+            remaining_gens = remaining_vres_gens | remaining_storage_gens
+            inflows_reset = case_study.dPower_Inflows.reset_index()
+            case_study.dPower_Inflows = inflows_reset[
+                inflows_reset['g'].isin(remaining_gens)
+            ].set_index(['rp', 'k', 'g'])
+
+        # Filter ImportExport by remaining buses
+        if hasattr(case_study, 'dPower_ImportExport') and case_study.dPower_ImportExport is not None:
+            ie_reset = case_study.dPower_ImportExport.reset_index()
+            case_study.dPower_ImportExport = ie_reset[
+                ie_reset['i'].astype(str).isin(remaining_buses)
+            ]
+            case_study.dPower_ImportExport['i'] = case_study.dPower_ImportExport['i'].astype(str)
+            case_study.dPower_ImportExport.set_index(['hub', 'i', 'rp', 'k'], inplace=True)
+
+        return None if inplace else case_study
 
     def filter_timesteps(self, start: str, end: str, inplace: bool = False, no_weight_k_adjustment: bool = False) -> Optional[Self]:
         """
@@ -910,6 +1201,131 @@ class CaseStudy:
                 setattr(case_study, df_name, df)
 
         return None if inplace else case_study
+
+    def _resample_hindex_from_target_probs(self, target_probs: dict[str, np.ndarray], rps: list[str], rng: np.random.Generator) -> None:
+        hindex_flat = self.dPower_Hindex.reset_index()
+        new_parts = []
+
+        for scenario in hindex_flat['scenario'].unique().tolist():
+            sc = hindex_flat[hindex_flat['scenario'] == scenario].copy()
+            sc = sc.sort_values(['p'])
+            n_ks_per_rp = len(self.dPower_WeightsK['scenario'] == scenario)
+
+            period_labels = sc['p'].tolist()
+            first_rp = sc['rp'].iloc[0]
+            n_periods = len(period_labels)
+
+            # Sample new RP sequence, anchoring the first period to the original
+            new_rp_seq = [first_rp for _ in range(n_ks_per_rp)]
+            for _ in range(n_periods - 1):
+                probs = target_probs[new_rp_seq[-1]]
+                next_rp = str(rng.choice(rps, p=probs))
+                new_rp_seq.extend([next_rp for _ in range(n_ks_per_rp)])
+
+            sc['rp'] = sc['p'].map(dict(zip(period_labels, new_rp_seq)))
+
+            # Ensure every RP appears at least once; if not, replace the most frequent period with the missing one
+            rp_count = sc.groupby('rp')['p'].count() / n_ks_per_rp
+            missing_rps = [rp for rp in rps if rp_count.get(rp, 0) == 0]
+            while missing_rps:
+                missing_rp = missing_rps.pop(0)
+                max_rp = rp_count.idxmax()
+                if rp_count[max_rp] <= 1:
+                    raise ValueError(f"It seems like there are more RPs than periods in the case study. Check your data and settings.")
+
+                first_occurence_of_max_rp = sc.rp.eq(max_rp).idxmax()
+                sc.loc[sc.index[first_occurence_of_max_rp:first_occurence_of_max_rp + n_ks_per_rp], 'rp'] = missing_rp
+
+                rp_count.loc[max_rp] -= 1
+                rp_count.loc[missing_rp] = 1
+
+            new_parts.append(sc)
+
+        new_hindex = pd.concat(new_parts, ignore_index=False)
+        self.dPower_Hindex = new_hindex.set_index(['p', 'rp', 'k'])
+
+    def shift_transition_matrix(self, positions: int, inplace: bool = True, seed: int = 42) -> Optional['CaseStudy']:
+        """
+        Adjust the transition matrix by shifting the probabilities by <positions> positions, resampling Hindex from the adjusted
+        target distribution. dPower_WeightsRP and all three transition-matrices are recomputed from the new Hindex.
+
+        :param positions: Number of positions to shift to the right (negative shifts to the left).
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param seed: Random seed to guarantee reproduceability.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        cs = self if inplace else self.copy()
+
+        rps = cs.rpTransitionMatrixAbsolute.index.tolist()
+        n = len(rps)
+
+        target_probs: dict[str, np.ndarray] = {}
+
+        printer.information(f"Adjusting transition matrix, shifting it by {positions} positions")
+        for rp in rps:
+            c = cs.rpTransitionMatrixAbsolute.loc[rp].values.astype(float)
+            total = c.sum()
+            if total == 0:
+                target_probs[rp] = np.ones(n) / n
+            else:
+                c_shifted = np.roll(c, positions)
+                target_probs[rp] = c_shifted / total
+
+        rng = np.random.default_rng(seed)
+        cs._resample_hindex_from_target_probs(target_probs, rps, rng)
+
+        # Recompute WeightsRP from new Hindex
+        cs.dPower_WeightsRP = cs.calculatePowerWeightsRP(np.nan, np.nan, np.nan)
+
+        # Recompute actual TM from new Hindex (approximates the target distributions)
+        cs.rpTransitionMatrixAbsolute, cs.rpTransitionMatrixRelativeTo, cs.rpTransitionMatrixRelativeFrom = cs.get_rpTransitionMatrices()
+
+        return None if inplace else cs
+
+    def perturb_transition_matrix(self, randomness: float, inplace: bool = True, seed: int = 42) -> Optional['CaseStudy']:
+        """
+        Adjust the transition matrix by interpolating each row between its original distribution and a random draw:
+        new_prob = (1 - randomness) * orig_prob + randomness * random_draw
+        Resamples Hindex from the adjusted target distribution. dPower_WeightsRP and all three transition-matrices
+        are recomputed from the new Hindex.
+
+        :param randomness: Interpolation factor [0.0, 1.0]. 0.0 leaves the matrix unchanged; 1.0 replaces it fully with random draws.
+        :param inplace: If True, modifies the current instance. If False, returns a new instance.
+        :param seed: Random seed to guarantee reproducibility.
+        :return: None if inplace is True, otherwise a new CaseStudy instance.
+        """
+        if not 0.0 <= randomness <= 1.0:
+            raise ValueError(f"randomness must be in [0.0, 1.0], got {randomness}")
+
+        cs = self if inplace else self.copy()
+
+        rps = cs.rpTransitionMatrixAbsolute.index.tolist()
+        n = len(rps)
+
+        target_probs: dict[str, np.ndarray] = {}
+        rng = np.random.default_rng(seed)
+
+        printer.information(f"Adjusting transition matrix, perturbing it with randomness={randomness}")
+        for rp in rps:
+            c = cs.rpTransitionMatrixAbsolute.loc[rp].values.astype(float)
+            total = c.sum()
+            if total == 0:
+                target_probs[rp] = np.ones(n) / n
+            else:
+                orig_prob = c / total
+                raw = rng.random(n)
+                random_draw = raw / raw.sum()
+                target_probs[rp] = (1 - randomness) * orig_prob + randomness * random_draw
+
+        cs._resample_hindex_from_target_probs(target_probs, rps, rng)
+
+        # Recompute WeightsRP from new Hindex
+        cs.dPower_WeightsRP = cs.calculatePowerWeightsRP(np.nan, np.nan, np.nan)
+
+        # Recompute actual TM from new Hindex (approximates the target distributions)
+        cs.rpTransitionMatrixAbsolute, cs.rpTransitionMatrixRelativeTo, cs.rpTransitionMatrixRelativeFrom = cs.get_rpTransitionMatrices()
+
+        return None if inplace else cs
 
     def apply_kmedoids_aggregation(self, number_rps: int, rp_length: int = 24,
                                    cluster_strategy: Literal["aggregated", "disaggregated"] = "aggregated",

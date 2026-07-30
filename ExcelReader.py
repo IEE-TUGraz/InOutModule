@@ -66,6 +66,8 @@ def __read_non_pivoted_file(excel_file_path: str, version_specifier: str, indice
                 df = df[df["excl"].isnull()]  # Only keep rows that are not excluded (i.e., have no value in the "Excl." column)
         else:
             df = df.drop(df.columns[0], axis=1)  # Drop the first column (which is empty)
+
+        df[indices] = df[indices].astype(str)  # Convert index columns to string to prevent issues with integer-indices
         df = df.set_index(indices) if len(indices) > 0 else df
         df["scenario"] = scenario
 
@@ -91,6 +93,7 @@ def __read_pivoted_file(excel_file_path: str, version_specifier: str, indices: l
     df = __read_non_pivoted_file(excel_file_path, version_specifier, [], has_excl_column, keep_excluded_columns, fail_on_wrong_version)
 
     df = df.melt(id_vars=melt_indices + ["scenario"], var_name=pivoted_variable_name, value_name="value")
+    df[indices] = df[indices].astype(str)  # Convert index columns to string to prevent issues with integer-indices (this has to be done here, since we don't pass indices to __read_non_pivoted_file)
     df = df.set_index(indices)
     return df
 
