@@ -5,13 +5,14 @@ import pandas as pd
 import pyomo.core.base.set
 import pyomo.environ as pyo
 from InOutModule.printer import Printer
+from LEGO.LEGO import LEGO
 
 printer = Printer.getInstance()
 
 
-def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
+def model_to_sqlite(model: pyo.base.ConcreteModel, filename: str) -> None:
     """
-    Save the model to a SQLite database.
+    Save the model to an SQLite database.
     Automatically includes objective decomposition and dual values.
 
     :param model: Pyomo model to save
@@ -64,14 +65,17 @@ def model_to_sqlite(model: pyo.base.Model, filename: str) -> None:
     pass
 
 
-def add_solver_statistics_to_sqlite(filename: str, results, work_units=None) -> None:
+def add_solver_statistics_to_sqlite(filename: str, lego: LEGO) -> None:
     """
-    Add solver statistics (like Gurobi work-units) to an existing SQLite database.
+    Add solver statistics to an existing SQLite database, reading from a LEGO instance.
     :param filename: Path to the SQLite database file
-    :param results: Pyomo solver results object
-    :param work_units: Optional work units value (from Gurobi solver)
+    :param lego: Solved LEGO instance (reads lego.results, lego.work_units, lego.mip_gap)
     :return: None
     """
+    results = lego.results
+    work_units = lego.work_units
+    mip_gap = lego.mip_gap
+
     cnx = sqlite3.connect(filename)
 
     # Extract solver statistics
@@ -109,13 +113,31 @@ def add_solver_statistics_to_sqlite(filename: str, results, work_units=None) -> 
                     if value is not None:
                         stats[attr] = float(value) if isinstance(value, (int, float)) else str(value)
 
+        # MIP gap
+        if mip_gap is not None:
+            stats['mip_gap'] = float(mip_gap)
+        else:
+            # Try to derive from bounds as fallback
+            lb = stats.get('lower_bound')
+            ub = stats.get('upper_bound')
+            if lb is not None and ub is not None and isinstance(lb, float) and isinstance(ub, float) and ub != 0:
+                derived_gap = abs(ub - lb) / abs(ub)
+                if derived_gap > 1e-10:
+                    stats['mip_gap'] = derived_gap
+                    printer.information(f"MIP gap derived from bounds: {derived_gap:.6f}")
+                else:
+                    printer.information("MIP gap not stored: bounds are equal (LP or MIP solved to optimality)")
+            else:
+                printer.information("MIP gap not available: not provided and bounds not found in results")
+
         # Create a DataFrame with solver statistics
         if stats:
             df = pd.DataFrame([stats])
             df.to_sql('solver_statistics', cnx, if_exists='replace', index=False)
             cnx.commit()
             work_units_str = f"{stats['work_units']:.2f}" if 'work_units' in stats else 'N/A'
-            printer.information(f"Added solver statistics to SQLite database (work_units: {work_units_str})")
+            mip_gap_str = f"{stats['mip_gap']:.6f}" if 'mip_gap' in stats else 'N/A'
+            printer.information(f"Added solver statistics to SQLite database (work_units: {work_units_str}, mip_gap: {mip_gap_str})")
         else:
             printer.warning("No solver statistics found in results object")
 

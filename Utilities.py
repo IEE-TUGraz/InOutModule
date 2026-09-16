@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import typing
 from typing import TYPE_CHECKING, Literal, Dict
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tsam.timeseriesaggregation as tsam
@@ -224,6 +226,7 @@ def _extract_scenario_data(case_study, scenario: str, capacity_normalization_str
     if combined_tech_data is not None:
         # Use right join to keep ALL demand data (even nodes without technology data)
         # Replicates demand for nodes with technology, and preserves demand-only nodes
+        combined_tech_data['i'] = combined_tech_data['i'].astype(str)
         scenario_df = pd.merge(
             combined_tech_data,
             scenario_df,
@@ -321,7 +324,9 @@ def _build_representative_periods(case_study, scenario: str, aggregation, rp_len
         """Extract numeric values from rp/k strings and calculate absolute hour."""
         df['rp_num'] = df['rp'].str[2:].astype(int)
         df['k_num'] = df['k'].str[1:].astype(int)
-        df['p'] = (df['rp_num'] - 1) * rp_length + df['k_num']
+        # Normalize k so the first k value maps to 1, regardless of offset (e.g. --limitK k2161-k4320)
+        min_k_num = df['k_num'].min()
+        df['p'] = (df['rp_num'] - 1) * rp_length + (df['k_num'] - min_k_num + 1)
         return df
 
     time_series_tables = [("Power_Demand", case_study.dPower_Demand)]
@@ -616,3 +621,125 @@ def apply_kmedoids_aggregation(
         inplace=inplace,
         verbose=verbose
     )
+
+
+def plot_transition_matrix(tm: pd.DataFrame, title: str | None = None, output: str | None = None):
+    """Plot a transition matrix as row- and column-normalised Blue-tinted tables.
+
+    Two figures are produced: one normalised by row sum ("from" perspective) and
+    one normalised by column sum ("to" perspective). In each, cell text shows
+    absolute counts and the respective normalised percentage; cell colour
+    intensity encodes that probability (darker = more likely). Row and column
+    sums are appended in bold.
+
+    :param tm: Transition matrix DataFrame (index and columns are RP labels).
+               Typically ``cs.rpTransitionMatrixAbsolute``.
+    :param title: Optional subtitle shown below the main heading.
+    :param output: If given, save the figures to this path with ``-rowNorm`` /
+                   ``-colNorm`` inserted before the extension, instead of
+                   displaying them.
+    """
+    labels = list(tm.index)
+    n = len(labels)
+    data = tm.values.astype(float)
+
+    row_totals = data.sum(axis=1)  # shape (n,)
+    col_totals = data.sum(axis=0)  # shape (n,)
+    grand_total = data.sum()
+
+    row_rel = data / np.where(row_totals == 0, 1, row_totals)[:, np.newaxis]
+    col_rel = data / np.where(col_totals == 0, 1, col_totals)[np.newaxis, :]
+
+    def _render(rel: np.ndarray, pct_label: str, out_path: str | None):
+        title_h = 0.55 if title else 0.35
+        fig_w = max(4.0, 0.95 * (n + 1) + 0.3)
+        fig_h = 0.4 * (n + 2) + title_h
+        fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+        ax.set_axis_off()
+
+        cmap = plt.cm.Blues
+
+        cell_text = [
+            [f"{int(data[r, c])}\n{rel[r, c]:.0%}" for c in range(n)] + [f"{int(row_totals[r])}"]
+            for r in range(n)
+        ]
+        cell_text.append([f"{int(col_totals[c])}" for c in range(n)] + [f"{int(grand_total)}"])
+
+        cell_colors = [
+            [cmap(rel[r, c]) for c in range(n)] + ["white"]
+            for r in range(n)
+        ]
+        cell_colors.append(["white"] * (n + 1))
+
+        sum_labels = labels + ["Sum"]
+
+        tbl = ax.table(
+            cellText=cell_text,
+            rowLabels=sum_labels,
+            colLabels=sum_labels,
+            cellColours=cell_colors,
+            loc="center",
+            cellLoc="center",
+            bbox=[0, 0, 1, 1],
+        )
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(8)
+
+        for r in range(n + 2):
+            tbl[r, n].get_text().set_fontweight("bold")
+        for c in range(-1, n + 1):
+            tbl[n + 1, c].get_text().set_fontweight("bold")
+
+        # Flip to white text where the Blue shade is too dark to read black on.
+        # (data cells are table rows 1..n, cols 0..n-1; row 0 is the header)
+        for r in range(n):
+            for c in range(n):
+                red, green, blue, _ = cmap(rel[r, c])
+                luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+                if luminance < 0.5:
+                    tbl[r + 1, c].get_text().set_color("white")
+
+        heading = f"Transition matrix (count / {pct_label})"
+        if title:
+            heading += f"\n{title}"
+        ax.set_title(heading, fontsize=10, pad=8)
+        fig.tight_layout(pad=0.3)
+
+        # Force layout so cell bounding boxes are finalised
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+
+        def _to_axes(xd, yd):
+            return ax.transAxes.inverted().transform((xd, yd))
+
+        bb0 = tbl[n + 1, 0].get_window_extent(renderer)
+        bb_rc = tbl[n + 1, n].get_window_extent(renderer)
+        bb_rl = tbl[n + 1, -1].get_window_extent(renderer)
+        x0_ax, y_ax = _to_axes(bb_rl.x0, bb0.y1)
+        x1_ax, _ = _to_axes(bb_rc.x1, bb0.y1)
+        ax.plot([x0_ax, x1_ax], [y_ax, y_ax], transform=ax.transAxes,
+                color="black", linewidth=2, clip_on=False, zorder=10)
+
+        bb_hdr = tbl[0, n].get_window_extent(renderer)
+        bb_bot = tbl[n + 1, n].get_window_extent(renderer)
+        x_ax, y0_ax = _to_axes(bb_hdr.x0, bb_bot.y0)
+        _, y1_ax = _to_axes(bb_hdr.x0, bb_hdr.y1)
+        ax.plot([x_ax, x_ax], [y0_ax, y1_ax], transform=ax.transAxes,
+                color="black", linewidth=2, clip_on=False, zorder=10)
+
+        if out_path:
+            fig.savefig(out_path, dpi=150, bbox_inches="tight")
+            print(f"Saved to {out_path}")
+        else:
+            plt.show()
+        plt.close(fig)
+
+    for rel_matrix, norm_suffix, norm_label in (
+        (row_rel, "rowNorm", "row %"),
+        (col_rel, "colNorm", "column %"),
+    ):
+        target = None
+        if output:
+            base, ext = os.path.splitext(output)
+            target = f"{base}-{norm_suffix}{ext}"
+        _render(rel_matrix, norm_label, target)
