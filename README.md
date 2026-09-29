@@ -2,6 +2,10 @@
 
 Data I/O package for LEGO-Pyomo. Handles reading Excel case study files, writing results to Excel and SQLite, and utility data transformations.
 
+PyPSA-related files are located in the folder [`PyPSA`](PyPSA). This folder contains the PyPSA reader, helper functions,
+the mapping configuration, and a [`README.md`](PyPSA/README.md) with documentation and instructions for translating a
+PyPSA-Eur dataset to LEGO Excel files.
+
 ## Key Files
 
 | File                   | Purpose                                                                 |
