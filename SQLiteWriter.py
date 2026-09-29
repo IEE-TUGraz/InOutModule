@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import os
 import sqlite3
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import pyomo.core.base.set
 import pyomo.environ as pyo
 from InOutModule.printer import Printer
-from LEGO.LEGO import LEGO
+
+if TYPE_CHECKING:
+    from LEGO.LEGO import LEGO
 
 printer = Printer.getInstance()
 
