@@ -24,6 +24,7 @@ See `README.md` for usage, key concepts, and data structure.
 - Excel sheets whose name starts with `~` are silently skipped (used to disable scenarios in a multi-sheet file without deleting them).
 - All Excel files have a version specifier in cell `C2` of each sheet. `check_LEGOExcel_version()` warns (or raises, if `fail_on_wrong_version=True`) on mismatch — wrong version can cause silent column misreads.
 - The reader uses `calamine` engine (fast), not `openpyxl`.
+- `compare_Excels()` returns `True` immediately if all xlsx parts except `docProps/` (timestamps) are byte-identical. Otherwise it compares cell by cell with openpyxl; formatting mismatches are cached per (source style IDs, target style IDs) pair because openpyxl style proxy access dominates runtime. openpyxl recomputes `max_row`, `max_column` and `column_groups` on every access (the latter cost quadratic time on wide sheets like `Power_Inflows`) — keep them hoisted out of the loops.
 
 ### ExcelWriter
 

@@ -1,4 +1,5 @@
 import time
+import zipfile
 
 import openpyxl
 import pandas as pd
@@ -469,6 +470,10 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
     :return: True if the files are equal, False otherwise
     """
     start_time = time.time()
+    if _xlsx_contents_identical(source_path, target_path):
+        printer.information(f"Excel files '{source_path}' and '{target_path}' have identical contents (only metadata may differ) - checked in {time.time() - start_time:.2f} seconds")
+        return True
+
     source = load_workbook(source_path)
     target = load_workbook(target_path)
 
@@ -482,16 +487,31 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
             continue
         target_sheet = target[sheet]
 
-        for row in range(1, min(source_sheet.max_row, target_sheet.max_row) + 1):
+        # max_row/max_column and column_groups are recomputed by openpyxl on every access, so evaluate them once per sheet
+        source_max_row, source_max_column = source_sheet.max_row, source_sheet.max_column
+        target_max_row, target_max_column = target_sheet.max_row, target_sheet.max_column
+        n_rows, n_columns = min(source_max_row, target_max_row), min(source_max_column, target_max_column)
+
+        if not dont_check_formatting:
+            source_column_widths = _get_column_widths(source_sheet, n_columns)
+            target_column_widths = _get_column_widths(target_sheet, n_columns)
+            for col in range(1, n_columns + 1):
+                if source_column_widths[col] != target_column_widths[col]:
+                    printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_column_widths[col]} != {target_column_widths[col]}")
+                    equal = False
+
+        # Formatting mismatches only depend on the cells' style IDs, so they are computed once per (source style, target style) pair
+        style_mismatch_cache = {}
+
+        for row, source_row, target_row in zip(range(1, n_rows + 1),
+                                               source_sheet.iter_rows(min_row=1, max_row=n_rows, max_col=n_columns),
+                                               target_sheet.iter_rows(min_row=1, max_row=n_rows, max_col=n_columns)):
             if not dont_check_formatting:
                 if source_sheet.row_dimensions[row].height != target_sheet.row_dimensions[row].height:
                     printer.error(f"Mismatch in row height at {sheet}/row {row}: {source_sheet.row_dimensions[row].height} != {target_sheet.row_dimensions[row].height}")
                     equal = False
 
-            for col in range(1, min(source_sheet.max_column, target_sheet.max_column) + 1):
-                source_cell = source_sheet.cell(row=row, column=col)
-                target_cell = target_sheet.cell(row=row, column=col)
-
+            for source_cell, target_cell in zip(source_row, target_row):
                 # Value
                 if source_cell.value != target_cell.value:
                     if (isinstance(source_cell.value, float) or isinstance(source_cell.value, int)) and (isinstance(target_cell.value, float) or isinstance(target_cell.value, int)):
@@ -507,42 +527,13 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                         equal = False
 
                 if not dont_check_formatting:
-                    # Font
-                    for k, v in source_cell.font.__dict__.items():
-                        if k == "color" and v is not None:
-                            for k2, v2 in v.__dict__.items():
-                                if ((v2 is None and target_cell.font.color is not None) or
-                                        (v2 is not None and target_cell.font.color is None) or
-                                        (v2 != getattr(target_cell.font.color, k2))):
-                                    printer.error(f"Mismatch in font color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.font.color, k2) if target_cell.font.color is not None else None}")
-                                    equal = False
-                        elif getattr(target_cell.font, k) != v:
-                            printer.error(f"Mismatch in font property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.font, k)} != {v}")
-                            equal = False
-
-                    # Fill
-                    for k, v in source_cell.fill.__dict__.items():
-                        if k == "color" and v is not None:
-                            for k2, v2 in v.__dict__.items():
-                                if ((v2 is None and target_cell.fill.color is not None) or
-                                        (v2 is not None and target_cell.fill.color is None) or
-                                        (v2 != getattr(target_cell.fill.color, k2))):
-                                    printer.error(f"Mismatch in fill color at {sheet}/{source_cell.coordinate}: {v2} != {getattr(target_cell.fill.color, k2) if target_cell.fill.color is not None else None}")
-                                    equal = False
-                        elif getattr(target_cell.fill, k) != v:
-                            printer.error(f"Mismatch in fill property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.fill, k)} != {v}")
-                            equal = False
-
-                    # Number format
-                    if source_cell.number_format != target_cell.number_format:
-                        printer.error(f"Mismatch in number format at {sheet}/{source_cell.coordinate}: {source_cell.number_format} != {target_cell.number_format}")
+                    style_key = (tuple(source_cell._style or ()), tuple(target_cell._style or ()))  # _style is None for cells with default style
+                    style_mismatches = style_mismatch_cache.get(style_key)
+                    if style_mismatches is None:
+                        style_mismatches = style_mismatch_cache[style_key] = _get_style_mismatches(source_cell, target_cell)
+                    for mismatch_description, mismatch_values in style_mismatches:
+                        printer.error(f"Mismatch in {mismatch_description} at {sheet}/{source_cell.coordinate}: {mismatch_values}")
                         equal = False
-
-                    # Alignment
-                    for k, v in source_cell.alignment.__dict__.items():
-                        if getattr(target_cell.alignment, k) != v:
-                            printer.error(f"Mismatch in alignment property '{k}' at {sheet}/{source_cell.coordinate}: {getattr(target_cell.alignment, k)} != {v}")
-                            equal = False
 
                     # Comment
                     if ((source_cell.comment is None and target_cell.comment is not None) or
@@ -550,34 +541,11 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                             (source_cell.comment != target_cell.comment)):
                         printer.error(f"Mismatch in comment at {sheet}/{source_cell.coordinate}: {source_cell.comment} != {target_cell.comment}")
                         equal = False
-
-                    # Column width
-                    if row == 1:  # Only need to check column width for the first row
-                        source_columnwidth = source_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width
-                        for group in source_sheet.column_groups:
-                            start, end = group.split(":")
-                            start = openpyxl.utils.column_index_from_string(start)
-                            end = openpyxl.utils.column_index_from_string(end)
-                            if start < col <= end:
-                                source_columnwidth = source_sheet.column_dimensions[openpyxl.utils.get_column_letter(start)].width
-                                break
-
-                        target_columnwidth = target_sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width
-                        for group in target_sheet.column_groups:
-                            start, end = group.split(":")
-                            start = openpyxl.utils.column_index_from_string(start)
-                            end = openpyxl.utils.column_index_from_string(end)
-                            if start < col <= end:
-                                target_columnwidth = target_sheet.column_dimensions[openpyxl.utils.get_column_letter(start)].width
-                                break
-                        if source_columnwidth != target_columnwidth:
-                            printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_columnwidth} != {target_columnwidth}")
-                            equal = False
-        if source_sheet.max_column != target_sheet.max_column:
-            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_column - target_sheet.max_column)} {"more" if target_sheet.max_column > source_sheet.max_column else "fewer"} columns ({target_sheet.max_column} in total) than source sheet ({source_sheet.max_column} in total)")
+        if source_max_column != target_max_column:
+            printer.error(f"Target sheet '{sheet}' has {abs(source_max_column - target_max_column)} {"more" if target_max_column > source_max_column else "fewer"} columns ({target_max_column} in total) than source sheet ({source_max_column} in total)")
             equal = False
-        if source_sheet.max_row != target_sheet.max_row:
-            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_row - target_sheet.max_row)} {"more" if target_sheet.max_row > source_sheet.max_row else "fewer"} rows ({target_sheet.max_row} in total) than source sheet ({source_sheet.max_row} in total)")
+        if source_max_row != target_max_row:
+            printer.error(f"Target sheet '{sheet}' has {abs(source_max_row - target_max_row)} {"more" if target_max_row > source_max_row else "fewer"} rows ({target_max_row} in total) than source sheet ({source_max_row} in total)")
             equal = False
 
     for sheet in target.sheetnames:
@@ -587,3 +555,83 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
 
     printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")
     return equal
+
+
+def _xlsx_contents_identical(source_path: str, target_path: str) -> bool:
+    """
+    Check if two xlsx files contain byte-identical parts, ignoring document metadata (docProps/, e.g. creation/modification time).
+    :param source_path: Path to the source Excel file
+    :param target_path: Path to the target Excel file
+    :return: True if all non-metadata parts are byte-identical, False otherwise
+    """
+    with zipfile.ZipFile(source_path) as source_zip, zipfile.ZipFile(target_path) as target_zip:
+        source_parts = {name for name in source_zip.namelist() if not name.startswith("docProps/")}
+        target_parts = {name for name in target_zip.namelist() if not name.startswith("docProps/")}
+        if source_parts != target_parts:
+            return False
+        return all(source_zip.getinfo(name).CRC == target_zip.getinfo(name).CRC and source_zip.read(name) == target_zip.read(name) for name in source_parts)
+
+
+def _get_column_widths(sheet, n_columns: int) -> dict[int, float]:
+    """
+    Get the effective width of columns 1..n_columns, where columns inside a column group use the width of the group's first column.
+    :param sheet: openpyxl worksheet
+    :param n_columns: Number of columns to get the width for
+    :return: Dictionary of column index -> width
+    """
+    column_groups = []
+    for group in sheet.column_groups:
+        start, end = group.split(":")
+        column_groups.append((openpyxl.utils.column_index_from_string(start), openpyxl.utils.column_index_from_string(end)))
+
+    column_widths = {}
+    for col in range(1, n_columns + 1):
+        column_widths[col] = sheet.column_dimensions[get_column_letter(col)].width
+        for start, end in column_groups:
+            if start < col <= end:
+                column_widths[col] = sheet.column_dimensions[get_column_letter(start)].width
+                break
+    return column_widths
+
+
+def _get_style_mismatches(source_cell, target_cell) -> list[tuple[str, str]]:
+    """
+    Compare the formatting (font, fill, number format, alignment) of two cells.
+    :param source_cell: Cell of the source workbook
+    :param target_cell: Cell of the target workbook
+    :return: List of (description, "source value != target value") tuples, one per mismatching property
+    """
+    mismatches = []
+
+    # Font
+    for k, v in source_cell.font.__dict__.items():
+        if k == "color" and v is not None:
+            for k2, v2 in v.__dict__.items():
+                if ((v2 is None and target_cell.font.color is not None) or
+                        (v2 is not None and target_cell.font.color is None) or
+                        (v2 != getattr(target_cell.font.color, k2))):
+                    mismatches.append(("font color", f"{v2} != {getattr(target_cell.font.color, k2) if target_cell.font.color is not None else None}"))
+        elif getattr(target_cell.font, k) != v:
+            mismatches.append((f"font property '{k}'", f"{getattr(target_cell.font, k)} != {v}"))
+
+    # Fill
+    for k, v in source_cell.fill.__dict__.items():
+        if k == "color" and v is not None:
+            for k2, v2 in v.__dict__.items():
+                if ((v2 is None and target_cell.fill.color is not None) or
+                        (v2 is not None and target_cell.fill.color is None) or
+                        (v2 != getattr(target_cell.fill.color, k2))):
+                    mismatches.append(("fill color", f"{v2} != {getattr(target_cell.fill.color, k2) if target_cell.fill.color is not None else None}"))
+        elif getattr(target_cell.fill, k) != v:
+            mismatches.append((f"fill property '{k}'", f"{getattr(target_cell.fill, k)} != {v}"))
+
+    # Number format
+    if source_cell.number_format != target_cell.number_format:
+        mismatches.append(("number format", f"{source_cell.number_format} != {target_cell.number_format}"))
+
+    # Alignment
+    for k, v in source_cell.alignment.__dict__.items():
+        if getattr(target_cell.alignment, k) != v:
+            mismatches.append((f"alignment property '{k}'", f"{getattr(target_cell.alignment, k)} != {v}"))
+
+    return mismatches
