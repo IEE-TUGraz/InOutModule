@@ -574,10 +574,15 @@ def compare_Excels(source_path: str, target_path: str, dont_check_formatting: bo
                             printer.error(f"Mismatch in column width at {sheet}/column {col}: {source_columnwidth} != {target_columnwidth}")
                             equal = False
         if source_sheet.max_column != target_sheet.max_column:
-            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_column - target_sheet.max_column)} {"more" if source_sheet.max_column > target_sheet.max_column else "less"} columns ({target_sheet.max_column} in total) than source sheet ({source_sheet.max_column} in total)")
+            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_column - target_sheet.max_column)} {"more" if target_sheet.max_column > source_sheet.max_column else "fewer"} columns ({target_sheet.max_column} in total) than source sheet ({source_sheet.max_column} in total)")
             equal = False
         if source_sheet.max_row != target_sheet.max_row:
-            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_row - target_sheet.max_row)} {"more" if source_sheet.max_row > target_sheet.max_row else "less"} rows ({target_sheet.max_row} in total) than source sheet ({source_sheet.max_row} in total)")
+            printer.error(f"Target sheet '{sheet}' has {abs(source_sheet.max_row - target_sheet.max_row)} {"more" if target_sheet.max_row > source_sheet.max_row else "fewer"} rows ({target_sheet.max_row} in total) than source sheet ({source_sheet.max_row} in total)")
+            equal = False
+
+    for sheet in target.sheetnames:
+        if sheet not in source.sheetnames:
+            printer.error(f"Sheet '{sheet}' not found in source file '{source_path}'")
             equal = False
 
     printer.information(f"Compared Excel file '{source_path}' to '{target_path}' in {time.time() - start_time:.2f} seconds")
