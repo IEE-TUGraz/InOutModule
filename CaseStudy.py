@@ -1209,7 +1209,7 @@ class CaseStudy:
         for scenario in hindex_flat['scenario'].unique().tolist():
             sc = hindex_flat[hindex_flat['scenario'] == scenario].copy()
             sc = sc.sort_values(['p'])
-            n_ks_per_rp = len(self.dPower_WeightsK['scenario'] == scenario)
+            n_ks_per_rp = int((self.dPower_WeightsK['scenario'] == scenario).sum())
 
             period_labels = sc['p'].tolist()
             first_rp = sc['rp'].iloc[0]
