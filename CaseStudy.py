@@ -435,6 +435,8 @@ class CaseStudy:
         self.dPower_ImportExport["ImpExpMinimum"] *= self.power_scaling_factor
         self.dPower_ImportExport["ImpExpMaximum"] *= self.power_scaling_factor
         self.dPower_ImportExport["ImpExpPrice"] *= self.cost_scaling_factor / self.power_scaling_factor
+        self.dPower_Parameters["pGridTariffImport"] *= self.cost_scaling_factor / self.power_scaling_factor
+        self.dPower_Parameters["pGridTariffExport"] *= self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         file_path = self.data_folder + self.global_parameters_file
