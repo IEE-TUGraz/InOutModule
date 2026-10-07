@@ -94,6 +94,8 @@ class CaseStudy:
 
         if dPower_Parameters is not None:
             self.dPower_Parameters = dPower_Parameters
+            for flag in ('pEnableDSM', 'pEnableDGA'):  # optional modules, see get_dPower_Parameters
+                self.dPower_Parameters.setdefault(flag, 0)
         else:
             self.power_parameters_file = power_parameters_file
             self.dPower_Parameters = self.get_dPower_Parameters()
@@ -184,12 +186,15 @@ class CaseStudy:
         else:
             self.dPower_ImportExport = None
 
+        # pEnableDGA / pEnableDSM always exist here (missing flags are set to "No" in get_dPower_Parameters)
         if self.dPower_Parameters["pEnableDGA"]:
             self.power_DGA_file = power_DGA_file
             if dPower_DGA is None:
                 tasks.append(("dPower_DGA", ExcelReader.get_Power_DGA, (self.data_folder + self.power_DGA_file,)))
             else:
                 self.dPower_DGA = dPower_DGA
+
+
 
         # --- Execute Tasks (Parallel or Sequential) ---
         if parallel_read and len(tasks) > 0:
@@ -435,8 +440,14 @@ class CaseStudy:
         self.dPower_ImportExport["ImpExpMinimum"] *= self.power_scaling_factor
         self.dPower_ImportExport["ImpExpMaximum"] *= self.power_scaling_factor
         self.dPower_ImportExport["ImpExpPrice"] *= self.cost_scaling_factor / self.power_scaling_factor
-        self.dPower_Parameters["pGridTariffImport"] *= self.cost_scaling_factor / self.power_scaling_factor
-        self.dPower_Parameters["pGridTariffExport"] *= self.cost_scaling_factor / self.power_scaling_factor
+        # Grid tariffs are optional: missing row (key not in dict) or empty cell (NaN) -> 0
+        for name in ("pGridTariffImport", "pGridTariffExport"):
+            value = self.dPower_Parameters.get(name)
+            if value is None or pd.isna(value):
+                printer.warning(f"'{name}' not set in Power_Parameters - using 0 (no grid tariff).")
+                self.dPower_Parameters[name] = 0.0
+            else:
+                self.dPower_Parameters[name] = float(value) * self.cost_scaling_factor / self.power_scaling_factor
 
     def get_dGlobal_Parameters(self):
         file_path = self.data_folder + self.global_parameters_file
@@ -489,6 +500,12 @@ class CaseStudy:
         dPower_Parameters = dPower_Parameters.drop(dPower_Parameters.columns[0], axis=1)
         dPower_Parameters = dPower_Parameters.dropna(how="all")
         dPower_Parameters = dPower_Parameters.set_index('General')
+
+        # Flags of modules that older Power_Parameters versions do not contain -> default "No" (module disabled)
+        for flag in ('pEnableDSM', 'pEnableDGA'):
+            if flag not in dPower_Parameters.index:
+                printer.warning(f"'{flag}' not found in Power_Parameters - module disabled ('No').")
+                dPower_Parameters.loc[flag, "Value"] = "No"
 
         self.yesNo_to_bool(dPower_Parameters, ['pEnableChDisPower', 'pFixStInterResToIniReserve', 'pEnableSoftLineLoadLimits', 'pEnableSoftVoltageLimits', 'pEnableThermalGen', 'pEnableRoR', 'pEnableVRES', 'pEnableStorage', 'pEnablePowerImportExport', 'pForcePrimitiveStorageUsage', 'pEnableSOCP', 'pEnableDSM', 'pEnableDGA'])
 
