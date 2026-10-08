@@ -255,18 +255,18 @@ class ExcelWriter:
         self.write_Power_BusInfo(cs.dPower_BusInfo, folder_path)
         self.write_Power_Demand(cs.dPower_Demand, folder_path)
         self.write_Power_Hindex(cs.dPower_Hindex, folder_path)
-        if hasattr(cs, "dPower_Inflows"):
+        if getattr(cs, "dPower_Inflows", None) is not None:
             self.write_Power_Inflows(cs.dPower_Inflows, folder_path)
         self.write_Power_Network(cs.dPower_Network, folder_path)
-        if hasattr(cs, "dPower_Storage"):
+        if getattr(cs, "dPower_Storage", None) is not None:
             self.write_Power_Storage(cs.dPower_Storage, folder_path)
-        if hasattr(cs, "dPower_ThermalGen"):
+        if getattr(cs, "dPower_ThermalGen", None) is not None:
             self.write_Power_ThermalGen(cs.dPower_ThermalGen, folder_path)
-        if hasattr(cs, "dPower_VRES"):
+        if getattr(cs, "dPower_VRES", None) is not None:
             self.write_Power_VRES(cs.dPower_VRES, folder_path)
-        if hasattr(cs, "dPower_VRESProfiles"):
+        if getattr(cs, "dPower_VRESProfiles", None) is not None:
             self.write_Power_VRESProfiles(cs.dPower_VRESProfiles, folder_path)
-        if hasattr(cs, "dPower_ImportExport") and cs.dPower_ImportExport is not None:
+        if getattr(cs, "dPower_ImportExport", None) is not None:
             self.write_Power_ImportExport(cs.dPower_ImportExport, folder_path)
         self.write_Power_WeightsK(cs.dPower_WeightsK, folder_path)
         self.write_Power_WeightsRP(cs.dPower_WeightsRP, folder_path)

@@ -29,6 +29,7 @@ See `README.md` for usage, key concepts, and data structure.
 ### ExcelWriter
 
 - All cell styles, column definitions, and table layouts are declared in `TableDefinitions.xml`, not in Python code. When adding a new output table, define its columns there first.
+- `CaseStudy` sets a missing optional file's dataframe to `None` (the attribute still exists), so `write_caseStudy` checks `getattr(cs, name, None) is not None`, never `hasattr` alone.
 - `ExcelWriter.__init__()` parses the XML once and stores resolved objects (`self.columns`, `self.cell_styles`, etc.). Avoid re-instantiating per row.
 
 ### SQLiteWriter
