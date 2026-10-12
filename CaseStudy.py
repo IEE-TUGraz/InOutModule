@@ -232,6 +232,11 @@ class CaseStudy:
             elif len(self.dGlobal_Scenarios) == 1:
                 self.filter_scenario(self.dGlobal_Scenarios.index[0], inplace=True)  # Filter case study to only include actually present scenarios
 
+        self.assign_tec_repr_for_same_zone_lines("SN")
+        self.assign_tec_repr_for_cross_zone_lines("TP")
+        self.assign_tec_repr_for_same_zone_lines("DC-OPF", whitelist=("AT", "Styria, AT"))
+        self.assign_tec_repr_for_cross_zone_lines("DC-OPF", whitelist=("AT", "Styria, AT"))
+
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
         if not do_not_merge_single_node_buses:
@@ -526,6 +531,50 @@ class CaseStudy:
 
         connected_buses.sort()
         return connected_buses
+
+    def assign_tec_repr_for_same_zone_lines(self, tec_repr, whitelist=(), blacklist=()):
+        """
+        Assign a technical representation to lines whose endpoints are in the same zone
+        :param tec_repr: Technical representation to assign, e.g. "SN", "TP", "DC-OPF"
+        :param whitelist: Optional zones to include. If set, only same-zone lines inside these zones are changed
+        :param blacklist: Optional zones to exclude. If set, same-zone lines inside these zones are skipped
+        """
+        if whitelist and blacklist:
+            raise ValueError("Use either whitelist or blacklist, not both.")
+
+        for from_bus, to_bus, circuit in self.dPower_Network.index:
+            from_zone = self.dPower_BusInfo.at[from_bus, "z"]
+            to_zone = self.dPower_BusInfo.at[to_bus, "z"]
+
+            if from_zone == to_zone:
+                if whitelist and from_zone not in whitelist:
+                    continue
+                if blacklist and from_zone in blacklist:
+                    continue
+
+                self.dPower_Network.at[(from_bus, to_bus, circuit), "pTecRepr"] = tec_repr
+
+    def assign_tec_repr_for_cross_zone_lines(self, tec_repr, whitelist=(), blacklist=()):
+        """
+        Assign a technical representation to lines whose endpoints are in different zones
+        :param tec_repr: Technical representation to assign, e.g. "SN", "TP", "DC-OPF"
+        :param whitelist: Optional zones to include. If set, only cross-zone lines touching these zones are changed
+        :param blacklist: Optional zones to exclude. If set, cross-zone lines touching these zones are skipped
+        """
+        if whitelist and blacklist:
+            raise ValueError("Use either whitelist or blacklist, not both.")
+
+        for from_bus, to_bus, circuit in self.dPower_Network.index:
+            from_zone = self.dPower_BusInfo.at[from_bus, "z"]
+            to_zone = self.dPower_BusInfo.at[to_bus, "z"]
+
+            if from_zone != to_zone:
+                if whitelist and from_zone not in whitelist and to_zone not in whitelist:
+                    continue
+                if blacklist and (from_zone in blacklist or to_zone in blacklist):
+                    continue
+
+                self.dPower_Network.at[(from_bus, to_bus, circuit), "pTecRepr"] = tec_repr
 
     def merge_single_node_buses(self, inplace: bool = True) -> typing.Optional[typing.Self]:
         """
