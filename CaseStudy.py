@@ -232,10 +232,7 @@ class CaseStudy:
             elif len(self.dGlobal_Scenarios) == 1:
                 self.filter_scenario(self.dGlobal_Scenarios.index[0], inplace=True)  # Filter case study to only include actually present scenarios
 
-        self.assign_tec_repr_for_same_zone_lines("SN")
-        self.assign_tec_repr_for_cross_zone_lines("TP")
-        self.assign_tec_repr_for_same_zone_lines("DC-OPF", whitelist=("AT", "Styria, AT"))
-        self.assign_tec_repr_for_cross_zone_lines("DC-OPF", whitelist=("AT", "Styria, AT"))
+        # can call assign_tec_repr_for_same_zone_line/assign_tec_repr_for_cross_zone_lines here
 
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
