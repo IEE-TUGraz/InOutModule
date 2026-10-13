@@ -9,6 +9,7 @@ See `README.md` for usage, key concepts, and data structure.
 
 - Sequential reads happen first (`Global_Parameters`, `Global_Scenarios`, `Power_Parameters`), because subsequent file selection depends on `pEnable*` flags.
 - All remaining files are read in parallel via `ThreadPoolExecutor` — order of assignment is non-deterministic, so no file read may depend on another parallel read.
+- `Power_VRESProfiles.xlsx` and `Power_Inflows.xlsx` are **optional**: a missing file leaves the attribute set to `None` (it still exists, so `hasattr` is not enough). Every consumer (scaling, clustering, `filter_zone`, `merge_generators`, `to_full_hourly_model`, `write_caseStudy`) must check `is not None`; the LEGO `vres`/`storage` modules do the same, and `vres` raises if a VRES generator has neither a profile nor an inflow.
 - `dPower_WeightsRP` is **computed** from `dPower_Hindex` (counting occurrences per `rp`); if a `Power_WeightsRP.xlsx` file also exists, it is read and compared — a mismatch triggers a warning but uses the **file** value, not the computed one.
 - `merge_single_node_buses()` preserves the `z` (zone) column as a sorted unique union string of all merged zones (e.g. `"R1_R2"`). This is documented in root `CLAUDE.md` as well.
 - `merge_generators()` collapses all generators sharing the same `(tec, i)` into one representative generator with ID `"{i}_{tec}"`. It must be called after construction (scaling is not required). VRESProfiles and Inflows are merged **before** VRES so that the original per-generator `MaxProd` weights are available for the capacity-factor weighted average. Generators in VRESProfiles/Inflows that have no matching entry in `dPower_VRES` (left-join miss) are grouped under `(tec=NaN, i=NaN)` — filter to a single scenario first to avoid mixing scenarios in the groupby.
@@ -36,6 +37,7 @@ See `README.md` for usage, key concepts, and data structure.
 
 - `model_to_sqlite()` automatically calls `add_objective_decomposition_to_sqlite()` and `add_dual_values_to_sqlite()` — these do not need to be called separately.
 - `add_run_parameters_to_sqlite()` stores all run configuration in the `run_parameters` table. Evaluation scripts should read from this table (more reliable than filename parsing).
+- `add_solver_statistics_to_sqlite()` adds the machine columns from `machine_info()` (CPU model: Windows registry `ProcessorNameString`, Linux `/proc/cpuinfo`; cores/affinity via `psutil`) and the resource columns from `lego.solver_attributes` (`Threads`, `MaxMemUsed` — Gurobi path only) and `process_memory_gb()` (shared with `research/MK/Markov.py`; Windows `peak_wset`, Linux `ru_maxrss` in kB). `None` values are dropped, so the columns may be missing (non-Gurobi solvers, old files). `process_peak_rss_gb` is the process-lifetime peak, so it covers model building and all earlier solves of the same process.
 - Pyomo component types not handled by the writer emit a `printer.warning()` and are skipped silently — add new `case` branches if new Pyomo types need to be stored.
 
 ### Utilities
