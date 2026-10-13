@@ -84,6 +84,7 @@ add_run_parameters_to_sqlite("output/results.sqlite", zoi="R1", dc_buffer=2)
 
 - `model_to_sqlite()` exports all Pyomo variables, parameters, and sets; automatically appends objective decomposition and dual values.
 - `add_run_parameters_to_sqlite()` creates a `run_parameters` table — evaluation scripts should read from this table rather than parsing filenames.
+- `add_solver_statistics_to_sqlite()` creates a `solver_statistics` table: status, termination condition, solver time, bounds, model size, work units and MIP gap, plus the machine and resources of the solve — `host`, `cpu_model`, `cpu_physical_cores`, `cpu_logical_cores`, `cpus_available` (CPU affinity, e.g. a Slurm allocation), `threads` (Gurobi threads; `0`/automatic is stored as the logical core count), `solver_max_mem_gb` (Gurobi's peak memory) and `process_peak_rss_gb` (peak RAM of the whole Python process). Works on Windows and Linux.
 
 ## Caller (Parallel Job Runner)
 

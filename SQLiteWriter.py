@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import platform
+import socket
 import sqlite3
 from typing import TYPE_CHECKING
 
@@ -70,6 +72,59 @@ def model_to_sqlite(model: pyo.base.ConcreteModel, filename: str) -> None:
     pass
 
 
+def process_memory_gb() -> tuple[float | None, float | None]:
+    """(current RSS, peak RSS) of this process in GB. Peak is the lifetime high-water mark of the process."""
+    rss = peak = None
+    try:
+        import psutil
+        mem = psutil.Process().memory_info()
+        rss = mem.rss / 1024 ** 3
+        if getattr(mem, 'peak_wset', None) is not None:  # Windows
+            peak = mem.peak_wset / 1024 ** 3
+    except Exception:
+        pass
+    if peak is None:
+        try:
+            import resource  # Linux: ru_maxrss in kB
+            peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 ** 2
+        except Exception:
+            pass
+    return rss, peak
+
+
+def _cpu_model() -> str | None:
+    """CPU model name as the OS reports it (e.g. '13th Gen Intel(R) Core(TM) i9-13900')."""
+    try:
+        if platform.system() == 'Windows':
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'HARDWARE\DESCRIPTION\System\CentralProcessor\0') as key:
+                return str(winreg.QueryValueEx(key, 'ProcessorNameString')[0]).strip()
+        if platform.system() == 'Linux':
+            with open('/proc/cpuinfo') as f:
+                for line in f:
+                    if line.startswith('model name'):
+                        return line.split(':', 1)[1].strip()
+    except Exception:
+        pass
+    return platform.processor() or None
+
+
+def machine_info() -> dict:
+    """Host, CPU model and core counts of the machine running this process (missing values omitted).
+    `cpus_available` is the process's CPU affinity - under Slurm the cores of the allocation, not of the node."""
+    info = {'host': socket.gethostname(), 'cpu_model': _cpu_model()}
+    try:
+        import psutil
+        info['cpu_physical_cores'] = psutil.cpu_count(logical=False)
+        info['cpu_logical_cores'] = psutil.cpu_count(logical=True)
+        info['cpus_available'] = len(psutil.Process().cpu_affinity())
+    except Exception:
+        info.setdefault('cpu_logical_cores', os.cpu_count())
+        if hasattr(os, 'sched_getaffinity'):  # Linux
+            info['cpus_available'] = len(os.sched_getaffinity(0))
+    return {k: v for k, v in info.items() if v is not None}
+
+
 def add_solver_statistics_to_sqlite(filename: str, lego: LEGO) -> None:
     """
     Add solver statistics to an existing SQLite database, reading from a LEGO instance.
@@ -134,6 +189,17 @@ def add_solver_statistics_to_sqlite(filename: str, lego: LEGO) -> None:
                     printer.information("MIP gap not stored: bounds are equal (LP or MIP solved to optimality)")
             else:
                 printer.information("MIP gap not available: not provided and bounds not found in results")
+
+        # Machine and resources of the solve (work units / solver times are only comparable on the same CPU and threads)
+        stats.update(machine_info())
+        solver_attributes = getattr(lego, 'solver_attributes', {}) or {}
+        threads = solver_attributes.get('Threads')
+        if threads is not None:  # Gurobi's Threads parameter, 0 (automatic) = all logical cores
+            stats['threads'] = int(threads) if threads > 0 else stats.get('cpu_logical_cores')
+        if solver_attributes.get('MaxMemUsed') is not None:
+            stats['solver_max_mem_gb'] = float(solver_attributes['MaxMemUsed'])
+        stats['process_peak_rss_gb'] = process_memory_gb()[1]
+        stats = {k: v for k, v in stats.items() if v is not None}
 
         # Create a DataFrame with solver statistics
         if stats:
