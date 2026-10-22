@@ -538,25 +538,37 @@ class CaseStudy:
         else:
             cs = self.copy()
 
-        # Create a connection matrix
-        connectionMatrix = pd.DataFrame(index=cs.dPower_BusInfo.index, columns=[cs.dPower_BusInfo.index], data=False)
-        for index, entry in cs.dPower_Network.iterrows():
-            if entry["pTecRepr"] == "SN":
-                connectionMatrix.loc[index[0], index[1]] = True
-                connectionMatrix.loc[index[1], index[0]] = True
+        # Find groups of buses connected via single-node lines (union-find over all SN lines)
+        parent = {}  # This builds a tree where each connected bus points to its parent (the 'root', which is the only one where parent[root] == root))
 
-        # Merge buses based on connection matrix
-        merged_buses = set()  # Set of buses that have been merged already
-        for index, entry in connectionMatrix.iterrows():
-            if index in merged_buses or not entry.any():  # Skip if bus has already been merged or has no connections
-                continue
+        def find(bus):
+            """Find the root of the tree for a given bus, with path compression."""
+            root = parent.setdefault(bus, bus)
+            while root != parent[root]:  # Find the root of the tree
+                root = parent[root]
+            while bus != root:  # Path compression, so that all nodes point directly to their root
+                parent[bus], bus = root, parent[bus]
+            return root
 
-            connected_buses = cs.get_connected_buses(connectionMatrix, str(index))
+        # Build trees of all buses and connect trees of each i and j of each single-node line
+        single_node_lines = cs.dPower_Network.index[cs.dPower_Network["pTecRepr"] == "SN"]
+        for i, j, _ in single_node_lines:
+            parent[find(str(i))] = find(str(j))
 
-            for bus in connected_buses:
-                merged_buses.add(bus)
+        # Collect groups (indexed by their root)
+        groups = {}
+        for bus in parent:
+            groups.setdefault(find(bus), []).append(bus)
 
-            new_bus_name = "merged-" + "-".join(connected_buses)
+        # Process groups in order of their first bus in dPower_BusInfo (keeps bus order and naming identical to previous implementation)
+        bus_order = {str(bus): position for position, bus in enumerate(cs.dPower_BusInfo.index)}
+        bus_groups = sorted((sorted(group) for group in groups.values()), key=lambda group: min(bus_order[bus] for bus in group))
+
+        bus_to_merged_bus = {}  # Mapping of each merged bus to the name of its new bus (used for dPower_Demand after the loop)
+        for connected_buses in bus_groups:
+            # Name contains at most 5 bus names (otherwise names get too long, e.g., for Gurobi's 255-character limit)
+            new_bus_name = "merged-" + "-".join(connected_buses[:5]) + (f"+{len(connected_buses) - 5}more" if len(connected_buses) > 5 else "")  # Add "+Nmore" suffix if more than 5 buses are merged
+            bus_to_merged_bus.update({bus: new_bus_name for bus in connected_buses})
 
             ### Adapt dPower_BusInfo
             dPower_BusInfo_entry = cs.dPower_BusInfo.loc[connected_buses]  # Entry for the new bus
@@ -589,24 +601,15 @@ class CaseStudy:
 
             ### Adapt dPower_Network
             cs.dPower_Network = cs.dPower_Network.reset_index()
-            rows_to_drop = []
-            for i, row in cs.dPower_Network.iterrows():
-                if row['i'] in connected_buses and row['j'] in connected_buses:
-                    rows_to_drop.append(i)
-                elif row['i'] in connected_buses:
-                    row['i'] = new_bus_name
-                    cs.dPower_Network.iloc[i] = row
-                elif row['j'] in connected_buses:
-                    row['j'] = new_bus_name
-                    cs.dPower_Network.iloc[i] = row
-            cs.dPower_Network = cs.dPower_Network.drop(rows_to_drop)
+            i_in_group = cs.dPower_Network['i'].isin(connected_buses)
+            j_in_group = cs.dPower_Network['j'].isin(connected_buses)
+            cs.dPower_Network = cs.dPower_Network[~(i_in_group & j_in_group)]  # Drop lines within the group
+            i_in_group = i_in_group.loc[cs.dPower_Network.index]
+            j_in_group = j_in_group.loc[cs.dPower_Network.index]
 
             # Always put new_bus_name to 'j' (handles case where e.g. 2->3 and 4->2 would lead to 2->34 and 34->2 (because 3 and 4 are merged))
-            for i, row in cs.dPower_Network.iterrows():
-                if row['i'] == new_bus_name:
-                    row['i'] = row['j']
-                    row['j'] = new_bus_name
-                    cs.dPower_Network.loc[i] = row
+            cs.dPower_Network.loc[i_in_group, 'i'] = cs.dPower_Network.loc[i_in_group, 'j']
+            cs.dPower_Network.loc[i_in_group | j_in_group, 'j'] = new_bus_name
 
             # Handle case where e.g. 2->3 and 2->4 would lead to 2->34 and 2->34 (because 3 and 4 are merged); also incl. handling 2->3 and 4->2
             cs.dPower_Network['pTecRepr'] = cs.dPower_Network.groupby(['i', 'j'])['pTecRepr'].transform(lambda series: 'DC-OPF' if 'DC-OPF' in series.values else series.iloc[0])
@@ -644,17 +647,29 @@ class CaseStudy:
             if hasattr(cs, "dPower_Storage"):
                 cs.dPower_Storage.loc[cs.dPower_Storage['i'].isin(connected_buses), 'i'] = new_bus_name
 
-            # Adapt dPower_Demand
-            cs.dPower_Demand = cs.dPower_Demand.reset_index()
-            mask = cs.dPower_Demand['i'].isin(connected_buses)  # Create mask for rows to be unified
-            cs.dPower_Demand.loc[mask, 'i'] = new_bus_name  # Update bus names
-            aggregation_methods_power_demand = {
-                'value': 'sum',
-                'dataPackage': lambda v: f"merged-{'-'.join(v.unique())}",
-                'dataSource': lambda v: f"merged-{'-'.join(v.unique())}",
-                'scenario': lambda v: '-'.join(v.unique())  # If there are multiple scenarios, this would probably fail later (which is good - then we know, something isn't right!)
-            }
-            cs.dPower_Demand = cs.dPower_Demand.groupby(['rp', 'k', 'i']).agg(aggregation_methods_power_demand)
+        # Adapt dPower_Demand (once for all groups, since dPower_Demand can be very large)
+        if len(bus_to_merged_bus) > 0:
+            demand = cs.dPower_Demand.reset_index()
+
+            # Group by integer codes (faster than by bus names)
+            bus_codes, buses = pd.factorize(demand['i'])
+            new_buses = buses.map(lambda bus: bus_to_merged_bus.get(bus, bus))
+            sorted_new_buses = pd.Index(sorted(set(new_buses)))  # Codes in sorted order, so that the resulting index is sorted by bus name
+            demand['i'] = sorted_new_buses.get_indexer(new_buses)[bus_codes]  # Fancy numpy indexing
+            grouped_demand = demand.groupby(['rp', 'k', 'i'])
+            merged_demand = grouped_demand[['value']].sum()
+
+            # Metadata is joined per (new) bus instead of per (rp, k, i) - unmerged buses keep their values
+            is_merged_bus = sorted_new_buses.isin(set(bus_to_merged_bus.values()))
+            merged_rows = demand[is_merged_bus[demand['i'].to_numpy()]]
+            for column, prefix in [('dataPackage', 'merged-'), ('dataSource', 'merged-'), ('scenario', '')]:  # Joined scenarios would probably fail later (which is good - then we know, something isn't right!)
+                merged_values = merged_rows.groupby('i')[column].unique().map(lambda v: prefix + '-'.join(str(x) for x in v))
+                merged_demand[column] = grouped_demand[column].first()
+                merged_bus_rows = merged_demand.index.get_level_values('i').isin(merged_values.index)
+                merged_demand.loc[merged_bus_rows, column] = merged_demand.index.get_level_values('i')[merged_bus_rows].map(merged_values)
+
+            merged_demand.index = merged_demand.index.set_levels(sorted_new_buses[merged_demand.index.levels[2]], level='i')
+            cs.dPower_Demand = merged_demand[['value', 'dataPackage', 'dataSource', 'scenario']]
 
         return cs if not inplace else None
 
