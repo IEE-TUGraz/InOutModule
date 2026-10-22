@@ -1,0 +1,378 @@
+Metadata:
+  source:
+    type: "metadata"
+  dataPackage: "PyPSA-Import" # Name of data package [text]
+  dataSource: "PyPSA-Eur_2040_CY2023" # Name of data source [text]
+  LDES_threshold: 2160 # defines the threshold in hours for storage units to be classified as LDES (Long Duration Energy Storage)
+
+  # Define names of carriers and their corresponding fuel costs (if thermal generator) for every technology
+  # [technology]:
+  #   filter: list of strings to filter the carrier name in the PyPSA network
+  #   cost: fuel cost in EUR/MWh (only needed for thermal generators)
+  naturalGas:
+    filter: [ 'Gas', 'gas' ]
+    cost: 100 # EUR/MWh
+  openCycleGasTurbine:
+    filter: [ 'OCGT' ]
+    cost: 100 # EUR/MWh
+  closedCycleGasTurbine:
+    filter: [ 'CCGT' ]
+    cost: 100 # EUR/MWh
+  coal:
+    filter: [ 'coal' ]
+    cost: 50 # EUR/MWh
+  hardCoal:
+    filter: [ 'Hard coal' ]
+    cost: 15 # EUR/MWh
+  brownCoal_lignite:
+    filter: [ 'Brown coal', 'lignite' ]
+    cost: 22 # EUR/MWh
+  oil:
+    filter: [ 'oil', 'Oil' ]
+    cost: 70 # EUR/MWh
+  nuclear:
+    filter: [ 'Nuclear', 'nuclear' ]
+    cost: 50 # EUR/MWh
+  biomass:
+    filter: [ 'biomass' ]
+    cost: 70 # EUR/MWh
+  geothermal:
+    filter: [ 'Geothermal', 'geothermal' ]
+    cost: 60 # EUR/MWh
+  waste:
+    filter: [ 'waste', 'Waste' ]
+    cost: 40 # EUR/MWh
+  solar:
+    filter: [ 'solar', 'Solar', 'solar-hsat' ]
+  onshoreWind:
+    filter: [ 'Wind Onshore', 'onwind', 'onshore-wind' ]
+  offshoreWind:
+    filter: [ 'Wind Offshore', 'offwind-float', 'offwind-dc', 'offwind-ac' ]
+  ror:
+    filter: [ 'ror', 'Run of River' ]
+  hydro:
+    default_storage_capacity_cost: 1  # EUR/MWh, PyPSA does not have a separation between power and energy capacity for investment costs
+    filter: [ 'Storage Hydro', 'hydro' ]
+  phs:
+    default_storage_capacity_cost: 1  # EUR/MWh, PyPSA does not have a separation between power and energy capacity for investment costs
+    filter: [ 'PHS', 'Pumped Hydro' ]
+
+  # Define categories of technologies and their corresponding technologies.
+  # The technologies must have the same name as specified in the mapping above.
+  ThermalGen:
+    technologies: [ 'naturalGas', 'openCycleGasTurbine', 'closedCycleGasTurbine', 'coal', 'hardCoal', 'brownCoal_lignite', 'oil', 'nuclear', 'biomass', 'geothermal', 'waste' ]
+  VRES:
+    technologies: [ 'solar', 'onshoreWind', 'offshoreWind', 'ror' ]
+  Storage:
+    technologies: [ 'phs', 'hydro' ]
+  VRESProfiles:
+    technologies: [ 'solar', 'onshoreWind', 'offshoreWind' ]
+  Inflows:
+    technologies: [ 'phs', 'hydro', 'ror' ]
+
+
+dData_Packages:
+  source:
+    type: "helper"
+    name: "prepare_data_packages"
+    metadata_arg: "dataPackage"
+  mapping:
+    dataPackage:
+      attr: "dataPackage"
+    comments:
+      attr: "comments"
+  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013. The (fuel) costs for thermal generators defined in the Metadata section are default assumptions." # Additional comments, manual adjustments, etc. [text]
+
+
+dData_Sources:
+  source:
+    type: "helper"
+    name: "prepare_data_sources"
+    metadata_arg: "dataSource"
+  mapping:
+    dataSource:
+      attr: "dataSource"
+    sources:
+      attr: "sources"
+    licenseInfo:
+      attr: "licenseInfo"
+    personResponsible:
+      attr: "personResponsible"
+    lastEdited:
+      attr: "lastEdited"
+    comments:
+      attr: "comments"
+  sources: "PyPSA-Eur" # List of used sources (detailing which values are from where) [text]
+  licenseInfo: "Public" # Information about re-usability ['Public', 'Non-Public']
+  personResponsible: "Orhidea Shatri" # Person responsible that added this source and the corresponding entries [text]
+  lastEdited: "21.07.2026" # Date of last edit (most likely when it was created) [DD.MM.YYYY]
+  comments: "PyPSA-Eur dataset for target year 2025 and weather year 2013. The (fuel) costs for thermal generators defined in the Metadata section are default assumptions." # Additional comments, manual adjustments, etc. [text]
+
+
+dGlobal_Scenarios:
+  source:
+    type: "helper"
+    name: "prepare_global_scenarios"
+  mapping:
+    scenarioID:
+      attr: "scenarioID"
+    relativeWeight:
+      attr: "relativeWeight"
+    comments:
+      attr: "comments"
+  scenarioID: "ScenarioA" # Scenario name [text]
+  relativeWeight: 1.0 # Relative weight of scenario [float]
+  comments: "PyPSA-Eur 2040 CY2023" # Additional comments, manual adjustments, etc. [text]
+
+
+dPower_Hindex:
+  source:
+    type: "helper"
+    name: "prepare_power_hindex"
+  mapping:
+    p:
+      attr: "p"
+    rp:
+      attr: "rp"
+    k:
+      attr: "k"
+  rp: "rp01" # Representative period [rp]
+
+
+dPower_WeightsK:
+  source:
+    type: "helper"
+    name: "prepare_power_weights_k"
+  mapping:
+    k:
+      attr: "k"
+    pWeight_k:
+      attr: "pWeight_k"
+  pWeight_k: 1 # Weight of representative hour within representative period [h]
+
+
+dPower_WeightsRP:
+  source:
+    type: "helper"
+    name: "prepare_power_weights_rp"
+  mapping:
+    rp:
+      attr: "rp"
+    pWeight_rp:
+      attr: "pWeight_rp"
+  rp: "rp01" # Representative period [rp]
+  pWeight_rp: 1 # Weight of representative period within full timespan [h]
+
+
+dPower_BusInfo:
+  source:
+    type: "attribute"
+    name: "buses"
+    filter: "carrier in ['AC', 'DC']"
+  index: "i"
+  mapping:
+    z: "country"
+    pBusBaseV: "v_nom"
+    pBusMaxV: 1.1 # Fixed value used, since v_mag_pu_max is currently not used in PyPSA
+    pBusMinV: 0.9 # Fixed value used, since v_mag_pu_min is currently not used in PyPSA
+    lat: "y"
+    lon: "x"
+
+
+dPower_Network:
+  BasePower: 100
+  source:
+    type: "helper"
+    name: "prepare_ac_lines_and_dc_links"
+  index:
+    i: "bus0"
+    j: "bus1"
+    c: "name"
+  mapping:
+    c: "c1"
+    pRline: "r"
+    pXline: "x"
+    pBcline: "b"
+    pPmax: "s_nom"
+    pFOMCost:
+      attr: "fom_cost"
+      conversion: "EUR_per_MVA_to_MEUR"
+    pEnableInvest:
+      attr: "s_nom_extendable"
+      conversion: "bool_to_binary"
+    pInvestCost:
+      attr: "capital_cost"
+      conversion: "EUR_per_MVA_to_MEUR"
+    pTecRepr:
+      attr: "carrier"
+      conversion: "line_carrier_to_tec_repr" # if no carrier is specified, the technical representation is set to DC-OPF
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+    pAngle: 0
+    pRatio: 1
+
+
+dPower_ThermalGen:
+  category: "ThermalGen"
+  source:
+    type: "attribute"
+    name: "generators"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    ExisUnits:
+      attr: "active"
+      conversion: "bool_to_binary_zero_if_p_nom_is_zero"
+    MaxProd:
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
+    MinProd:
+      attr: "p_min_pu"
+      conversion: "pu_to_absolute"
+    RampUp:
+      attr: "ramp_limit_up"
+      conversion: "pu_to_absolute_and_p_nom_if_nan_or_zero"
+    RampDw:
+      attr: "ramp_limit_down"
+      conversion: "pu_to_absolute_and_p_nom_if_nan_or_zero"
+    MinUpTime:
+      attr: "min_up_time"
+      conversion: "greater_or_equal_to_one"
+    MinDownTime:
+      attr: "min_down_time"
+      conversion: "greater_or_equal_to_one"
+    Efficiency: "efficiency"
+    FuelCost:
+      attr: "carrier"
+      conversion: "get_fuel_cost_from_metadata"
+    CommitConsumption:
+      attr: "stand_by_cost"
+      conversion: "EUR_per_hour_to_MWh_per_hour"
+    OMVarCost: "marginal_cost"
+    StartupConsumption:
+      attr: "start_up_consumption"
+      conversion: "EUR_to_MWh"
+    EnableInvest:
+      attr: "p_nom_extendable"
+      conversion: "bool_to_binary"
+    InvestCost: "capital_cost"
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+
+
+dPower_VRES: # including ROR
+  category: "VRES"
+  source:
+    type: "attribute"
+    name: "generators"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    ExisUnits:
+      attr: "active"
+      conversion: "bool_to_binary_zero_if_p_nom_is_zero"
+    MaxProd:
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
+    EnableInvest:
+      attr: "p_nom_extendable"
+      conversion: "bool_to_binary"
+    MaxInvest:
+      attr: "p_nom_max"
+      conversion: "total_capacity_to_number_of_units"
+    InvestCost: "capital_cost"
+    OMVarCost: "marginal_cost"
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+
+
+dPower_Storage:
+  category: "Storage"
+  source:
+    type: "attribute"
+    name: "storage_units"
+  index: "g"
+  mapping:
+    tec: "carrier"
+    i: "bus"
+    ExisUnits:
+      attr: "active"
+      conversion: "bool_to_binary_zero_if_p_nom_is_zero"
+    MaxProd:
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
+    MinProd: 0
+    MaxCons:
+      attr: "p_nom"
+      conversion: "one_if_nan_or_zero"
+    DisEffic: "efficiency_dispatch"
+    ChEffic: "efficiency_store"
+    Self Discharge: "standing_loss"
+    MinReserve: 0
+    IniReserve: "state_of_charge_initial"
+    IsLDES:
+      attr: "max_hours"
+      conversion: "is_ldes"
+    OMVarCost: "marginal_cost"
+    EnableInvest:
+      attr: "p_nom_extendable"
+      conversion: "bool_to_binary"
+    MaxInvest:
+      attr: "p_nom_max"
+      conversion: "total_capacity_to_number_of_units"
+    InvestCostPerMW: "capital_cost"
+    InvestCostPerMWh:
+      attr: "carrier"
+      conversion: "get_storage_capacity_cost_from_metadata"
+    Ene2PowRatio: "max_hours"
+    YearCom: "build_year"
+    YearDecom:
+      attr: "decom_year"
+      conversion: "year_and_lifetime_to_year_decom"
+
+
+dPower_Inflows:
+  category: "Inflows"
+  source:
+    type: "helper"
+    name: "prepare_inflow_profiles"
+  index:
+    rp: "rp"
+    k: "k"
+    g: "g"
+  mapping:
+    value: "Inflow"
+
+
+dPower_Demand:
+  source:
+    type: "helper"
+    name: "prepare_demand_profiles"
+    filter: "carrier in ['AC', 'DC']"  # Should be the same filter as for the buses in dPower_BusInfo
+  index:
+    rp: "rp"
+    k: "k"
+    i: "n"
+  mapping:
+    value: "Demand"
+
+
+dPower_VRESProfiles:
+  category: "VRESProfiles"
+  source:
+    type: "helper"
+    name: "prepare_renewable_profiles"
+  index:
+    rp: "rp"
+    g: "generator_id"
+    k: "k"
+  mapping:
+    value: "Capacity"
