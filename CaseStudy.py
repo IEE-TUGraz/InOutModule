@@ -260,15 +260,13 @@ class CaseStudy:
         if negative_demands.any():
             negative_demand_count = negative_demands.sum()
             affected_entries = self.dPower_Demand.loc[negative_demands, ["scenario", "value"]].head(10)
-            error_message = (
+            raise ValueError(
                 f"{negative_demand_count} negative power demand entries found. "
                 f"Power demand must be non-negative. "
                 f"Affected entries:\n"
                 f"{affected_entries.to_string()}"
                 + (f"\n... (and {negative_demand_count - 10} more {"entries" if negative_demand_count > 11 else "entry"})" if negative_demand_count > 10 else "")
             )
-            printer.error(error_message)
-            raise ValueError(error_message)
 
     def check_duplicate_lines_dPower_Network(self):
         """
