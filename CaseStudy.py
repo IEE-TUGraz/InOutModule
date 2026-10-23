@@ -198,6 +198,7 @@ class CaseStudy:
                     printer.error(f"Error reading for '{attr_name}': {exc}")
                     raise exc
 
+        self.check_negative_demands_dPower_Demand()
         self.check_duplicate_lines_dPower_Network()
 
         # === SEQUENTIAL DEPENDENTS ===
@@ -248,6 +249,26 @@ class CaseStudy:
     def copy(self):
         new_self = copy.deepcopy(self)
         return new_self
+
+    def check_negative_demands_dPower_Demand(self):
+        """
+        Check dPower_Demand for negative values.
+        If there are negative demand values, an error is thrown.
+        :return: None
+        """
+        negative_demands = self.dPower_Demand["value"] < 0
+        if negative_demands.any():
+            negative_demand_count = negative_demands.sum()
+            affected_entries = self.dPower_Demand.loc[negative_demands, ["scenario", "value"]].head(10)
+            error_message = (
+                f"{negative_demand_count} negative power demand entries found. "
+                f"Power demand must be non-negative. "
+                f"Affected entries:\n"
+                f"{affected_entries.to_string()}"
+                + (f"\n... (and {negative_demand_count - 10} more {"entries" if negative_demand_count > 11 else "entry"})" if negative_demand_count > 10 else "")
+            )
+            printer.error(error_message)
+            raise ValueError(error_message)
 
     def check_duplicate_lines_dPower_Network(self):
         """
