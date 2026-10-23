@@ -232,8 +232,6 @@ class CaseStudy:
             elif len(self.dGlobal_Scenarios) == 1:
                 self.filter_scenario(self.dGlobal_Scenarios.index[0], inplace=True)  # Filter case study to only include actually present scenarios
 
-        # can call assign_tec_repr_for_same_zone_line/assign_tec_repr_for_cross_zone_lines here
-
         self.rpTransitionMatrixAbsolute, self.rpTransitionMatrixRelativeTo, self.rpTransitionMatrixRelativeFrom = self.get_rpTransitionMatrices(clip_method=clip_method, clip_value=clip_value)
 
         if not do_not_merge_single_node_buses:
@@ -529,16 +527,23 @@ class CaseStudy:
         connected_buses.sort()
         return connected_buses
 
-    def assign_tec_repr_for_same_zone_lines(self, tec_repr, whitelist=(), blacklist=()):
+    def assign_tec_repr_for_same_zone_lines(self,
+                                            tec_repr,
+                                            *,
+                                            whitelist: list[str] | None = None,
+                                            blacklist: list[str] | None = None,
+                                            merge_single_node_buses=False):
         """
         Assign a technical representation to lines whose endpoints are in the same zone
         :param tec_repr: Technical representation to assign, e.g. "SN", "TP", "DC-OPF"
         :param whitelist: Optional zones to include. If set, only same-zone lines inside these zones are changed
         :param blacklist: Optional zones to exclude. If set, same-zone lines inside these zones are skipped
+        :param merge_single_node_buses: Merge single node buses after "SN" is assigned. Defaults to False
         """
         if whitelist and blacklist:
             raise ValueError("Use either whitelist or blacklist, not both.")
 
+        set_lines = 0
         for from_bus, to_bus, circuit in self.dPower_Network.index:
             from_zone = self.dPower_BusInfo.at[from_bus, "z"]
             to_zone = self.dPower_BusInfo.at[to_bus, "z"]
@@ -550,17 +555,30 @@ class CaseStudy:
                     continue
 
                 self.dPower_Network.at[(from_bus, to_bus, circuit), "pTecRepr"] = tec_repr
+                set_lines += 1
 
-    def assign_tec_repr_for_cross_zone_lines(self, tec_repr, whitelist=(), blacklist=()):
+        if tec_repr == "SN" and merge_single_node_buses:
+            self.merge_single_node_buses()
+
+        printer.information(f"Technical representation set to {tec_repr} for {set_lines} same zone lines.")
+
+    def assign_tec_repr_for_cross_zone_lines(self,
+                                             tec_repr,
+                                             *,
+                                             whitelist: list[str] | None = None,
+                                             blacklist: list[str] | None = None,
+                                             merge_single_node_buses=False):
         """
         Assign a technical representation to lines whose endpoints are in different zones
         :param tec_repr: Technical representation to assign, e.g. "SN", "TP", "DC-OPF"
         :param whitelist: Optional zones to include. If set, only cross-zone lines touching these zones are changed
         :param blacklist: Optional zones to exclude. If set, cross-zone lines touching these zones are skipped
+        :param merge_single_node_buses: Merge single-node buses after assigning "SN". Defaults to False
         """
         if whitelist and blacklist:
             raise ValueError("Use either whitelist or blacklist, not both.")
 
+        set_lines = 0
         for from_bus, to_bus, circuit in self.dPower_Network.index:
             from_zone = self.dPower_BusInfo.at[from_bus, "z"]
             to_zone = self.dPower_BusInfo.at[to_bus, "z"]
@@ -572,6 +590,12 @@ class CaseStudy:
                     continue
 
                 self.dPower_Network.at[(from_bus, to_bus, circuit), "pTecRepr"] = tec_repr
+                set_lines += 1
+
+        if tec_repr == "SN" and merge_single_node_buses:
+            self.merge_single_node_buses()
+
+        printer.information(f"Technical representation set to {tec_repr} for {set_lines} cross zone lines.")
 
     def merge_single_node_buses(self, inplace: bool = True) -> typing.Optional[typing.Self]:
         """
