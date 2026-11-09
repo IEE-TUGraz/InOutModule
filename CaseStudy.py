@@ -557,8 +557,11 @@ class CaseStudy:
                 self.dPower_Network.at[(from_bus, to_bus, circuit), "pTecRepr"] = tec_repr
                 set_lines += 1
 
-        if tec_repr == "SN" and merge_single_node_buses:
-            self.merge_single_node_buses()
+        if tec_repr == "SN":
+            if not merge_single_node_buses and set_lines > 0:
+                printer.warning(f"Adjusted {set_lines} lines to tec_repr 'SN' but did not merge single node buses - check if this is desired behavior!")
+            if merge_single_node_buses:
+                self.merge_single_node_buses()
 
         printer.information(f"Technical representation set to {tec_repr} for {set_lines} same zone lines.")
 
@@ -592,8 +595,11 @@ class CaseStudy:
                 self.dPower_Network.at[(from_bus, to_bus, circuit), "pTecRepr"] = tec_repr
                 set_lines += 1
 
-        if tec_repr == "SN" and merge_single_node_buses:
-            self.merge_single_node_buses()
+        if tec_repr == "SN":
+            if not merge_single_node_buses and set_lines > 0:
+                printer.warning(f"Adjusted {set_lines} lines to tec_repr 'SN' but did not merge single node buses - check if this is desired behavior!")
+            if merge_single_node_buses:
+                self.merge_single_node_buses()
 
         printer.information(f"Technical representation set to {tec_repr} for {set_lines} cross zone lines.")
 
