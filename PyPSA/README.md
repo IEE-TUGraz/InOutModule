@@ -145,6 +145,8 @@ The YAML configuration acts as the "translation map" between the two models.
 Each entry (e.g., `dPower_ThermalGen`) defines:
 
 * **source**: The data origin (`type: attribute` for direct PyPSA access or `type: helper` for function calls).
+    - For `type: attribute`, components with the column `bus` (generators, storage units, ...) automatically get the coordinates of their bus as columns `x` (longitude) and `y` (latitude), so they
+      can be mapped to `lon`/`lat`.
 * **category**: (Optional) References a metadata category to automatically filter the source data.
 * **index**: Defines the LEGO index columns (e.g., `i` for bus, `g` for generator).
 * **mapping**: A dictionary where keys are LEGO columns and values are either:

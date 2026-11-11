@@ -374,6 +374,12 @@ class NetworkDataExtractor:
             source_df = getattr(self.network, src["name"])
             if "filter" in src:
                 source_df = source_df.query(src["filter"])
+            if "bus" in source_df.columns:
+                # components (e.g., generators) get the coordinates of their bus
+                source_df = source_df.assign(
+                    x=source_df["bus"].map(self.network.buses["x"]),
+                    y=source_df["bus"].map(self.network.buses["y"]),
+                )
             return source_df
         elif src["type"] == "helper":
             helper = getattr(h, src["name"])
