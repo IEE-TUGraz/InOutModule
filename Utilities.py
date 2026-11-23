@@ -699,7 +699,7 @@ def plot_transition_matrix(tm: pd.DataFrame, title: str | None = None, output: s
                 if luminance < 0.5:
                     tbl[r + 1, c].get_text().set_color("white")
 
-        heading = f"Transition matrix (count / {pct_label})"
+        heading = f"Transition Matrix (count / {pct_label})"
         if title:
             heading += f"\n{title}"
         ax.set_title(heading, fontsize=10, pad=8)
